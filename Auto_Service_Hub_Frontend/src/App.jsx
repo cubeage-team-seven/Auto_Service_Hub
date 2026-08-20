@@ -1,121 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 import './App.css'
 
+const navItems = ['Features', 'Modules', 'AI Engine', 'Pricing', 'About']
+
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-shell min-h-screen bg-[#050505] text-white">
+      <header className="border-b border-white/10 bg-[#050505]">
+        <nav className="mx-auto flex max-w-[1600px] items-center justify-between gap-6 px-5 py-4 md:px-8 xl:px-12">
+          <div className="flex items-center gap-4">
+            <div className="nav-icon flex h-12 w-12 items-center justify-center rounded-md bg-[#d8ff3d] text-black shadow-[0_0_22px_rgba(216,255,61,0.55)]">
+              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 10.5 12 4l9 6.5" />
+                <path d="M5 9.5V18h14v-8.5" />
+                <path d="M10 18v-5h4v5" />
+              </svg>
+            </div>
 
-      <div className="ticks"></div>
+            <div className="leading-none">
+              <div className="text-[clamp(1.1rem,1vw+0.8rem,2rem)] font-black tracking-[-0.06em] text-[#d8ff3d]">
+                SMARTGARAGE
+              </div>
+              <div className="mt-1 text-[0.6rem] font-medium uppercase tracking-[0.22em] text-white/70">
+                AI CRM
+              </div>
+            </div>
+          </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
+          <div className="nav-menu hidden flex-1 items-center justify-center gap-10 text-[1.05rem] font-medium text-white/75 lg:flex">
+            {navItems.map((item) => (
+              <a key={item} href="#" className="transition-colors duration-200 hover:text-[#d8ff3d]">
+                {item}
               </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+            ))}
+          </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <button
+              type="button"
+              className="nav-signin rounded-md border border-[#d8ff3d] bg-transparent px-5 py-3 text-base font-semibold text-[#d8ff3d] transition-transform duration-200 hover:scale-[1.02]"
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              className="nav-cta rounded-md bg-[#d8ff3d] px-5 py-3 text-base font-semibold text-[#050505] shadow-[0_0_20px_rgba(216,255,61,0.35)] transition-transform duration-200 hover:scale-[1.02]"
+            >
+              Get Access <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      <main className="mx-auto max-w-[1600px] min-h-[calc(100vh-88px)] bg-[#050505]" />
+    </div>
   )
 }
 
