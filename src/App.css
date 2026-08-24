@@ -1,0 +1,29 @@
+.app-shell {
+  background:
+    radial-gradient(circle at top, rgba(216, 255, 61, 0.08), transparent 25%),
+    linear-gradient(180deg, #050505 0%, #090909 100%);
+}
+
+.nav-icon {
+  transform: translateY(-1px);
+}
+
+.nav-menu a {
+  letter-spacing: -0.02em;
+}
+
+.nav-signin,
+.nav-cta {
+  min-width: 124px;
+  font-size: 1.05rem;
+}
+
+@media (max-width: 767px) {
+  .nav-signin,
+  .nav-cta {
+    min-width: 98px;
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+    font-size: 0.95rem;
+  }
+}
