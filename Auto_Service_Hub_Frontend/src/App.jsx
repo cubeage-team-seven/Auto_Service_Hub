@@ -1,58 +1,52 @@
-import './App.css'
+import React from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import LandingPage from './pages/landing/LandingPage'
+import LoginPage from './pages/auth/LoginPage'
+import BillingPage from './pages/billing/BillingPage'
+import DashboardPage from './pages/dashboard/DashboardPage'
+import CustomerListPage from './pages/customers/CustomerListPage'
 
-const navItems = ['Features', 'Modules', 'AI Engine', 'Pricing', 'About']
+import CustomerPortalDashboard from './pages/customer-portal/CustomerPortalDashboard'
+import CustomerVehiclesPage from './pages/customer-portal/CustomerVehiclesPage'
+import CustomerBookingPage from './pages/customer-portal/CustomerBookingPage'
+import CustomerAppointmentsPage from './pages/customer-portal/CustomerAppointmentsPage'
+import CustomerServiceHistoryPage from './pages/customer-portal/CustomerServiceHistoryPage'
+import CustomerNotificationsPage from './pages/customer-portal/CustomerNotificationsPage'
+import CustomerFeedbackPage from './pages/customer-portal/CustomerFeedbackPage'
+import CustomerProfilePage from './pages/customer-portal/CustomerProfilePage'
+
+import './App.css'
 
 function App() {
   return (
-    <div className="app-shell min-h-screen bg-[#050505] text-white">
-      <header className="border-b border-white/10 bg-[#050505]">
-        <nav className="mx-auto flex max-w-[1600px] items-center justify-between gap-6 px-5 py-4 md:px-8 xl:px-12">
-          <div className="flex items-center gap-4">
-            <div className="nav-icon flex h-12 w-12 items-center justify-center rounded-md bg-[#d8ff3d] text-black shadow-[0_0_22px_rgba(216,255,61,0.55)]">
-              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M3 10.5 12 4l9 6.5" />
-                <path d="M5 9.5V18h14v-8.5" />
-                <path d="M10 18v-5h4v5" />
-              </svg>
-            </div>
+    <BrowserRouter>
+      <Routes>
+        {/* Landing Page */}
+        <Route path="/" element={<LandingPage />} />
 
-            <div className="leading-none">
-              <div className="text-[clamp(1.1rem,1vw+0.8rem,2rem)] font-black tracking-[-0.06em] text-[#d8ff3d]">
-                SMARTGARAGE
-              </div>
-              <div className="mt-1 text-[0.6rem] font-medium uppercase tracking-[0.22em] text-white/70">
-                AI CRM
-              </div>
-            </div>
-          </div>
+        {/* Authentication & Module Selection Flow */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/modules" element={<LoginPage />} />
 
-          <div className="nav-menu hidden flex-1 items-center justify-center gap-10 text-[1.05rem] font-medium text-white/75 lg:flex">
-            {navItems.map((item) => (
-              <a key={item} href="#" className="transition-colors duration-200 hover:text-[#d8ff3d]">
-                {item}
-              </a>
-            ))}
-          </div>
+        {/* Administrative Garage Hub Routes */}
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/billing" element={<BillingPage />} />
+        <Route path="/customers" element={<CustomerListPage />} />
 
-          <div className="flex items-center gap-3 sm:gap-4">
-            <button
-              type="button"
-              className="nav-signin rounded-md border border-[#d8ff3d] bg-transparent px-5 py-3 text-base font-semibold text-[#d8ff3d] transition-transform duration-200 hover:scale-[1.02]"
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              className="nav-cta rounded-md bg-[#d8ff3d] px-5 py-3 text-base font-semibold text-[#050505] shadow-[0_0_20px_rgba(216,255,61,0.35)] transition-transform duration-200 hover:scale-[1.02]"
-            >
-              Get Access <span aria-hidden="true">→</span>
-            </button>
-          </div>
-        </nav>
-      </header>
+        {/* Customer Self-Service Portal Routes */}
+        <Route path="/portal" element={<CustomerPortalDashboard />} />
+        <Route path="/portal/vehicles" element={<CustomerVehiclesPage />} />
+        <Route path="/portal/book" element={<CustomerBookingPage />} />
+        <Route path="/portal/appointments" element={<CustomerAppointmentsPage />} />
+        <Route path="/portal/history" element={<CustomerServiceHistoryPage />} />
+        <Route path="/portal/notifications" element={<CustomerNotificationsPage />} />
+        <Route path="/portal/feedback" element={<CustomerFeedbackPage />} />
+        <Route path="/portal/profile" element={<CustomerProfilePage />} />
 
-      <main className="mx-auto max-w-[1600px] min-h-[calc(100vh-88px)] bg-[#050505]" />
-    </div>
+        {/* Fallback Redirect to Landing */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
