@@ -1,28 +1,142 @@
 @import "tailwindcss";
 
-:root {
-  font-family: Inter, system-ui, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color: #111827;
-  background: #f9fafb;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  :root {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+    color: #f0f0f0;
+    background-color: #080909;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background-color: #080909;
+    color: #f0f0f0;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
 }
 
-html {
-  scroll-behavior: smooth;
+/* Custom Typography Utility Classes */
+.font-display {
+  font-family: 'Barlow Condensed', sans-serif;
 }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background: #f9fafb;
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
 }
 
-#root {
-  min-height: 100vh;
+.font-sans {
+  font-family: 'Inter', sans-serif;
 }
+
+/* Custom scrollbar for dark panels */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(8, 9, 9, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(200, 241, 53, 0.3);
+}
+
+/* Figma-matching SmartGarage Theme Utilities */
+.bg-smart-bg {
+  background-color: #080909;
+}
+
+.bg-smart-surface {
+  background-color: #0f1010;
+}
+
+.bg-smart-card {
+  background-color: #141515;
+}
+
+.bg-smart-card-sec {
+  background-color: #191a1a;
+}
+
+.bg-smart-card-hover:hover {
+  background-color: #191a1a;
+}
+
+.border-smart-border {
+  border-color: #242626;
+}
+
+.text-smart-accent {
+  color: #c8f135;
+}
+
+.bg-smart-accent {
+  background-color: #c8f135;
+}
+
+.text-smart-muted {
+  color: #6b6e6e;
+}
+
+/* Loyalty Badges */
+.badge-loyalty-platinum {
+  background-color: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+.badge-loyalty-gold {
+  background-color: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+}
+
+.badge-loyalty-silver {
+  background-color: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  color: #94a3b8;
+}
+
+.badge-loyalty-bronze {
+  background-color: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  color: #f97316;
+}
+
+/* Status Badges */
+.badge-status-paid {
+  background-color: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.badge-status-pending {
+  background-color: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.badge-status-overdue {
+  background-color: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  color: #f43f5e;
+  font-weight: 700;
+}
+
+
