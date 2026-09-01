@@ -35,6 +35,11 @@ import JobCardListPage from "./pages/jobcards/JobCardListPage";
 import JobCardCreatePage from "./pages/jobcards/JobCardCreatePage";
 import JobCardDetailsPage from "./pages/jobcards/JobCardDetailsPage";
 
+/* =========================
+   BILLING
+========================= */
+import BillingLogin from "./pages/billing/BillingLogin";
+import BillingPage from "./pages/billing/BillingPage";
 
 function App() {
   return (
@@ -90,7 +95,12 @@ function App() {
           element={<InventoryPage />}
         />
 
+        {/* BILLING MODULE ROUTES */}
+        <Route path="/billing" element={<BillingLogin />} />
+        <Route path="/billing/dashboard" element={<BillingPage />} />
+      
 
+        
         {/* =========================
             JOB CARDS
         ========================= */}
