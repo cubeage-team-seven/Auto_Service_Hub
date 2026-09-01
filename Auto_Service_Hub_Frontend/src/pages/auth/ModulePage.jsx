@@ -246,41 +246,16 @@ function ModulePage() {
               </span>
 
             </Link>
-
-
-            {/* =================================================
-                BILLING
-            ================================================= */}
-
-            <div className="module-card">
-
-              <div className="module-card-icon">
-                ₹
-              </div>
-
-              <div className="module-card-content">
-
-                <h3>
-                  Billing
-                </h3>
-
-                <span>
-                  Payments & Invoicing
-                </span>
-
-                <p>
-                  Manage invoices, payments,
-                  taxes and financial records.
-                </p>
-
-              </div>
-
-              <span className="module-arrow">
-                →
-              </span>
-
+          {/* BILLING */}
+          <Link to="/billing" className="module-card module-card-link">
+            <div className="module-card-icon">₹</div>
+            <div className="module-card-content">
+              <h3>Billing</h3>
+              <span>Payments & Invoicing</span>
+              <p>Manage invoices, payments, taxes and financial records.</p>
             </div>
-
+            <span className="module-arrow">→</span>
+          </Link>
 
             {/* =================================================
                 CUSTOMER
