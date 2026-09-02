@@ -1,0 +1,994 @@
+/* =========================================================
+    Auto_Service_Hub
+   MECHANIC DASHBOARD
+   FIGMA MATCHED VERSION
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    background: #090909;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.dashboard-page {
+    width: 100%;
+    min-height: 100vh;
+    background: #090909;
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.dashboard-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 235px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #0c0c0c;
+    border-right: 1px solid #252525;
+    z-index: 100;
+    transition: transform 0.25s ease;
+}
+
+
+/* =========================================================
+   CLOSED SIDEBAR
+========================================================= */
+
+.dashboard-page.sidebar-closed .dashboard-sidebar {
+    transform: translateX(-100%);
+}
+
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.dashboard-logo {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    border-bottom: 1px solid #252525;
+    flex-shrink: 0;
+}
+
+.dashboard-logo-icon {
+    width: 29px;
+    height: 29px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #d7ff36;
+    color: #050505;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.dashboard-logo span {
+    color: #ffffff;
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.dashboard-nav {
+    padding-top: 12px;
+}
+
+.dashboard-nav-item {
+    width: 100%;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 0 16px;
+    color: #666666;
+    text-decoration: none;
+    font-size: 12px;
+    line-height: 1;
+    border-left: 2px solid transparent;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.dashboard-nav-item:hover {
+    color: #ffffff;
+    background: #141414;
+}
+
+.dashboard-nav-item.active {
+    color: #d7ff36;
+    background: rgba(215, 255, 54, 0.07);
+    border-left-color: #d7ff36;
+}
+
+.dashboard-nav-icon {
+    width: 17px;
+    text-align: center;
+    font-size: 13px;
+    line-height: 1;
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.dashboard-main {
+    width: calc(100% - 235px);
+    margin-left: 235px;
+    min-height: 100vh;
+    background: #090909;
+    transition: width 0.25s ease, margin-left 0.25s ease;
+}
+
+
+/* =========================================================
+   SIDEBAR CLOSED
+========================================================= */
+
+.dashboard-page.sidebar-closed .dashboard-main {
+    width: 100%;
+    margin-left: 0;
+}
+
+
+/* =========================================================
+   SIDEBAR TOGGLE
+========================================================= */
+
+.dashboard-sidebar-toggle {
+    position: fixed;
+    bottom: 18px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: #111111;
+    color: #777777;
+    border: 1px solid #292929;
+    border-radius: 50%;
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 9999;
+    transition: left 0.25s ease, color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.dashboard-toggle-open {
+    left: 220px;
+}
+
+.dashboard-toggle-closed {
+    left: 13px;
+}
+
+.dashboard-sidebar-toggle:hover {
+    color: #d7ff36;
+    background: #151515;
+    border-color: #d7ff36;
+}
+
+
+/* =========================================================
+   TOP BAR
+========================================================= */
+
+.dashboard-topbar {
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: #0b0b0b;
+    border-bottom: 1px solid #252525;
+}
+
+
+/* =========================================================
+   BREADCRUMB
+========================================================= */
+
+.dashboard-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 11px;
+    line-height: 1;
+}
+
+.dashboard-breadcrumb span {
+    color: #707070;
+}
+
+.dashboard-breadcrumb b {
+    color: #414141;
+    font-weight: 400;
+}
+
+.dashboard-breadcrumb strong {
+    color: #eeeeee;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   TOP ACTIONS
+========================================================= */
+
+.dashboard-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+
+/* ROLE */
+
+.dashboard-role-badge {
+    padding: 5px 9px;
+    border: 1px solid rgba(215, 255, 54, 0.35);
+    border-radius: 4px;
+    color: #d7ff36;
+    font-size: 8px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+
+/* AI ALERT */
+
+.dashboard-ai-alert {
+    height: 29px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 9px;
+    border: 1px solid #292929;
+    border-radius: 5px;
+    color: #777777;
+    font-size: 9px;
+    line-height: 1;
+}
+
+.dashboard-status-dot {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #19d96b;
+    box-shadow: 0 0 7px rgba(25, 217, 107, 0.35);
+}
+
+
+/* =========================================================
+   USER BUTTON
+========================================================= */
+
+.dashboard-user-button {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: #d7ff36;
+    color: #050505;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    text-decoration: none;
+    transition: 0.2s ease;
+}
+
+.dashboard-user-button:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 0 20px rgba(215, 255, 54, 0.18);
+}
+
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.dashboard-content {
+    width: 100%;
+    padding: 24px 22px 38px;
+}
+
+
+/* =========================================================
+   PAGE HEADING
+========================================================= */
+
+.dashboard-page-heading {
+    margin-bottom: 20px;
+}
+
+.dashboard-date {
+    margin-bottom: 8px;
+    color: #d7ff36;
+    font-size: 8px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+}
+
+
+/*
+   Figma-style condensed display heading
+*/
+
+.dashboard-page-heading h1 {
+    margin: 0;
+    color: #ffffff;
+    font-family: "Arial Narrow", "Roboto Condensed", Arial, Helvetica, sans-serif;
+    font-size: 30px;
+    line-height: 0.95;
+    font-weight: 900;
+    letter-spacing: -0.045em;
+}
+
+
+/* =========================================================
+   STAT GRID
+========================================================= */
+
+.dashboard-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+
+/* =========================================================
+   STAT CARDS
+========================================================= */
+
+.dashboard-stat-card {
+    min-height: 102px;
+    padding: 15px;
+    background: #151515;
+    border: 1px solid #282828;
+    border-radius: 6px;
+    transition: 0.2s ease;
+}
+
+.dashboard-stat-card:hover {
+    background: #171717;
+    border-color: #383838;
+}
+
+
+/* LABEL */
+
+.dashboard-stat-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #6c6c6c;
+    font-size: 8px;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+}
+
+
+/* VALUE */
+
+.dashboard-stat-value {
+    display: block;
+    margin-bottom: 7px;
+    color: #eeeeee;
+    font-size: 25px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.dashboard-stat-value.green {
+    color: #d7ff36;
+}
+
+
+/* DESCRIPTION */
+
+.dashboard-stat-description {
+    color: #5c5c5c;
+    font-size: 9px;
+    line-height: 1.2;
+}
+
+
+/* =========================================================
+   MAIN GRID
+========================================================= */
+
+.dashboard-main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2.05fr) minmax(310px, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+.dashboard-panel {
+    background: #151515;
+    border: 1px solid #282828;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.dashboard-panel-header {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    border-bottom: 1px solid #292929;
+    color: #dedede;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+
+/* =========================================================
+   JOB TABLE
+========================================================= */
+
+.dashboard-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.dashboard-jobs-table {
+    width: 100%;
+    min-width: 680px;
+    border-collapse: collapse;
+}
+
+
+/* TABLE HEADER */
+
+.dashboard-jobs-table th {
+    height: 36px;
+    padding: 0 14px;
+    text-align: left;
+    color: #626262;
+    font-size: 8px;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #292929;
+}
+
+
+/* TABLE DATA */
+
+.dashboard-jobs-table td {
+    height: 43px;
+    padding: 0 14px;
+    color: #737373;
+    font-size: 9px;
+    line-height: 1;
+    border-bottom: 1px solid #252525;
+    white-space: nowrap;
+}
+
+.dashboard-jobs-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.dashboard-jobs-table tbody tr {
+    transition: 0.15s ease;
+}
+
+.dashboard-jobs-table tbody tr:hover {
+    background: #1a1a1a;
+}
+
+
+/* JOB ID */
+
+.dashboard-jobs-table .job-id {
+    color: #d7ff36;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* CUSTOMER */
+
+.dashboard-jobs-table .customer-name {
+    color: #eeeeee;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+}
+
+
+/* MECHANIC */
+
+.dashboard-jobs-table .mechanic-name {
+    color: #eeeeee;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 600;
+}
+
+
+/* AMOUNT */
+
+.dashboard-jobs-table .amount {
+    color: #eeeeee;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 700;
+    text-align: right;
+}
+
+
+/* =========================================================
+   STATUS BADGES
+========================================================= */
+
+.status {
+    display: inline-block;
+    padding: 4px 7px;
+    border-radius: 4px;
+    font-size: 8px;
+    line-height: 1;
+    font-weight: 700;
+}
+
+
+/* REPAIR */
+
+.status-repair {
+    color: #24d879;
+    border: 1px solid rgba(36, 216, 121, 0.35);
+    background: rgba(36, 216, 121, 0.07);
+}
+
+
+/* QUALITY */
+
+.status-quality {
+    color: #b96cff;
+    border: 1px solid rgba(185, 108, 255, 0.35);
+    background: rgba(185, 108, 255, 0.07);
+}
+
+
+/* DELIVERED */
+
+.status-delivered {
+    color: #b8ef22;
+    border: 1px solid rgba(184, 239, 34, 0.35);
+    background: rgba(184, 239, 34, 0.07);
+}
+
+
+/* INSPECTION */
+
+.status-inspection {
+    color: #f0a000;
+    border: 1px solid rgba(240, 160, 0, 0.35);
+    background: rgba(240, 160, 0, 0.07);
+}
+
+
+/* RECEIVED */
+
+.status-received {
+    color: #28b9ed;
+    border: 1px solid rgba(40, 185, 237, 0.35);
+    background: rgba(40, 185, 237, 0.07);
+}
+
+
+/* =========================================================
+   RIGHT COLUMN
+========================================================= */
+
+.dashboard-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+/* =========================================================
+   WORKLOAD
+========================================================= */
+
+.workload-list {
+    padding: 9px 14px;
+}
+
+.workload-item {
+    height: 29px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.workload-item strong {
+    color: #eeeeee;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 600;
+}
+
+.workload-item>span:last-child {
+    margin-left: auto;
+    color: #626262;
+    font-size: 8px;
+    line-height: 1;
+}
+
+.workload-dot {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+.workload-dot.yellow {
+    background: #ffd400;
+}
+
+.workload-dot.green {
+    background: #20d979;
+}
+
+
+/* =========================================================
+   AI ALERTS
+========================================================= */
+
+.alert-list {
+    padding: 0 14px;
+}
+
+.alert-item {
+    min-height: 51px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    border-bottom: 1px solid #292929;
+}
+
+.alert-item:last-child {
+    border-bottom: none;
+}
+
+.alert-icon {
+    width: 22px;
+    color: #d7ff36;
+    font-size: 12px;
+    line-height: 1;
+    text-align: center;
+}
+
+.alert-item strong {
+    display: block;
+    margin-bottom: 3px;
+    color: #eeeeee;
+    font-size: 9px;
+    line-height: 1.1;
+    font-weight: 700;
+}
+
+.alert-item span {
+    display: block;
+    color: #686868;
+    font-size: 8px;
+    line-height: 1;
+}
+
+
+/* =========================================================
+   BOTTOM GRID
+========================================================= */
+
+.dashboard-bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+
+/* =========================================================
+   REVENUE
+========================================================= */
+
+.revenue-panel {
+    min-height: 175px;
+}
+
+.revenue-chart {
+    position: relative;
+    height: 122px;
+    margin: 0 14px;
+}
+
+.chart-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 31px;
+    height: 1px;
+    background: #292929;
+}
+
+.chart-days {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 3px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    color: #686868;
+    font-size: 8px;
+    line-height: 1;
+    text-align: center;
+}
+
+
+/* =========================================================
+   SERVICE DISTRIBUTION
+========================================================= */
+
+.service-list {
+    padding: 11px 14px;
+}
+
+.service-item {
+    margin-bottom: 10px;
+}
+
+.service-item:last-child {
+    margin-bottom: 0;
+}
+
+.service-item-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.service-item-top strong {
+    color: #eeeeee;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 600;
+}
+
+.service-item-top span {
+    color: #666666;
+    font-size: 8px;
+    line-height: 1;
+}
+
+.service-bar {
+    width: 100%;
+    height: 5px;
+    background: #242424;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.service-fill {
+    height: 100%;
+    border-radius: 5px;
+}
+
+.service-fill.full {
+    background: #c9f92d;
+}
+
+.service-fill.engine {
+    background: #35bce8;
+}
+
+.service-fill.electrical {
+    background: #bb72ff;
+}
+
+.service-fill.tyres {
+    background: #26d878;
+}
+
+
+/* =========================================================
+   LARGE SCREEN
+========================================================= */
+
+@media (min-width: 1400px) {
+    .dashboard-sidebar {
+        width: 235px;
+    }
+    .dashboard-main {
+        width: calc(100% - 235px);
+        margin-left: 235px;
+    }
+    .dashboard-page.sidebar-closed .dashboard-main {
+        width: 100%;
+        margin-left: 0;
+    }
+    .dashboard-toggle-open {
+        left: 220px;
+    }
+    .dashboard-content {
+        padding-left: 24px;
+        padding-right: 24px;
+    }
+    .dashboard-page-heading h1 {
+        font-size: 31px;
+    }
+    .dashboard-stat-value {
+        font-size: 26px;
+    }
+}
+
+
+/* =========================================================
+   MEDIUM SCREEN
+========================================================= */
+
+@media (max-width: 1100px) {
+    .dashboard-sidebar {
+        width: 205px;
+    }
+    .dashboard-main {
+        width: calc(100% - 205px);
+        margin-left: 205px;
+    }
+    .dashboard-page.sidebar-closed .dashboard-main {
+        width: 100%;
+        margin-left: 0;
+    }
+    .dashboard-toggle-open {
+        left: 190px;
+    }
+    .dashboard-stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .dashboard-main-grid {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-bottom-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 750px) {
+    .dashboard-sidebar {
+        width: 230px;
+        height: 100vh;
+        position: fixed;
+    }
+    .dashboard-main {
+        width: 100%;
+        margin-left: 0;
+    }
+    .dashboard-page.sidebar-open .dashboard-main {
+        margin-left: 0;
+    }
+    .dashboard-page.sidebar-closed .dashboard-main {
+        width: 100%;
+        margin-left: 0;
+    }
+    .dashboard-toggle-open {
+        left: 215px;
+    }
+    .dashboard-topbar {
+        padding: 0 14px;
+    }
+    .dashboard-breadcrumb {
+        font-size: 10px;
+    }
+    .dashboard-ai-alert {
+        display: none;
+    }
+    .dashboard-stat-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .dashboard-main-grid {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-bottom-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 500px) {
+    .dashboard-content {
+        padding: 18px 12px 25px;
+    }
+    .dashboard-page-heading {
+        margin-bottom: 16px;
+    }
+    .dashboard-page-heading h1 {
+        font-size: 23px;
+    }
+    .dashboard-date {
+        font-size: 7px;
+    }
+    .dashboard-top-actions {
+        gap: 5px;
+    }
+    .dashboard-role-badge {
+        display: none;
+    }
+    .dashboard-stat-grid {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-stat-card {
+        min-height: 88px;
+    }
+    .dashboard-stat-value {
+        font-size: 21px;
+    }
+    .dashboard-panel-header {
+        padding: 0 12px;
+    }
+    .dashboard-jobs-table th {
+        padding: 0 10px;
+    }
+    .dashboard-jobs-table td {
+        padding: 0 10px;
+    }
+}
