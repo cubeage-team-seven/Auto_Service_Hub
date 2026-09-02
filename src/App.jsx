@@ -35,18 +35,6 @@ import JobCardListPage from "./pages/jobcards/JobCardListPage";
 import JobCardCreatePage from "./pages/jobcards/JobCardCreatePage";
 import JobCardDetailsPage from "./pages/jobcards/JobCardDetailsPage";
 
-/* =========================
-   CUSTOMER
-========================= */
-import CustomerLogin from "./pages/customers/CustomerLogin";
-import CustomerDashboard from "./pages/customers/Dashboard";
-import Appointments from "./pages/customers/Appointments"; // Add Appointments import
-
-/* =========================
-   BILLING
-========================= */
-import BillingLogin from "./pages/billing/BillingLogin";
-import BillingPage from "./pages/billing/BillingPage";
 
 function App() {
   return (
@@ -101,38 +89,8 @@ function App() {
           path="/inventory"
           element={<InventoryPage />}
         />
-        
-        {/* =========================
-            CUSTOMER
-        ========================= */}
-        <Route
-          path="/customers"
-          element={<CustomerLogin />}
-        />
-
-        {/* Both dashboard routes configured */}
-        <Route
-          path="/dashboard"
-          element={<CustomerDashboard />}
-        />
-        <Route
-          path="/customer-dashboard"
-          element={<CustomerDashboard />}
-        />
-
-           {/* APPOINTMENTS */}
-        <Route
-          path="/appointments"
-          element={<Appointments />}
-        />
 
 
-        {/* BILLING MODULE ROUTES */}
-        <Route path="/billing" element={<BillingLogin />} />
-        <Route path="/billing/dashboard" element={<BillingPage />} />
-      
-
-        
         {/* =========================
             JOB CARDS
         ========================= */}

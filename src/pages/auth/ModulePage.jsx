@@ -246,30 +246,74 @@ function ModulePage() {
               </span>
 
             </Link>
-          {/* BILLING */}
-          <Link to="/billing" className="module-card module-card-link">
-            <div className="module-card-icon">₹</div>
-            <div className="module-card-content">
-              <h3>Billing</h3>
-              <span>Payments & Invoicing</span>
-              <p>Manage invoices, payments, taxes and financial records.</p>
+
+
+            {/* =================================================
+                BILLING
+            ================================================= */}
+
+            <div className="module-card">
+
+              <div className="module-card-icon">
+                ₹
+              </div>
+
+              <div className="module-card-content">
+
+                <h3>
+                  Billing
+                </h3>
+
+                <span>
+                  Payments & Invoicing
+                </span>
+
+                <p>
+                  Manage invoices, payments,
+                  taxes and financial records.
+                </p>
+
+              </div>
+
+              <span className="module-arrow">
+                →
+              </span>
+
             </div>
-            <span className="module-arrow">→</span>
-          </Link>
+
 
             {/* =================================================
                 CUSTOMER
             ================================================= */}
 
-            <Link to="/customers" className="module-card module-card-link">
-                <div className="module-card-icon">👤</div>
-                <div className="module-card-content">
-                  <h3>Customer</h3>
-                  <span>Customer Portal</span>
-                  <p>View service history, appointments and vehicle details.</p>
-                </div>
-                <span className="module-arrow">→</span>
-              </Link>
+            <div className="module-card">
+
+              <div className="module-card-icon">
+                👤
+              </div>
+
+              <div className="module-card-content">
+
+                <h3>
+                  Customer
+                </h3>
+
+                <span>
+                  Customer Portal
+                </span>
+
+                <p>
+                  View service history,
+                  appointments and vehicle details.
+                </p>
+
+              </div>
+
+              <span className="module-arrow">
+                →
+              </span>
+
+            </div>
 
 
             {/* =================================================

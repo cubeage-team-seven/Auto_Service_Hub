@@ -1,0 +1,228 @@
+.login-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background-color: #0d0e12;
+  color: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+}
+
+/* LEFT SIDE */
+.login-left {
+  flex: 1.1;
+  position: relative;
+  background: url('https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&q=80&w=1200') center/cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 40px 60px;
+}
+
+.left-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(13, 14, 18, 0.4) 0%, rgba(13, 14, 18, 0.85) 100%);
+}
+
+.back-link {
+  position: relative;
+  z-index: 2;
+  color: #a0a0a0;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.left-content {
+  position: relative;
+  z-index: 2;
+  max-width: 480px;
+}
+
+.brand-tag {
+  color: #ccff00;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.brand-title {
+  font-size: 48px;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.brand-title .highlight {
+  color: #ccff00;
+}
+
+.brand-desc {
+  color: #a0a0a0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* RIGHT SIDE */
+.login-right {
+  flex: 0.9;
+  background-color: #0d0e12;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.form-wrapper {
+  width: 100%;
+  max-width: 400px;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.logo-box {
+  width: 32px;
+  height: 32px;
+  background-color: #ccff00;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 18px;
+}
+
+.logo-title {
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.logo-subtitle {
+  font-size: 12px;
+  color: #666;
+}
+
+.change-role-btn {
+  display: inline-block;
+  color: #888;
+  text-decoration: none;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.active-role-card {
+  background-color: #14161d;
+  border: 1px solid #262933;
+  border-radius: 8px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.role-card-icon {
+  font-size: 20px;
+}
+
+.role-card-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.role-card-subtitle {
+  font-size: 12px;
+  color: #ff6b4a;
+}
+
+.form-title {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.form-subtitle {
+  color: #666;
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+.input-group {
+  margin-bottom: 18px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #777;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.input-group input {
+  width: 100%;
+  background-color: #14161d;
+  border: 1px solid #262933;
+  border-radius: 6px;
+  padding: 12px 14px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.input-group input:focus {
+  border-color: #ccff00;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  font-size: 13px;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.remember-me input {
+  accent-color: #ccff00;
+}
+
+.forgot-pass {
+  color: #ccff00;
+  text-decoration: none;
+}
+
+.submit-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  background-color: #ccff00;
+  color: #000;
+  font-weight: 800;
+  padding: 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  box-sizing: border-box;
+}
