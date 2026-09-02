@@ -23,15 +23,13 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) {
-        User user = userRepository.findAll().stream()
-                .filter(u -> username.equals(u.getUsername()))
-                .findFirst()
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
                 .password(user.getPasswordHash())
-                .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER"))) // TODO: real roles
+                .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER")))
                 .disabled(Boolean.FALSE.equals(user.getActive()))
                 .build();
     }

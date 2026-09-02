@@ -6,14 +6,15 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/**
- * Maps to the 'invoices' table (SRS section 8.2 High-Level Entities).
- */
 @Getter
 @Setter
 @Entity
 @Table(name = "invoices")
 public class Invoice extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_card_id")
+    private JobCard jobCard;
 
     @Column(name = "subtotal")
     private BigDecimal subtotal;

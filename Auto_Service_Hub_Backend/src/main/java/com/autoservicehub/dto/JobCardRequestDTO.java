@@ -1,15 +1,27 @@
 package com.autoservicehub.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
-/**
- * Inbound payload for JobCard create/update endpoints. Digital Job Card (SRS 4.5)
- * Extend with the fields listed for the 'JobCard' entity (SRS 8.2/8.3) and add
- * jakarta.validation annotations per SRS 14 (Validation Rules).
- */
 @Getter
 @Setter
 public class JobCardRequestDTO {
-    // TODO: map fields from entity.JobCard per confirmed API contract (SRS 9)
+    @NotNull
+    private Long customerId;
+    @NotNull
+    private Long vehicleId;
+    private Long mechanicId;
+    private Long appointmentId;
+    @NotBlank
+    private String serviceType;
+    private String complaint;
+    private String technicianNotes;
+    private Integer odometerReading;
+    private LocalDateTime estimatedDelivery;
+    private BigDecimal estimatedCost;
+    private String status;
 }

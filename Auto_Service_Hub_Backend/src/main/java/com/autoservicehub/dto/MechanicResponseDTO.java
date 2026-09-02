@@ -4,14 +4,15 @@ import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
 
-/**
- * Outbound payload for Mechanic endpoints. Never expose the JPA entity directly (SRS 9.1).
- */
 @Getter
 @Setter
 public class MechanicResponseDTO {
     private Long id;
+    private String employeeCode;
+    private String name;
+    private String phone;
+    private Integer experienceYears;
+    private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    // TODO: map remaining fields from entity.Mechanic
 }

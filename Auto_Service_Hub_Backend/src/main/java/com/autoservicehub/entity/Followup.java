@@ -5,14 +5,19 @@ import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDate;
 
-/**
- * Maps to the 'followups' table (SRS section 8.2 High-Level Entities).
- */
 @Getter
 @Setter
 @Entity
 @Table(name = "followups")
 public class Followup extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_card_id")
+    private JobCard jobCard;
 
     @Column(name = "due_date")
     private LocalDate dueDate;

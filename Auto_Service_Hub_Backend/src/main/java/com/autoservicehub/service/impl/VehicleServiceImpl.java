@@ -2,8 +2,10 @@ package com.autoservicehub.service.impl;
 
 import com.autoservicehub.dto.VehicleRequestDTO;
 import com.autoservicehub.dto.VehicleResponseDTO;
+import com.autoservicehub.entity.Customer;
 import com.autoservicehub.entity.Vehicle;
 import com.autoservicehub.exception.ResourceNotFoundException;
+import com.autoservicehub.repository.CustomerRepository;
 import com.autoservicehub.repository.VehicleRepository;
 import com.autoservicehub.service.VehicleService;
 import lombok.RequiredArgsConstructor;
@@ -12,40 +14,34 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Vehicle Management (SRS 4.2)
- * Business rules to enforce here per SRS section 12 (e.g. server-side total
- * recalculation, stock limits, audit trail) before persisting.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class VehicleServiceImpl implements VehicleService {
 
     private final VehicleRepository repository;
+    private final CustomerRepository customerRepository;
 
     @Override
     public VehicleResponseDTO create(VehicleRequestDTO request) {
         Vehicle entity = new Vehicle();
-        // TODO: map request -> entity
-        Vehicle saved = repository.save(entity);
-        return toResponse(saved);
+        mapToEntity(request, entity);
+        return toResponse(repository.save(entity));
     }
 
     @Override
     public VehicleResponseDTO update(Long id, VehicleRequestDTO request) {
         Vehicle existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found: " + id));
-        // TODO: map request -> existing
+        mapToEntity(request, existing);
         return toResponse(repository.save(existing));
     }
 
     @Override
     @Transactional(readOnly = true)
     public VehicleResponseDTO getById(Long id) {
-        Vehicle found = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found: " + id));
-        return toResponse(found);
+        return toResponse(repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found: " + id)));
     }
 
     @Override
@@ -56,18 +52,47 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Vehicle not found: " + id);
-        }
+        if (!repository.existsById(id)) throw new ResourceNotFoundException("Vehicle not found: " + id);
         repository.deleteById(id);
     }
 
-    private VehicleResponseDTO toResponse(Vehicle entity) {
+    private void mapToEntity(VehicleRequestDTO r, Vehicle e) {
+        if (r.getCustomerId() != null) {
+            Customer customer = customerRepository.findById(r.getCustomerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + r.getCustomerId()));
+            e.setCustomer(customer);
+        }
+        e.setRegistrationNo(r.getRegistrationNo());
+        e.setMake(r.getMake());
+        e.setModel(r.getModel());
+        e.setVariant(r.getVariant());
+        e.setYear(r.getYear());
+        e.setEngineNo(r.getEngineNo());
+        e.setChassisNo(r.getChassisNo());
+        e.setMileage(r.getMileage());
+        e.setInsuranceExpiry(r.getInsuranceExpiry());
+        e.setWarrantyExpiry(r.getWarrantyExpiry());
+    }
+
+    private VehicleResponseDTO toResponse(Vehicle e) {
         VehicleResponseDTO dto = new VehicleResponseDTO();
-        dto.setId(entity.getId());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-        // TODO: map remaining fields
+        dto.setId(e.getId());
+        dto.setRegistrationNo(e.getRegistrationNo());
+        dto.setMake(e.getMake());
+        dto.setModel(e.getModel());
+        dto.setVariant(e.getVariant());
+        dto.setYear(e.getYear());
+        dto.setEngineNo(e.getEngineNo());
+        dto.setChassisNo(e.getChassisNo());
+        dto.setMileage(e.getMileage());
+        dto.setInsuranceExpiry(e.getInsuranceExpiry());
+        dto.setWarrantyExpiry(e.getWarrantyExpiry());
+        if (e.getCustomer() != null) {
+            dto.setCustomerId(e.getCustomer().getId());
+            dto.setCustomerName(e.getCustomer().getName());
+        }
+        dto.setCreatedAt(e.getCreatedAt());
+        dto.setUpdatedAt(e.getUpdatedAt());
         return dto;
     }
 }
