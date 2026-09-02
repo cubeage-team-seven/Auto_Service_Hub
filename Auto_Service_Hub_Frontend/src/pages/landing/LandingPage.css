@@ -1,12 +1,7 @@
-/* =========================================================
-   SMARTGARAGE LANDING PAGE
-   FIGMA MATCH
-========================================================= */
-
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap");
 
 /* =========================================================
-   RESET
+   GLOBAL
 ========================================================= */
 
 * {
@@ -23,17 +18,18 @@ body {
     margin: 0;
     padding: 0;
     background: #050505;
-    color: #f5f5f5;
+    color: #f2f2f2;
     font-family: "Inter", Arial, sans-serif;
 }
 
 a {
-    text-decoration: none;
     color: inherit;
+    text-decoration: none;
 }
 
 button,
-input {
+input,
+textarea {
     font-family: inherit;
 }
 
@@ -44,24 +40,18 @@ input {
     overflow-x: hidden;
 }
 
-
-/* =========================================================
-   COLORS
-========================================================= */
-
 :root {
-    --lime: #c8ff00;
-    --lime-bright: #cfff19;
-    --white: #f5f5f5;
-    --text-gray: #687078;
-    --dark: #050505;
+    --lime: #cfff19;
+    --white: #f2f2f2;
+    --gray: #687078;
+    --black: #050505;
     --card: #111111;
-    --border: #222222;
+    --border: #252525;
 }
 
 
 /* =========================================================
-   PAGE 1 — HERO
+   HERO
 ========================================================= */
 
 .landing-hero {
@@ -73,9 +63,6 @@ input {
     background: #050505;
 }
 
-
-/* HERO IMAGE */
-
 .landing-hero-background {
     position: absolute;
     inset: 0;
@@ -84,32 +71,27 @@ input {
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center center;
-    transform: scale(1.01);
 }
-
-
-/* FIGMA DARK IMAGE */
 
 .landing-hero-overlay {
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: linear-gradient( 90deg, rgba(0, 0, 0, 0.97) 0%, rgba(0, 0, 0, 0.94) 30%, rgba(0, 0, 0, 0.70) 58%, rgba(0, 0, 0, 0.70) 100%);
+    background: linear-gradient( 90deg, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.94) 27%, rgba(0, 0, 0, 0.72) 55%, rgba(0, 0, 0, 0.55) 100%);
     pointer-events: none;
 }
 
 
 /* =========================================================
    NAVBAR
-   OLD NAVBAR — ONLY ONE NAVBAR
 ========================================================= */
 
 .landing-navbar {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    z-index: 100;
+    z-index: 20;
     width: 100%;
     height: 72px;
     display: flex;
@@ -141,7 +123,7 @@ input {
     background: var(--lime);
     color: #050505;
     border-radius: 3px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 900;
 }
 
@@ -169,7 +151,7 @@ input {
 
 
 /* =========================================================
-   NAV LINKS
+   NAVIGATION
 ========================================================= */
 
 .landing-nav {
@@ -213,7 +195,8 @@ input {
     justify-content: center;
     padding: 0 18px;
     color: var(--lime);
-    border: 1px solid #384500;
+    background: transparent;
+    border: 1px solid #394600;
     border-radius: 4px;
     font-size: 13px;
     font-weight: 600;
@@ -237,7 +220,7 @@ input {
 }
 
 .landing-access:hover {
-    background: #e0ff55;
+    background: #ddff48;
 }
 
 
@@ -254,7 +237,7 @@ input {
     flex-direction: column;
     justify-content: center;
     padding-left: 50px;
-    padding-top: 70px;
+    padding-top: 72px;
 }
 
 
@@ -268,8 +251,8 @@ input {
     font-family: "Barlow Condensed", sans-serif;
     font-size: 12px;
     font-weight: 600;
-    letter-spacing: 2.8px;
     line-height: 1;
+    letter-spacing: 2.8px;
 }
 
 
@@ -281,6 +264,7 @@ input {
     margin: 0;
     display: flex;
     flex-direction: column;
+    color: var(--white);
     font-family: "Barlow Condensed", Impact, sans-serif;
     font-size: 88px;
     font-weight: 900;
@@ -290,7 +274,7 @@ input {
 }
 
 .landing-hero-title span {
-    color: #f2f2f2;
+    color: var(--white);
 }
 
 .landing-hero-title .landing-hero-green {
@@ -305,10 +289,10 @@ input {
 .landing-hero-description {
     margin: 30px 0 0;
     color: #8a959d;
+    font-family: "Inter", Arial, sans-serif;
     font-size: 15px;
     font-weight: 400;
     line-height: 1.65;
-    letter-spacing: 0;
 }
 
 
@@ -329,8 +313,8 @@ input {
     align-items: center;
     justify-content: center;
     padding: 0 20px;
-    background: var(--lime);
     color: #050505;
+    background: var(--lime);
     border-radius: 4px;
     font-family: "Barlow Condensed", sans-serif;
     font-size: 14px;
@@ -345,8 +329,8 @@ input {
     justify-content: center;
     gap: 8px;
     padding: 0 20px;
+    color: #eeeeee;
     background: transparent;
-    color: #e5e5e5;
     border: 1px solid #333333;
     border-radius: 4px;
     font-family: "Barlow Condensed", sans-serif;
@@ -387,7 +371,7 @@ input {
 
 
 /* =========================================================
-   SECTION 1 — DIGITAL JOB CARD
+   DIGITAL JOB CARD
 ========================================================= */
 
 .landing-feature-section {
@@ -398,9 +382,6 @@ input {
     padding: 20px 0;
     background: #050505;
 }
-
-
-/* IMAGE CONTAINER */
 
 .landing-feature-image {
     width: 100%;
@@ -419,9 +400,6 @@ input {
     border-radius: 8px;
 }
 
-
-/* CONTENT */
-
 .landing-feature-content {
     display: flex;
     flex-direction: column;
@@ -429,25 +407,19 @@ input {
     padding: 0 100px 0 65px;
 }
 
-
-/* SECTION LABEL */
-
 .landing-section-label {
     margin-bottom: 23px;
     color: var(--lime);
     font-family: "Barlow Condensed", sans-serif;
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 2.5px;
     line-height: 1;
+    letter-spacing: 2.5px;
 }
-
-
-/* HEADING */
 
 .landing-feature-content h1 {
     margin: 0;
-    color: #eeeeee;
+    color: var(--white);
     font-family: "Barlow Condensed", Impact, sans-serif;
     font-size: 52px;
     font-weight: 900;
@@ -456,20 +428,19 @@ input {
     text-transform: uppercase;
 }
 
-
-/* DESCRIPTION */
-
 .landing-feature-content p {
     max-width: 590px;
     margin: 25px 0 0;
-    color: #6d767c;
+    color: #687078;
     font-size: 14px;
     font-weight: 400;
     line-height: 1.6;
 }
 
 
-/* PROCESS */
+/* =========================================================
+   PROCESS
+========================================================= */
 
 .landing-process {
     display: flex;
@@ -498,7 +469,7 @@ input {
 
 
 /* =========================================================
-   SECTION 2 — CUSTOMER RETENTION
+   CUSTOMER RETENTION
 ========================================================= */
 
 .landing-retention-section {
@@ -510,9 +481,6 @@ input {
     background: #050505;
 }
 
-
-/* CONTENT */
-
 .landing-retention-content {
     display: flex;
     flex-direction: column;
@@ -522,7 +490,7 @@ input {
 
 .landing-retention-content h2 {
     margin: 0;
-    color: #eeeeee;
+    color: var(--white);
     font-family: "Barlow Condensed", Impact, sans-serif;
     font-size: 52px;
     font-weight: 900;
@@ -534,13 +502,10 @@ input {
 .landing-retention-content p {
     max-width: 550px;
     margin: 25px 0 0;
-    color: #6d767c;
+    color: #687078;
     font-size: 14px;
     line-height: 1.6;
 }
-
-
-/* RETENTION IMAGE */
 
 .landing-retention-image {
     width: 100%;
@@ -602,22 +567,24 @@ input {
 
 .landing-featured-section {
     width: 100%;
-    height: 145px;
+    height: 184px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 0;
     background: #050505;
     border-top: 1px solid #151515;
     border-bottom: 1px solid #151515;
 }
 
 .landing-featured-title {
-    margin-bottom: 35px;
-    color: #363b3d;
+    margin: 0 0 36px;
+    color: #353a3c;
     font-family: "Barlow Condensed", sans-serif;
     font-size: 10px;
     font-weight: 500;
+    line-height: 1;
     letter-spacing: 3px;
 }
 
@@ -625,16 +592,18 @@ input {
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: space-around;
-    padding: 0 170px;
+    justify-content: space-between;
+    padding: 0 258px;
 }
 
 .landing-featured-logos span {
-    color: #282d30;
+    color: #292e31;
     font-family: "Barlow Condensed", sans-serif;
     font-size: 13px;
     font-weight: 800;
-    letter-spacing: 0.3px;
+    line-height: 1;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
 }
 
 
@@ -651,13 +620,23 @@ input {
 }
 
 
-/* LEFT */
+/* =========================================================
+   ACCESS LEFT
+========================================================= */
 
 .landing-access-content {
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding-left: 160px;
+    padding-right: 50px;
+    margin-top: 10px;
+}
+
+.landing-access-content .landing-section-label {
+    margin-bottom: 27px;
+    font-size: 10px;
+    letter-spacing: 2.8px;
 }
 
 .landing-access-content h2 {
@@ -672,11 +651,12 @@ input {
 }
 
 .landing-access-content p {
-    max-width: 560px;
-    margin: 24px 0 0;
+    max-width: 600px;
+    margin: 26px 0 0;
     color: #687078;
     font-size: 14px;
-    line-height: 1.6;
+    font-weight: 400;
+    line-height: 1.65;
 }
 
 
@@ -686,15 +666,17 @@ input {
 
 .landing-access-card {
     width: 630px;
+    height: 422px;
     align-self: center;
-    padding: 35px;
+    margin-left: -105px;
+    padding: 35px 34px;
     background: #111111;
     border: 1px solid #272727;
     border-radius: 8px;
 }
 
 .landing-access-card h3 {
-    margin: 0 0 27px;
+    margin: 0 0 28px;
     color: #eeeeee;
     font-family: "Barlow Condensed", sans-serif;
     font-size: 18px;
@@ -703,7 +685,9 @@ input {
 }
 
 
-/* FORM */
+/* =========================================================
+   ACCESS FORM
+========================================================= */
 
 .landing-access-card form {
     display: flex;
@@ -712,7 +696,9 @@ input {
 }
 
 
-/* NAME */
+/* =========================================================
+   FIRST NAME + LAST NAME
+========================================================= */
 
 .landing-name-row {
     display: grid;
@@ -720,8 +706,15 @@ input {
     gap: 12px;
 }
 
+.landing-name-row input {
+    width: 100%;
+    height: 43px;
+}
 
-/* INPUTS */
+
+/* =========================================================
+   ALL NORMAL INPUTS
+========================================================= */
 
 .landing-access-card input {
     width: 100%;
@@ -732,7 +725,9 @@ input {
     border: 1px solid #292929;
     border-radius: 4px;
     outline: none;
+    font-family: "Inter", Arial, sans-serif;
     font-size: 14px;
+    font-weight: 400;
 }
 
 .landing-access-card input::placeholder {
@@ -740,18 +735,55 @@ input {
 }
 
 .landing-access-card input:focus {
-    border-color: #536500;
+    border-color: #4b5d00;
 }
 
 
-/* WORKSHOP INPUT */
+/* =========================================================
+   WORKSHOP FIELD
+========================================================= */
 
-.landing-access-card input[type="text"]:last-of-type {
+
+/* If workshop is a textarea */
+
+.landing-access-card textarea {
+    width: 100%;
     height: 64px;
+    padding: 12px;
+    color: #eeeeee;
+    background: #151515;
+    border: 1px solid #292929;
+    border-radius: 4px;
+    outline: none;
+    resize: none;
+    font-family: "Inter", Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.landing-access-card textarea::placeholder {
+    color: #72787c;
+}
+
+.landing-access-card textarea:focus {
+    border-color: #4b5d00;
 }
 
 
-/* SUBMIT */
+/* =========================================================
+   IF WORKSHOP IS AN INPUT
+========================================================= */
+
+.landing-access-card .workshop-input {
+    width: 100%;
+    height: 64px;
+    padding: 0 12px;
+}
+
+
+/* =========================================================
+   SUBMIT BUTTON
+========================================================= */
 
 .landing-submit {
     width: 100%;
@@ -762,11 +794,14 @@ input {
     justify-content: center;
     color: #050505;
     background: var(--lime);
+    border: none;
     border-radius: 4px;
     font-family: "Barlow Condensed", sans-serif;
     font-size: 14px;
     font-weight: 800;
-    letter-spacing: 0.5px;
+    line-height: 1;
+    letter-spacing: 0.4px;
+    cursor: pointer;
 }
 
 .landing-submit:hover {
@@ -775,7 +810,7 @@ input {
 
 
 /* =========================================================
-   TABLET
+   LARGE DESKTOP
 ========================================================= */
 
 @media (max-width: 1400px) {
@@ -811,6 +846,10 @@ input {
     }
     .landing-access-card {
         width: calc(100% - 70px);
+        margin-left: 0;
+    }
+    .landing-featured-logos {
+        padding: 0 120px;
     }
 }
 
@@ -842,6 +881,7 @@ input {
         padding: 0 12px;
         font-size: 11px;
     }
+    /* HERO */
     .landing-hero {
         height: 620px;
         min-height: 620px;
@@ -852,14 +892,15 @@ input {
     .landing-hero-title {
         font-size: 65px;
     }
+    /* SECTIONS */
     .landing-feature-section,
     .landing-retention-section {
         grid-template-columns: 1fr;
     }
     .landing-feature-image,
     .landing-retention-image {
-        padding: 40px;
         height: 450px;
+        padding: 40px;
         justify-content: center;
     }
     .landing-feature-content,
@@ -872,6 +913,7 @@ input {
     .landing-featured-logos {
         padding: 0 40px;
     }
+    /* ACCESS */
     .landing-access-section {
         grid-template-columns: 1fr;
     }
@@ -914,6 +956,7 @@ input {
     .landing-nav a {
         white-space: nowrap;
     }
+    /* HERO */
     .landing-hero {
         height: 720px;
         min-height: 720px;
@@ -932,6 +975,7 @@ input {
     .landing-hero-description br {
         display: none;
     }
+    /* IMAGES */
     .landing-feature-image,
     .landing-retention-image {
         height: 350px;
@@ -942,6 +986,7 @@ input {
         width: 100%;
         height: 310px;
     }
+    /* CONTENT */
     .landing-feature-content,
     .landing-retention-content {
         padding: 50px 25px;
@@ -950,15 +995,18 @@ input {
     .landing-retention-content h2 {
         font-size: 44px;
     }
+    /* PROCESS */
     .landing-process {
         flex-wrap: wrap;
     }
+    /* STATS */
     .landing-stats {
         flex-wrap: wrap;
     }
     .landing-stat {
         width: 150px;
     }
+    /* FEATURED */
     .landing-featured-section {
         height: auto;
         padding: 35px 20px;
@@ -967,7 +1015,9 @@ input {
         padding: 0;
         gap: 25px;
         justify-content: center;
+        flex-wrap: wrap;
     }
+    /* ACCESS */
     .landing-access-content {
         padding: 60px 25px 20px;
     }
