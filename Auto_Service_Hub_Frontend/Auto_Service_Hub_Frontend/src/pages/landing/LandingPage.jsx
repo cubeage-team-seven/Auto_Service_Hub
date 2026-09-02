@@ -10,180 +10,79 @@ function LandingPage() {
     <div className="landing-page">
 
       {/* =====================================================
-          PAGE 1 — FIGMA HERO
+          NAVBAR
       ===================================================== */}
 
-      <section className="landing-hero">
+      <header className="landing-navbar">
 
-        {/* HERO BACKGROUND */}
-        <div className="landing-hero-background"></div>
+        <div className="landing-logo">
 
-        {/* DARK OVERLAY */}
-        <div className="landing-hero-overlay"></div>
+          <div className="landing-logo-icon">
+            ⌂
+          </div>
 
-
-        {/* =================================================
-            OLD NAVBAR
-            MOVED INSIDE PAGE 1 HERO
-        ================================================= */}
-
-        <header className="landing-navbar">
-
-          {/* LOGO */}
-
-          <div className="landing-logo">
-
-            <div className="landing-logo-icon">
-              ⌂
+          <div>
+            <div className="landing-logo-title">
+              Auto_Service_Hub
             </div>
 
-            <div>
-              <div className="landing-logo-title">
-                Auto_Service_Hub
-              </div>
-
-              <div className="landing-logo-subtitle">
-                AI CRM
-              </div>
+            <div className="landing-logo-subtitle">
+              AI CRM
             </div>
-
-          </div>
-
-
-          {/* NAVIGATION */}
-
-          <nav className="landing-nav">
-
-            <a href="#features">
-              Features
-            </a>
-
-            <a href="#modules">
-              Modules
-            </a>
-
-            <a href="#ai">
-              AI Engine
-            </a>
-
-            <a href="#pricing">
-              Pricing
-            </a>
-
-            <a href="#about">
-              About
-            </a>
-
-          </nav>
-
-
-          {/* BUTTONS */}
-
-          <div className="landing-nav-buttons">
-
-            <Link
-              to="/modules"
-              className="landing-signin"
-            >
-              Sign In
-            </Link>
-
-            <Link
-              to="/modules"
-              className="landing-access"
-            >
-              Get Access →
-            </Link>
-
-          </div>
-
-        </header>
-
-
-        {/* =================================================
-            HERO CONTENT
-        ================================================= */}
-
-        <div className="landing-hero-content">
-
-          <div className="landing-hero-label">
-            — THE FUTURE OF WORKSHOP MANAGEMENT
-          </div>
-
-
-          <h1 className="landing-hero-title">
-
-            <span>
-              INTELLIGENT.
-            </span>
-
-            <span>
-              PRECISE.
-            </span>
-
-            <span className="landing-hero-green">
-              CONNECTED.
-            </span>
-
-          </h1>
-
-
-          <p className="landing-hero-description">
-            The all-new SmartGarage AI CRM. AI-powered diagnosis,
-            <br />
-            booking, billing and customer retention — in one platform.
-          </p>
-
-
-          {/* HERO BUTTONS */}
-
-          <div className="landing-hero-buttons">
-
-            <Link
-              to="/modules"
-              className="landing-hero-access-button"
-            >
-              ACCESS PLATFORM →
-            </Link>
-
-
-            <button
-              type="button"
-              className="landing-hero-demo-button"
-            >
-              <span>
-                ▶
-              </span>
-
-              WATCH DEMO
-            </button>
-
-          </div>
-
-
-          {/* SLIDER INDICATORS */}
-
-          <div className="landing-hero-slider">
-
-            <span className="active"></span>
-
-            <span></span>
-
-            <span></span>
-
-            <span></span>
-
           </div>
 
         </div>
 
-      </section>
+
+        <nav className="landing-nav">
+
+          <a href="#features">
+            Features
+          </a>
+
+          <a href="#modules">
+            Modules
+          </a>
+
+          <a href="#ai">
+            AI Engine
+          </a>
+
+          <a href="#pricing">
+            Pricing
+          </a>
+
+          <a href="#about">
+            About
+          </a>
+
+        </nav>
 
 
-      {/* =====================================================
-          PAGE 3 — EXISTING CONTENT
-          NOTHING CHANGED
-      ===================================================== */}
+        <div className="landing-nav-buttons">
+
+          {/* SIGN IN → SELECT MODULE */}
+
+          <Link
+            to="/modules"
+            className="landing-signin"
+          >
+            Sign In
+          </Link>
+
+
+          {/* GET ACCESS → SELECT MODULE */}
+
+          <Link
+            to="/modules"
+            className="landing-access"
+          >
+            Get Access →
+          </Link>
+
+        </div>
+
+      </header>
 
 
       {/* =====================================================
