@@ -12,11 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service Package Management (SRS 4.8)
- * Business rules to enforce here per SRS section 12 (e.g. server-side total
- * recalculation, stock limits, audit trail) before persisting.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,25 +22,23 @@ public class ServicePackageServiceImpl implements ServicePackageService {
     @Override
     public ServicePackageResponseDTO create(ServicePackageRequestDTO request) {
         ServicePackage entity = new ServicePackage();
-        // TODO: map request -> entity
-        ServicePackage saved = repository.save(entity);
-        return toResponse(saved);
+        mapToEntity(request, entity);
+        return toResponse(repository.save(entity));
     }
 
     @Override
     public ServicePackageResponseDTO update(Long id, ServicePackageRequestDTO request) {
         ServicePackage existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("ServicePackage not found: " + id));
-        // TODO: map request -> existing
+        mapToEntity(request, existing);
         return toResponse(repository.save(existing));
     }
 
     @Override
     @Transactional(readOnly = true)
     public ServicePackageResponseDTO getById(Long id) {
-        ServicePackage found = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("ServicePackage not found: " + id));
-        return toResponse(found);
+        return toResponse(repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("ServicePackage not found: " + id)));
     }
 
     @Override
@@ -56,18 +49,26 @@ public class ServicePackageServiceImpl implements ServicePackageService {
 
     @Override
     public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("ServicePackage not found: " + id);
-        }
+        if (!repository.existsById(id)) throw new ResourceNotFoundException("ServicePackage not found: " + id);
         repository.deleteById(id);
     }
 
-    private ServicePackageResponseDTO toResponse(ServicePackage entity) {
+    private void mapToEntity(ServicePackageRequestDTO r, ServicePackage e) {
+        e.setName(r.getName());
+        e.setType(r.getType());
+        e.setPrice(r.getPrice());
+        e.setActive(r.getActive() != null ? r.getActive() : true);
+    }
+
+    private ServicePackageResponseDTO toResponse(ServicePackage e) {
         ServicePackageResponseDTO dto = new ServicePackageResponseDTO();
-        dto.setId(entity.getId());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-        // TODO: map remaining fields
+        dto.setId(e.getId());
+        dto.setName(e.getName());
+        dto.setType(e.getType());
+        dto.setPrice(e.getPrice());
+        dto.setActive(e.getActive());
+        dto.setCreatedAt(e.getCreatedAt());
+        dto.setUpdatedAt(e.getUpdatedAt());
         return dto;
     }
 }

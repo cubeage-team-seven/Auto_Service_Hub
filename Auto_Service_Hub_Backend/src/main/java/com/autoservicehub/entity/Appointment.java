@@ -5,14 +5,19 @@ import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
 
-/**
- * Maps to the 'appointments' table (SRS section 8.2 High-Level Entities).
- */
 @Getter
 @Setter
 @Entity
 @Table(name = "appointments")
 public class Appointment extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_id")
+    private Vehicle vehicle;
 
     @Column(name = "service_type")
     private String serviceType;

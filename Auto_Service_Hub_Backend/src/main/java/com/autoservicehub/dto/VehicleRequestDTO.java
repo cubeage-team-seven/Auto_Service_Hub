@@ -1,15 +1,23 @@
 package com.autoservicehub.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
+import java.time.LocalDate;
 
-/**
- * Inbound payload for Vehicle create/update endpoints. Vehicle Management (SRS 4.2)
- * Extend with the fields listed for the 'Vehicle' entity (SRS 8.2/8.3) and add
- * jakarta.validation annotations per SRS 14 (Validation Rules).
- */
 @Getter
 @Setter
 public class VehicleRequestDTO {
-    // TODO: map fields from entity.Vehicle per confirmed API contract (SRS 9)
+    @NotBlank
+    private String registrationNo;
+    private String make;
+    private String model;
+    private String variant;
+    private Integer year;
+    private String engineNo;
+    private String chassisNo;
+    private Integer mileage;
+    private LocalDate insuranceExpiry;
+    private LocalDate warrantyExpiry;
+    private Long customerId;
 }
