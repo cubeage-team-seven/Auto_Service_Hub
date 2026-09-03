@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  BrowserRouter,
-  Routes,
-  Route
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 /* =========================
    LANDING
@@ -14,6 +10,11 @@ import LandingPage from "./pages/landing/LandingPage";
    MODULE SELECTION
 ========================= */
 import ModulePage from "./pages/auth/ModulePage";
+
+/* =========================
+   AUTH
+========================= */
+import Login from "./pages/auth/Login";
 
 /* =========================
    MECHANIC
@@ -35,83 +36,61 @@ import JobCardListPage from "./pages/jobcards/JobCardListPage";
 import JobCardCreatePage from "./pages/jobcards/JobCardCreatePage";
 import JobCardDetailsPage from "./pages/jobcards/JobCardDetailsPage";
 
+/* =========================
+   DEVELOPER
+========================= */
+import DeveloperDashboard from "./pages/developer/DeveloperDashboard";
+
+/* =========================
+   QA ENGINEER
+========================= */
+import QADashboard from "./pages/qa/QADashboard";
 
 function App() {
   return (
     <BrowserRouter>
-
       <Routes>
 
         {/* LANDING PAGE */}
-        <Route
-          path="/"
-          element={<LandingPage />}
-        />
-
+        <Route path="/" element={<LandingPage />} />
 
         {/* MODULE SELECTION */}
-        <Route
-          path="/modules"
-          element={<ModulePage />}
-        />
+        <Route path="/modules" element={<ModulePage />} />
 
+        {/* LOGIN PAGE */}
+        <Route path="/login" element={<Login />} />
 
         {/* =========================
             MECHANIC
         ========================= */}
-
-        <Route
-          path="/mechanic"
-          element={<MechanicLogin />}
-        />
-
-        <Route
-          path="/mechanic-dashboard"
-          element={<DashboardPage />}
-        />
-
+        <Route path="/mechanic" element={<MechanicLogin />} />
+        <Route path="/mechanic-dashboard" element={<DashboardPage />} />
 
         {/* =========================
             INVENTORY
         ========================= */}
-
-        <Route
-          path="/inventory-login"
-          element={<InventoryLogin />}
-        />
-
-        <Route
-          path="/inventory-dashboard"
-          element={<InventoryDashboard />}
-        />
-
-        <Route
-          path="/inventory"
-          element={<InventoryPage />}
-        />
-
+        <Route path="/inventory-login" element={<InventoryLogin />} />
+        <Route path="/inventory-dashboard" element={<InventoryDashboard />} />
+        <Route path="/inventory" element={<InventoryPage />} />
 
         {/* =========================
             JOB CARDS
         ========================= */}
+        <Route path="/job-cards" element={<JobCardListPage />} />
+        <Route path="/job-cards/create" element={<JobCardCreatePage />} />
+        <Route path="/job-cards/:jobId" element={<JobCardDetailsPage />} />
 
-        <Route
-          path="/job-cards"
-          element={<JobCardListPage />}
-        />
+        {/* =========================
+            DEVELOPER
+        ========================= */}
+        <Route path="/developer" element={<DeveloperDashboard />} />
 
-        <Route
-          path="/job-cards/create"
-          element={<JobCardCreatePage />}
-        />
-
-        <Route
-          path="/job-cards/:jobId"
-          element={<JobCardDetailsPage />}
-        />
+        {/* =========================
+            QA ENGINEER
+        ========================= */}
+        <Route path="/qa/dashboard" element={<QADashboard />} />
 
       </Routes>
-
     </BrowserRouter>
   );
 }

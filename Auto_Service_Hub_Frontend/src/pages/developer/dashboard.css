@@ -1,0 +1,72 @@
+.qa-dashboard {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
+}
+
+.qa-dashboard h1 {
+  font-size: 24px;
+  margin-bottom: 5px;
+  color: #00ff99;
+}
+
+.qa-dashboard h2 {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #f1c40f;
+}
+
+.qa-dashboard p {
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 20px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.metrics div {
+  background: #2c2c2c;
+  border: 1px solid #444;
+  padding: 12px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 25px;
+}
+
+table th, table td {
+  border: 1px solid #444;
+  padding: 10px;
+  text-align: left;
+  font-size: 14px;
+}
+
+table th {
+  background-color: #333;
+  color: #00ff99;
+}
+
+table tr:nth-child(even) {
+  background-color: #2a2a2a;
+}
+
+ul {
+  list-style-type: disc;
+  margin-left: 20px;
+  margin-bottom: 20px;
+}
+
+ul li {
+  margin-bottom: 6px;
+  font-size: 14px;
+}
