@@ -37,6 +37,8 @@ import JobCardDetailsPage from "./pages/jobcards/JobCardDetailsPage";
 
 /* =========================
    CUSTOMER
+========================= *//* =========================
+   CUSTOMER
 ========================= */
 import CustomerLogin from "./pages/customers/CustomerLogin";
 import CustomerDashboard from "./pages/customers/Dashboard";
