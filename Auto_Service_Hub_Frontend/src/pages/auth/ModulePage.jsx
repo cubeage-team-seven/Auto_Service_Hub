@@ -140,38 +140,21 @@ function ModulePage() {
             </div>
 
 
-            {/* =================================================
-                SERVICE ADVISOR
-            ================================================= */}
-
-            <div className="module-card">
-
-              <div className="module-card-icon">
-                📋
-              </div>
-
-              <div className="module-card-content">
-
-                <h3>
-                  Service Advisor
-                </h3>
-
-                <span>
-                  Customer & Job Management
-                </span>
-
-                <p>
-                  Handle customers, job cards,
-                  estimates and service updates.
-                </p>
-
-              </div>
-
-              <span className="module-arrow">
-                →
-              </span>
-
-            </div>
+              {/* SERVICE ADVISOR LINK */}
+              <Link
+                to="/service-advisor-login"
+                className="module-card module-card-link"
+              >
+                <div className="module-card-icon">📋</div>
+                <div className="module-card-content">
+                  <h3>Service Advisor</h3>
+                  <span>Customer &amp; Job Management</span>
+                  <p>
+                    Handle customers, job cards, estimates and service updates.
+                  </p>
+                </div>
+                <span className="module-arrow">→</span>
+              </Link>
 
 
             {/* =================================================

@@ -43,10 +43,27 @@ import CustomerDashboard from "./pages/customers/Dashboard";
 import Appointments from "./pages/customers/Appointments"; // Add Appointments import
 
 /* =========================
+    Service Advisor
+========================= */
+
+import ServiceAdvisorAppointments from "./pages/Service Advisor/Appointments";
+import ServiceAdvisorCustomers from "./pages/Service Advisor/Customers";
+import ServiceAdvisorDashboard from "./pages/Service Advisor/Dashboard";
+import ServiceAdvisorJobCards from "./pages/Service Advisor/JobCards";
+import ServiceAdvisorPackages from "./pages/Service Advisor/Packages";
+import ServiceAdvisorLayout from "./pages/Service Advisor/ServiceAdvisorLayout";
+import ServiceAdvisorLogin from "./pages/Service Advisor/ServiceAdvisorLogin";
+import ServiceAdvisorVehicles from "./pages/Service Advisor/Vehicles";
+
+
+
+/* =========================
    BILLING
 ========================= */
 import BillingLogin from "./pages/billing/BillingLogin";
 import BillingPage from "./pages/billing/BillingPage";
+
+
 
 function App() {
   return (
@@ -132,7 +149,29 @@ function App() {
         <Route path="/billing/dashboard" element={<BillingPage />} />
       
 
-        
+        {/* =========================
+    Service Advisor
+========================= */}
+
+{/* Standalone Login Route */}
+<Route 
+  path="/service-advisor-login" 
+  element={<ServiceAdvisorLogin />} 
+/>
+
+{/* Protected Layout & Dashboard Routes */}
+<Route 
+  path="/service-advisor" 
+  element={<ServiceAdvisorLayout />}
+>
+  <Route index element={<ServiceAdvisorDashboard />} />
+  <Route path="dashboard" element={<ServiceAdvisorDashboard />} />
+  <Route path="customers" element={<ServiceAdvisorCustomers />} />
+  <Route path="vehicles" element={<ServiceAdvisorVehicles />} />
+  <Route path="appointments" element={<ServiceAdvisorAppointments />} />
+  <Route path="jobcards" element={<ServiceAdvisorJobCards />} />
+  <Route path="packages" element={<ServiceAdvisorPackages />} />
+</Route>
         {/* =========================
             JOB CARDS
         ========================= */}
