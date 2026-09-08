@@ -19,7 +19,6 @@ import ModulePage from "./pages/auth/ModulePage";
    MECHANIC
 ========================= */
 import MechanicLogin from "./pages/mechanic/MechanicLogin";
-import DashboardPage from "./pages/dashboard/DashboardPage";
 
 /* =========================
    INVENTORY
@@ -40,13 +39,17 @@ import JobCardDetailsPage from "./pages/jobcards/JobCardDetailsPage";
 ========================= */
 import CustomerLogin from "./pages/customers/CustomerLogin";
 import CustomerDashboard from "./pages/customers/Dashboard";
-import Appointments from "./pages/customers/Appointments"; // Add Appointments import
 
 /* =========================
-   BILLING
+   BILLING LOGIN
 ========================= */
 import BillingLogin from "./pages/billing/BillingLogin";
-import BillingPage from "./pages/billing/BillingPage";
+
+/* =========================
+   DASHBOARD
+========================= */
+import DashboardPage from "./pages/dashboard/DashboardPage";
+
 
 function App() {
   return (
@@ -54,14 +57,18 @@ function App() {
 
       <Routes>
 
-        {/* LANDING PAGE */}
+        {/* =========================
+            LANDING
+        ========================= */}
         <Route
           path="/"
           element={<LandingPage />}
         />
 
 
-        {/* MODULE SELECTION */}
+        {/* =========================
+            MODULE SELECTION
+        ========================= */}
         <Route
           path="/modules"
           element={<ModulePage />}
@@ -71,7 +78,6 @@ function App() {
         {/* =========================
             MECHANIC
         ========================= */}
-
         <Route
           path="/mechanic"
           element={<MechanicLogin />}
@@ -86,7 +92,6 @@ function App() {
         {/* =========================
             INVENTORY
         ========================= */}
-
         <Route
           path="/inventory-login"
           element={<InventoryLogin />}
@@ -101,7 +106,8 @@ function App() {
           path="/inventory"
           element={<InventoryPage />}
         />
-        
+
+
         {/* =========================
             CUSTOMER
         ========================= */}
@@ -110,33 +116,29 @@ function App() {
           element={<CustomerLogin />}
         />
 
-        {/* Both dashboard routes configured */}
         <Route
           path="/dashboard"
           element={<CustomerDashboard />}
         />
+
         <Route
           path="/customer-dashboard"
           element={<CustomerDashboard />}
         />
 
-           {/* APPOINTMENTS */}
+
+        {/* =========================
+            BILLING LOGIN
+        ========================= */}
         <Route
-          path="/appointments"
-          element={<Appointments />}
+          path="/billing"
+          element={<BillingLogin />}
         />
 
 
-        {/* BILLING MODULE ROUTES */}
-        <Route path="/billing" element={<BillingLogin />} />
-        <Route path="/billing/dashboard" element={<BillingPage />} />
-      
-
-        
         {/* =========================
             JOB CARDS
         ========================= */}
-
         <Route
           path="/job-cards"
           element={<JobCardListPage />}
@@ -150,6 +152,15 @@ function App() {
         <Route
           path="/job-cards/:jobId"
           element={<JobCardDetailsPage />}
+        />
+
+
+        {/* =========================
+            FALLBACK
+        ========================= */}
+        <Route
+          path="*"
+          element={<ModulePage />}
         />
 
       </Routes>

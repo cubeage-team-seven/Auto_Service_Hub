@@ -1,24 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, NavLink } from "react-router-dom";
 import "./JobCardListPage.css";
 
 function JobCardListPage() {
   const [activeFilter, setActiveFilter] = useState("ALL");
-  const [savedJobs, setSavedJobs] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  useEffect(() => {
-    const storedJobs =
-      JSON.parse(localStorage.getItem("smartgarage_jobcards")) || [];
-
-    setSavedJobs(storedJobs);
-  }, []);
-
-  // =========================================================
-  // DEFAULT JOBS
-  // =========================================================
-
-  const jobs = [
+  const jobCards = [
     {
       id: "JC-2408",
       customer: "Arjun Mehta",
@@ -26,11 +13,10 @@ function JobCardListPage() {
       service: "Engine Overhaul",
       mechanic: "Ravi Kumar",
       status: "In Repair",
-      eta: "Today 5:00 PM",
+      time: "Today 5:00 PM",
       amount: "₹18,500",
       progress: 3,
     },
-
     {
       id: "JC-2407",
       customer: "Priya Sharma",
@@ -38,11 +24,10 @@ function JobCardListPage() {
       service: "Full Service",
       mechanic: "Amit Patel",
       status: "Quality Check",
-      eta: "Today 3:30 PM",
+      time: "Today 3:30 PM",
       amount: "₹8,200",
       progress: 4,
     },
-
     {
       id: "JC-2406",
       customer: "Rohit Desai",
@@ -50,11 +35,10 @@ function JobCardListPage() {
       service: "AC Repair + Service",
       mechanic: "Suresh Nair",
       status: "Delivered",
-      eta: "Delivered",
+      time: "Delivered",
       amount: "₹12,400",
       progress: 5,
     },
-
     {
       id: "JC-2405",
       customer: "Neha Joshi",
@@ -62,11 +46,10 @@ function JobCardListPage() {
       service: "Brake Replacement",
       mechanic: "Ravi Kumar",
       status: "Inspection",
-      eta: "Today 6:00 PM",
+      time: "Today 6:00 PM",
       amount: "₹4,800",
       progress: 2,
     },
-
     {
       id: "JC-2404",
       customer: "Vikram Singh",
@@ -74,11 +57,10 @@ function JobCardListPage() {
       service: "Suspension + Tyres",
       mechanic: "Amit Patel",
       status: "Received",
-      eta: "Tomorrow 12:00 PM",
+      time: "Tomorrow 12:00 PM",
       amount: "₹32,000",
       progress: 1,
     },
-
     {
       id: "JC-2403",
       customer: "Kavita Rao",
@@ -86,15 +68,11 @@ function JobCardListPage() {
       service: "Basic Service",
       mechanic: "Deepak Verma",
       status: "Delivered",
-      eta: "Delivered",
+      time: "Delivered",
       amount: "₹3,200",
       progress: 5,
     },
   ];
-
-  // =========================================================
-  // FILTERS
-  // =========================================================
 
   const filters = [
     "ALL",
@@ -105,166 +83,241 @@ function JobCardListPage() {
     "DELIVERED",
   ];
 
-  // =========================================================
-  // ALL JOBS
-  // =========================================================
+  const getFilteredCards = () => {
+    if (activeFilter === "ALL") {
+      return jobCards;
+    }
 
-  const allJobs = [
-    ...jobs,
-    ...savedJobs,
-  ];
+    return jobCards.filter((card) => {
+      if (activeFilter === "RECEIVED") {
+        return card.status === "Received";
+      }
 
-  // =========================================================
-  // FILTER JOBS
-  // =========================================================
+      if (activeFilter === "INSPECTION") {
+        return card.status === "Inspection";
+      }
 
-  const filteredJobs =
-    activeFilter === "ALL"
-      ? allJobs
-      : allJobs.filter((job) => {
-          if (activeFilter === "REPAIR") {
-            return job.status === "In Repair";
-          }
+      if (activeFilter === "REPAIR") {
+        return card.status === "In Repair";
+      }
 
-          if (activeFilter === "QC") {
-            return job.status === "Quality Check";
-          }
+      if (activeFilter === "QC") {
+        return card.status === "Quality Check";
+      }
 
-          return job.status.toUpperCase() === activeFilter;
-        });
+      if (activeFilter === "DELIVERED") {
+        return card.status === "Delivered";
+      }
 
-  // =========================================================
-  // STATUS CLASS
-  // =========================================================
+      return true;
+    });
+  };
+
+  const filteredCards = getFilteredCards();
 
   const getStatusClass = (status) => {
     switch (status) {
       case "In Repair":
-        return "status-repair";
+        return "job-status repair";
 
       case "Quality Check":
-        return "status-qc";
+        return "job-status qc";
 
       case "Delivered":
-        return "status-delivered";
+        return "job-status delivered";
 
       case "Inspection":
-        return "status-inspection";
+        return "job-status inspection";
 
       case "Received":
-        return "status-received";
+        return "job-status received";
 
       default:
-        return "";
+        return "job-status";
     }
   };
 
   return (
-    <div
-      className={`jobcard-page ${
-        sidebarOpen ? "sidebar-open" : "sidebar-closed"
-      }`}
-    >
+    <div className="jobcards-page">
 
       {/* =====================================================
-          SIDEBAR
+          MECHANIC SIDEBAR
       ===================================================== */}
 
-      <aside className="jobcard-sidebar">
+      <aside
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "260px",
+          height: "100vh",
+          background: "#0d0d0d",
+          borderRight: "1px solid #252525",
+          zIndex: 1000,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
 
-        {/* LOGO */}
+        {/* BRAND */}
 
-        <div className="jobcard-logo">
+        <div
+          style={{
+            height: "120px",
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            padding: "0 24px",
+            borderBottom: "1px solid #252525",
+          }}
+        >
 
-          <div className="jobcard-logo-icon">
+          <div
+            style={{
+              width: "34px",
+              height: "34px",
+              borderRadius: "5px",
+              background: "#baff00",
+              color: "#101010",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "18px",
+              fontWeight: "900",
+            }}
+          >
             ▰
           </div>
 
-          <span className="jobcard-logo-text">
-            Auto_Service_Hub
-          </span>
+          <div
+            style={{
+              color: "#ffffff",
+              fontSize: "14px",
+              fontWeight: "900",
+              letterSpacing: "0.5px",
+            }}
+          >
+            SMARTGARAGE
+          </div>
 
         </div>
 
 
-        {/* NAVIGATION */}
+        {/* MENU */}
 
-        <nav className="jobcard-sidebar-nav">
+        <nav
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            paddingTop: "18px",
+          }}
+        >
 
-          {/* DASHBOARD */}
-
-          <Link
+          <NavLink
             to="/mechanic-dashboard"
-            className="jobcard-nav-item"
+            end
+            style={({ isActive }) => ({
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+              height: "52px",
+              padding: "0 22px",
+              color: isActive ? "#baff00" : "#777777",
+              textDecoration: "none",
+              fontSize: "15px",
+              fontWeight: "600",
+              background: isActive
+                ? "rgba(186, 255, 0, 0.07)"
+                : "transparent",
+              borderLeft: isActive
+                ? "3px solid #baff00"
+                : "3px solid transparent",
+            })}
           >
-
-            <span className="jobcard-nav-icon">
+            <span style={{ fontSize: "18px" }}>
               ▦
             </span>
 
-            <span className="jobcard-nav-text">
+            <span>
               Dashboard
             </span>
+          </NavLink>
 
-          </Link>
 
-
-          {/* JOB CARDS */}
-
-          <Link
+          <NavLink
             to="/job-cards"
-            className="jobcard-nav-item active"
+            end
+            style={({ isActive }) => ({
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+              height: "52px",
+              padding: "0 22px",
+              color: isActive ? "#baff00" : "#777777",
+              textDecoration: "none",
+              fontSize: "15px",
+              fontWeight: "600",
+              background: isActive
+                ? "rgba(186, 255, 0, 0.07)"
+                : "transparent",
+              borderLeft: isActive
+                ? "3px solid #baff00"
+                : "3px solid transparent",
+            })}
           >
-
-            <span className="jobcard-nav-icon">
-              ♧
+            <span style={{ fontSize: "18px" }}>
+              ▢
             </span>
 
-            <span className="jobcard-nav-text">
+            <span>
               Job Cards
             </span>
-
-          </Link>
+          </NavLink>
 
         </nav>
+
+
+        {/* BOTTOM */}
+
+        <div
+          style={{
+            marginTop: "auto",
+            height: "55px",
+            borderTop: "1px solid #252525",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#777777",
+            fontSize: "20px",
+          }}
+        >
+          ‹
+        </div>
 
       </aside>
 
 
       {/* =====================================================
-          SIDEBAR TOGGLE
+          MAIN
       ===================================================== */}
 
-      <button
-        type="button"
-        className={`sidebar-toggle ${
-          sidebarOpen ? "toggle-open" : "toggle-closed"
-        }`}
-        onClick={() => setSidebarOpen((prev) => !prev)}
-        aria-label="Toggle sidebar"
+      <main
+        className="jobcards-main"
+        style={{
+          marginLeft: "260px",
+        }}
       >
-        {sidebarOpen ? "‹" : "›"}
-      </button>
 
-
-      {/* =====================================================
-          MAIN AREA
-      ===================================================== */}
-
-      <main className="jobcard-main">
-
-        {/* ===================================================
+        {/* =================================================
             TOP BAR
-        =================================================== */}
+        ================================================= */}
 
-        <header className="jobcard-topbar">
+        <header className="jobcards-topbar">
 
-          {/* BREADCRUMB */}
-
-          <div className="jobcard-breadcrumb">
+          <div className="jobcards-breadcrumb">
 
             <span>
-              Auto_Service_Hub
+              SmartGarage
             </span>
 
             <b>
@@ -272,56 +325,51 @@ function JobCardListPage() {
             </b>
 
             <strong>
-              Jobcards
+              Job Cards
             </strong>
 
           </div>
 
 
-          {/* TOP RIGHT */}
+          <div className="jobcards-top-actions">
 
-          <div className="jobcard-top-actions">
-
-            {/* ROLE */}
-
-            <span className="jobcard-role">
+            <div className="jobcards-role">
               MECHANIC
-            </span>
+            </div>
 
+            <div className="jobcards-alert">
 
-            {/* AI ALERT */}
+              <span></span>
 
-            <span className="jobcard-alert">
-              <i></i>
               3 AI alerts
-            </span>
 
+            </div>
 
-            {/* MAIN DASHBOARD BUTTON */}
-
-            <Link
-                to="/"
-                className="jobcard-user-button"
-                aria-label="Go to Main Page"
-                title="Go to Main Page"
-                >
-                ⌂
-            </Link>
+            <button
+              type="button"
+              className="jobcards-settings"
+              title="Settings"
+            >
+              ⚙
+            </button>
 
           </div>
 
         </header>
 
 
-        {/* ===================================================
+        {/* =================================================
             CONTENT
-        =================================================== */}
+        ================================================= */}
 
-        <section className="jobcard-content">
+        <section className="jobcards-content">
 
-          {/* HEADING */}
 
-          <div className="jobcard-heading-row">
+          {/* =================================================
+              PAGE HEADER
+          ================================================= */}
+
+          <div className="jobcards-page-header">
 
             <h1>
               JOB CARDS
@@ -329,7 +377,7 @@ function JobCardListPage() {
 
             <Link
               to="/job-cards/create"
-              className="new-job-card-button"
+              className="new-jobcard-button"
             >
               + NEW JOB CARD
             </Link>
@@ -341,9 +389,9 @@ function JobCardListPage() {
               STATISTICS
           ================================================= */}
 
-          <div className="jobcard-stats">
+          <div className="jobcards-stats">
 
-            <div className="jobcard-stat-card">
+            <div className="jobcard-stat">
 
               <span>
                 TOTAL TODAY
@@ -356,20 +404,20 @@ function JobCardListPage() {
             </div>
 
 
-            <div className="jobcard-stat-card">
+            <div className="jobcard-stat">
 
               <span>
                 IN REPAIR
               </span>
 
-              <strong className="green-number">
+              <strong className="lime">
                 4
               </strong>
 
             </div>
 
 
-            <div className="jobcard-stat-card">
+            <div className="jobcard-stat">
 
               <span>
                 QC
@@ -382,7 +430,7 @@ function JobCardListPage() {
             </div>
 
 
-            <div className="jobcard-stat-card">
+            <div className="jobcard-stat">
 
               <span>
                 DELIVERED
@@ -395,7 +443,7 @@ function JobCardListPage() {
             </div>
 
 
-            <div className="jobcard-stat-card">
+            <div className="jobcard-stat">
 
               <span>
                 OVERDUE
@@ -414,7 +462,7 @@ function JobCardListPage() {
               FILTERS
           ================================================= */}
 
-          <div className="jobcard-filters">
+          <div className="jobcards-filters">
 
             {filters.map((filter) => (
 
@@ -423,8 +471,8 @@ function JobCardListPage() {
                 type="button"
                 className={
                   activeFilter === filter
-                    ? "jobcard-filter active"
-                    : "jobcard-filter"
+                    ? "job-filter active"
+                    : "job-filter"
                 }
                 onClick={() => setActiveFilter(filter)}
               >
@@ -437,36 +485,37 @@ function JobCardListPage() {
 
 
           {/* =================================================
-              JOB LIST
+              JOB CARDS
           ================================================= */}
 
-          <div className="jobcard-list">
+          <div className="jobcards-list">
 
-            {filteredJobs.map((job) => (
+            {filteredCards.map((card) => (
 
               <div
-                className="jobcard-item"
-                key={job.id}
+                className="job-card"
+                key={card.id}
               >
 
                 {/* TOP INFORMATION */}
 
-                <div className="jobcard-item-top">
+                <div className="job-card-info">
 
-                  {/* CUSTOMER */}
 
-                  <div className="jobcard-customer">
+                  {/* LEFT */}
 
-                    <span className="jobcard-id">
-                      {job.id}
-                    </span>
+                  <div className="job-card-left">
+
+                    <div className="job-card-id">
+                      {card.id}
+                    </div>
 
                     <h2>
-                      {job.customer}
+                      {card.customer}
                     </h2>
 
                     <p>
-                      {job.vehicle}
+                      {card.vehicle}
                     </p>
 
                   </div>
@@ -474,18 +523,18 @@ function JobCardListPage() {
 
                   {/* SERVICE */}
 
-                  <div className="jobcard-service">
+                  <div className="job-card-service">
 
                     <span>
-                      Service
+                      SERVICE
                     </span>
 
                     <strong>
-                      {job.service}
+                      {card.service}
                     </strong>
 
                     <p>
-                      Mechanic: {job.mechanic}
+                      Mechanic: {card.mechanic}
                     </p>
 
                   </div>
@@ -493,29 +542,27 @@ function JobCardListPage() {
 
                   {/* STATUS */}
 
-                  <div className="jobcard-status-area">
+                  <div className="job-card-status-area">
 
                     <span
-                      className={`jobcard-status ${getStatusClass(
-                        job.status
-                      )}`}
+                      className={getStatusClass(card.status)}
                     >
-                      {job.status}
+                      {card.status}
                     </span>
 
                   </div>
 
 
-                  {/* AMOUNT */}
+                  {/* RIGHT */}
 
-                  <div className="jobcard-amount-area">
+                  <div className="job-card-right">
 
-                    <span>
-                      {job.eta}
+                    <span className="job-card-time">
+                      {card.time}
                     </span>
 
-                    <strong>
-                      {job.amount}
+                    <strong className="job-card-amount">
+                      {card.amount}
                     </strong>
 
                   </div>
@@ -524,9 +571,8 @@ function JobCardListPage() {
                   {/* DETAILS */}
 
                   <Link
-                    to={`/job-cards/${job.id}`}
-                    state={{ job }}
-                    className="jobcard-details-button"
+                    to={`/job-cards/${card.id}`}
+                    className="job-card-details"
                   >
                     Details
                   </Link>
@@ -534,22 +580,20 @@ function JobCardListPage() {
                 </div>
 
 
-                {/* =================================================
-                    PROGRESS
-                ================================================= */}
+                {/* PROGRESS */}
 
-                <div className="jobcard-progress">
+                <div className="job-progress">
 
-                  <div className="jobcard-progress-bars">
+                  <div className="job-progress-bars">
 
                     {[1, 2, 3, 4, 5].map((step) => (
 
                       <div
                         key={step}
                         className={
-                          step <= job.progress
-                            ? "progress-bar completed"
-                            : "progress-bar"
+                          step <= card.progress
+                            ? "job-progress-segment complete"
+                            : "job-progress-segment"
                         }
                       ></div>
 
@@ -558,7 +602,7 @@ function JobCardListPage() {
                   </div>
 
 
-                  <div className="jobcard-progress-labels">
+                  <div className="job-progress-labels">
 
                     <span>
                       Received
@@ -589,12 +633,10 @@ function JobCardListPage() {
             ))}
 
 
-            {/* EMPTY RESULT */}
+            {filteredCards.length === 0 && (
 
-            {filteredJobs.length === 0 && (
-
-              <div className="jobcard-empty">
-                No job cards found.
+              <div className="jobcards-empty">
+                No job cards found for this status.
               </div>
 
             )}

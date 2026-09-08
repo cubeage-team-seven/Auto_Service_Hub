@@ -668,7 +668,8 @@ textarea {
     width: 630px;
     height: 422px;
     align-self: center;
-    margin-left: -105px;
+    /* UPDATED: MOVED FORM TO RIGHT */
+    margin-left: 30px;
     padding: 35px 34px;
     background: #111111;
     border: 1px solid #272727;

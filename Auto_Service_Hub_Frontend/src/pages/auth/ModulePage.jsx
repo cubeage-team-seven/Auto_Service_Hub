@@ -66,7 +66,7 @@ function ModulePage() {
             <div>
 
               <div className="module-brand-title">
-                 Auto_Service_Hub
+                Auto_Service_Hub
               </div>
 
               <div className="module-brand-subtitle">
@@ -110,7 +110,10 @@ function ModulePage() {
                 GARAGE OWNER
             ================================================= */}
 
-            <div className="module-card">
+            <Link
+              to="/garage-owner/login"
+              className="module-card module-card-link"
+            >
 
               <div className="module-card-icon">
                 🏢
@@ -137,7 +140,7 @@ function ModulePage() {
                 →
               </span>
 
-            </div>
+            </Link>
 
 
             {/* =================================================
@@ -161,8 +164,8 @@ function ModulePage() {
                 </span>
 
                 <p>
-                  Handle customers, job cards,
-                  estimates and service updates.
+                  Handle customers, job cards, estimates
+                  and service updates.
                 </p>
 
               </div>
@@ -246,30 +249,80 @@ function ModulePage() {
               </span>
 
             </Link>
-          {/* BILLING */}
-          <Link to="/billing" className="module-card module-card-link">
-            <div className="module-card-icon">₹</div>
-            <div className="module-card-content">
-              <h3>Billing</h3>
-              <span>Payments & Invoicing</span>
-              <p>Manage invoices, payments, taxes and financial records.</p>
-            </div>
-            <span className="module-arrow">→</span>
-          </Link>
+
+
+            {/* =================================================
+                BILLING
+            ================================================= */}
+
+            <Link
+              to="/billing"
+              className="module-card module-card-link"
+            >
+
+              <div className="module-card-icon">
+                ₹
+              </div>
+
+              <div className="module-card-content">
+
+                <h3>
+                  Billing
+                </h3>
+
+                <span>
+                  Payments & Invoicing
+                </span>
+
+                <p>
+                  Manage invoices, payments,
+                  taxes and financial records.
+                </p>
+
+              </div>
+
+              <span className="module-arrow">
+                →
+              </span>
+
+            </Link>
+
 
             {/* =================================================
                 CUSTOMER
             ================================================= */}
 
-            <Link to="/customers" className="module-card module-card-link">
-                <div className="module-card-icon">👤</div>
-                <div className="module-card-content">
-                  <h3>Customer</h3>
-                  <span>Customer Portal</span>
-                  <p>View service history, appointments and vehicle details.</p>
-                </div>
-                <span className="module-arrow">→</span>
-              </Link>
+            <Link
+              to="/customers"
+              className="module-card module-card-link"
+            >
+
+              <div className="module-card-icon">
+                👤
+              </div>
+
+              <div className="module-card-content">
+
+                <h3>
+                  Customer
+                </h3>
+
+                <span>
+                  Customer Portal
+                </span>
+
+                <p>
+                  View service history,
+                  appointments and vehicle details.
+                </p>
+
+              </div>
+
+              <span className="module-arrow">
+                →
+              </span>
+
+            </Link>
 
 
             {/* =================================================
@@ -304,6 +357,7 @@ function ModulePage() {
               </span>
 
             </div>
+
 
           </div>
 

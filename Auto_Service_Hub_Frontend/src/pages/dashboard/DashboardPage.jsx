@@ -1,104 +1,165 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React from "react";
+import { Link, NavLink } from "react-router-dom";
 import "./DashboardPage.css";
 
 function DashboardPage() {
+  const sidebarStyle = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "260px",
+    height: "100vh",
+    background: "#0d0d0d",
+    borderRight: "1px solid #252525",
+    zIndex: 1000,
+    display: "flex",
+    flexDirection: "column",
+  };
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const brandStyle = {
+    height: "120px",
+    display: "flex",
+    alignItems: "center",
+    gap: "14px",
+    padding: "0 24px",
+    borderBottom: "1px solid #252525",
+  };
+
+  const logoStyle = {
+    width: "34px",
+    height: "34px",
+    borderRadius: "5px",
+    background: "#baff00",
+    color: "#101010",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "18px",
+    fontWeight: "900",
+  };
+
+  const brandNameStyle = {
+    color: "#ffffff",
+    fontSize: "14px",
+    fontWeight: "900",
+    letterSpacing: "0.5px",
+  };
+
+  const navStyle = {
+    display: "flex",
+    flexDirection: "column",
+    paddingTop: "18px",
+  };
+
+  const navLinkStyle = {
+    display: "flex",
+    alignItems: "center",
+    gap: "14px",
+    height: "52px",
+    padding: "0 22px",
+    color: "#777777",
+    textDecoration: "none",
+    fontSize: "15px",
+    fontWeight: "600",
+    borderLeft: "3px solid transparent",
+  };
+
+  const activeNavLinkStyle = {
+    ...navLinkStyle,
+    color: "#baff00",
+    background: "rgba(186, 255, 0, 0.07)",
+    borderLeft: "3px solid #baff00",
+  };
 
   return (
-
-    <div
-      className={`dashboard-page ${
-        sidebarOpen ? "sidebar-open" : "sidebar-closed"
-      }`}
-    >
+    <div className="dashboard-page sidebar-open">
 
       {/* =====================================================
-          SIDEBAR
+          MECHANIC SIDEBAR
       ===================================================== */}
 
-      <aside className="dashboard-sidebar">
+      <aside style={sidebarStyle}>
 
-        {/* LOGO */}
+        {/* BRAND */}
+        <div style={brandStyle}>
 
-        <div className="dashboard-logo">
-
-          <div className="dashboard-logo-icon">
+          <div style={logoStyle}>
             ▰
           </div>
 
-          <span>
-           Auto_Service_Hub
-          </span>
+          <div style={brandNameStyle}>
+            SMARTGARAGE
+          </div>
 
         </div>
 
 
-        {/* NAVIGATION */}
+        {/* MENU */}
+        <nav style={navStyle}>
 
-        <nav className="dashboard-nav">
-
-          <a
-            href="#dashboard"
-            className="dashboard-nav-item active"
+          <NavLink
+            to="/mechanic-dashboard"
+            end
+            style={({ isActive }) =>
+              isActive ? activeNavLinkStyle : navLinkStyle
+            }
           >
-
-            <span className="dashboard-nav-icon">
+            <span style={{ fontSize: "18px" }}>
               ▦
             </span>
 
             <span>
               Dashboard
             </span>
+          </NavLink>
 
-          </a>
 
-
-          <Link
+          <NavLink
             to="/job-cards"
-            className="dashboard-nav-item"
+            style={({ isActive }) =>
+              isActive ? activeNavLinkStyle : navLinkStyle
+            }
           >
-
-            <span className="dashboard-nav-icon">
-              ♧
+            <span style={{ fontSize: "18px" }}>
+              ▢
             </span>
 
             <span>
               Job Cards
             </span>
-
-          </Link>
+          </NavLink>
 
         </nav>
+
+
+        {/* BOTTOM */}
+        <div
+          style={{
+            marginTop: "auto",
+            height: "55px",
+            borderTop: "1px solid #252525",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#777777",
+          }}
+        >
+          ‹
+        </div>
 
       </aside>
 
 
       {/* =====================================================
-          SIDEBAR TOGGLE
-          OUTSIDE SIDEBAR SO IT NEVER DISAPPEARS
+          MAIN
       ===================================================== */}
 
-      <button
-        type="button"
-        className={`dashboard-sidebar-toggle ${
-          sidebarOpen
-            ? "dashboard-toggle-open"
-            : "dashboard-toggle-closed"
-        }`}
-        onClick={() => setSidebarOpen((prev) => !prev)}
-        aria-label="Toggle sidebar"
+      <main
+        className="dashboard-main"
+        style={{
+          marginLeft: "260px",
+        }}
       >
-        {sidebarOpen ? "‹" : "›"}
-      </button>
-
-
-      {/* =====================================================
-          MAIN CONTENT
-      ===================================================== */}
-
-      <main className="dashboard-main">
 
         {/* =================================================
             TOP BAR
@@ -109,7 +170,7 @@ function DashboardPage() {
           <div className="dashboard-breadcrumb">
 
             <span>
-              Auto_Service_Hub
+              SmartGarage
             </span>
 
             <b>
@@ -129,7 +190,6 @@ function DashboardPage() {
               MECHANIC
             </div>
 
-
             <div className="dashboard-ai-alert">
 
               <span className="dashboard-status-dot"></span>
@@ -138,13 +198,12 @@ function DashboardPage() {
 
             </div>
 
-
             <Link
-                to="/"
-                className="dashboard-user-button"
-                title="Go to Main Page"
+              to="/"
+              className="dashboard-user-button"
+              title="Go to Main Page"
             >
-                ⌂
+              ↗
             </Link>
 
           </div>
@@ -153,12 +212,15 @@ function DashboardPage() {
 
 
         {/* =================================================
-            DASHBOARD CONTENT
+            CONTENT
         ================================================= */}
 
         <div className="dashboard-content">
 
-          {/* PAGE TITLE */}
+
+          {/* =================================================
+              DATE + HEADING
+          ================================================= */}
 
           <div className="dashboard-page-heading">
 
@@ -217,7 +279,7 @@ function DashboardPage() {
             </div>
 
 
-            {/* INVOICES */}
+            {/* PENDING INVOICES */}
 
             <div className="dashboard-stat-card">
 
@@ -249,7 +311,7 @@ function DashboardPage() {
               </strong>
 
               <span className="dashboard-stat-description">
-                ACE, OIE, TYR
+                ACF, OIF, TYR
               </span>
 
             </div>
@@ -258,7 +320,7 @@ function DashboardPage() {
 
 
           {/* =================================================
-              MAIN GRID
+              ACTIVE JOB CARDS + RIGHT COLUMN
           ================================================= */}
 
           <section className="dashboard-main-grid">
@@ -283,33 +345,13 @@ function DashboardPage() {
 
                     <tr>
 
-                      <th>
-                        JOB ID
-                      </th>
-
-                      <th>
-                        CUSTOMER
-                      </th>
-
-                      <th>
-                        VEHICLE
-                      </th>
-
-                      <th>
-                        MECHANIC
-                      </th>
-
-                      <th>
-                        STATUS
-                      </th>
-
-                      <th>
-                        ETA
-                      </th>
-
-                      <th>
-                        AMOUNT
-                      </th>
+                      <th>JOB ID</th>
+                      <th>CUSTOMER</th>
+                      <th>VEHICLE</th>
+                      <th>MECHANIC</th>
+                      <th>STATUS</th>
+                      <th>ETA</th>
+                      <th>AMOUNT</th>
 
                     </tr>
 
@@ -317,6 +359,9 @@ function DashboardPage() {
 
 
                   <tbody>
+
+
+                    {/* JOB 2408 */}
 
                     <tr>
 
@@ -337,11 +382,9 @@ function DashboardPage() {
                       </td>
 
                       <td>
-
                         <span className="status status-repair">
                           In Repair
                         </span>
-
                       </td>
 
                       <td>
@@ -354,6 +397,8 @@ function DashboardPage() {
 
                     </tr>
 
+
+                    {/* JOB 2407 */}
 
                     <tr>
 
@@ -374,11 +419,9 @@ function DashboardPage() {
                       </td>
 
                       <td>
-
                         <span className="status status-quality">
                           Quality Check
                         </span>
-
                       </td>
 
                       <td>
@@ -391,6 +434,8 @@ function DashboardPage() {
 
                     </tr>
 
+
+                    {/* JOB 2406 */}
 
                     <tr>
 
@@ -411,11 +456,9 @@ function DashboardPage() {
                       </td>
 
                       <td>
-
                         <span className="status status-delivered">
                           Delivered
                         </span>
-
                       </td>
 
                       <td>
@@ -428,6 +471,8 @@ function DashboardPage() {
 
                     </tr>
 
+
+                    {/* JOB 2405 */}
 
                     <tr>
 
@@ -448,11 +493,9 @@ function DashboardPage() {
                       </td>
 
                       <td>
-
                         <span className="status status-inspection">
                           Inspection
                         </span>
-
                       </td>
 
                       <td>
@@ -465,6 +508,8 @@ function DashboardPage() {
 
                     </tr>
 
+
+                    {/* JOB 2404 */}
 
                     <tr>
 
@@ -485,11 +530,9 @@ function DashboardPage() {
                       </td>
 
                       <td>
-
                         <span className="status status-received">
                           Received
                         </span>
-
                       </td>
 
                       <td>
@@ -502,6 +545,8 @@ function DashboardPage() {
 
                     </tr>
 
+
+                    {/* JOB 2403 */}
 
                     <tr>
 
@@ -522,11 +567,9 @@ function DashboardPage() {
                       </td>
 
                       <td>
-
                         <span className="status status-delivered">
                           Delivered
                         </span>
-
                       </td>
 
                       <td>
@@ -538,6 +581,7 @@ function DashboardPage() {
                       </td>
 
                     </tr>
+
 
                   </tbody>
 
@@ -555,7 +599,9 @@ function DashboardPage() {
             <div className="dashboard-right-column">
 
 
-              {/* MECHANIC WORKLOAD */}
+              {/* =================================================
+                  MECHANIC WORKLOAD
+              ================================================= */}
 
               <div className="dashboard-panel workload-panel">
 
@@ -565,6 +611,7 @@ function DashboardPage() {
 
 
                 <div className="workload-list">
+
 
                   <div className="workload-item">
 
@@ -640,12 +687,15 @@ function DashboardPage() {
 
                   </div>
 
+
                 </div>
 
               </div>
 
 
-              {/* AI ALERTS */}
+              {/* =================================================
+                  AI ALERTS
+              ================================================= */}
 
               <div className="dashboard-panel alerts-panel">
 
@@ -655,6 +705,7 @@ function DashboardPage() {
 
 
                 <div className="alert-list">
+
 
                   <div className="alert-item">
 
@@ -718,6 +769,7 @@ function DashboardPage() {
 
                   </div>
 
+
                 </div>
 
               </div>
@@ -728,13 +780,15 @@ function DashboardPage() {
 
 
           {/* =================================================
-              BOTTOM GRID
+              BOTTOM
           ================================================= */}
 
           <section className="dashboard-bottom-grid">
 
 
-            {/* REVENUE CHART */}
+            {/* =================================================
+                REVENUE
+            ================================================= */}
 
             <div className="dashboard-panel revenue-panel">
 
@@ -764,7 +818,9 @@ function DashboardPage() {
             </div>
 
 
-            {/* SERVICE DISTRIBUTION */}
+            {/* =================================================
+                SERVICE DISTRIBUTION
+            ================================================= */}
 
             <div className="dashboard-panel service-panel">
 
@@ -775,6 +831,8 @@ function DashboardPage() {
 
               <div className="service-list">
 
+
+                {/* FULL SERVICE */}
 
                 <div className="service-item">
 
@@ -802,6 +860,8 @@ function DashboardPage() {
                 </div>
 
 
+                {/* ENGINE */}
+
                 <div className="service-item">
 
                   <div className="service-item-top">
@@ -827,6 +887,8 @@ function DashboardPage() {
 
                 </div>
 
+
+                {/* ELECTRICAL */}
 
                 <div className="service-item">
 
@@ -854,6 +916,8 @@ function DashboardPage() {
                 </div>
 
 
+                {/* TYRES */}
+
                 <div className="service-item">
 
                   <div className="service-item-top">
@@ -879,11 +943,14 @@ function DashboardPage() {
 
                 </div>
 
+
               </div>
 
             </div>
 
+
           </section>
+
 
         </div>
 

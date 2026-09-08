@@ -1,481 +1,302 @@
 /* =========================================================
-    Auto_Service_Hub
-   MECHANIC DASHBOARD
-   FIGMA MATCHED VERSION
-========================================================= */
+   SMARTGARAGE — GARAGE OWNER DASHBOARD
+   FIGMA MATCH
+   ========================================================= */
 
 * {
     box-sizing: border-box;
 }
 
-html,
-body,
-#root {
-    margin: 0;
-    padding: 0;
+.dashboard-page {
     width: 100%;
-    min-height: 100%;
-}
-
-body {
-    background: #090909;
-    color: #ffffff;
+    min-height: 100vh;
+    background: #080909;
+    color: #eeeeee;
     font-family: Arial, Helvetica, sans-serif;
 }
 
 
 /* =========================================================
-   PAGE
-========================================================= */
-
-.dashboard-page {
-    width: 100%;
-    min-height: 100vh;
-    background: #090909;
-    color: #ffffff;
-}
-
-
-/* =========================================================
-   SIDEBAR
-========================================================= */
-
-.dashboard-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 235px;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #0c0c0c;
-    border-right: 1px solid #252525;
-    z-index: 100;
-    transition: transform 0.25s ease;
-}
-
-
-/* =========================================================
-   CLOSED SIDEBAR
-========================================================= */
-
-.dashboard-page.sidebar-closed .dashboard-sidebar {
-    transform: translateX(-100%);
-}
-
-
-/* =========================================================
-   LOGO
-========================================================= */
-
-.dashboard-logo {
-    height: 64px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 16px;
-    border-bottom: 1px solid #252525;
-    flex-shrink: 0;
-}
-
-.dashboard-logo-icon {
-    width: 29px;
-    height: 29px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #d7ff36;
-    color: #050505;
-    border-radius: 4px;
-    font-size: 13px;
-    font-weight: 900;
-}
-
-.dashboard-logo span {
-    color: #ffffff;
-    font-size: 12px;
-    line-height: 1;
-    font-weight: 900;
-    letter-spacing: -0.03em;
-}
-
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-.dashboard-nav {
-    padding-top: 12px;
-}
-
-.dashboard-nav-item {
-    width: 100%;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    padding: 0 16px;
-    color: #666666;
-    text-decoration: none;
-    font-size: 12px;
-    line-height: 1;
-    border-left: 2px solid transparent;
-    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-.dashboard-nav-item:hover {
-    color: #ffffff;
-    background: #141414;
-}
-
-.dashboard-nav-item.active {
-    color: #d7ff36;
-    background: rgba(215, 255, 54, 0.07);
-    border-left-color: #d7ff36;
-}
-
-.dashboard-nav-icon {
-    width: 17px;
-    text-align: center;
-    font-size: 13px;
-    line-height: 1;
-}
-
-
-/* =========================================================
-   MAIN
-========================================================= */
+   MAIN AREA
+   ========================================================= */
 
 .dashboard-main {
-    width: calc(100% - 235px);
-    margin-left: 235px;
+    margin-left: 260px;
+    width: calc(100% - 260px);
     min-height: 100vh;
-    background: #090909;
-    transition: width 0.25s ease, margin-left 0.25s ease;
-}
-
-
-/* =========================================================
-   SIDEBAR CLOSED
-========================================================= */
-
-.dashboard-page.sidebar-closed .dashboard-main {
-    width: 100%;
-    margin-left: 0;
-}
-
-
-/* =========================================================
-   SIDEBAR TOGGLE
-========================================================= */
-
-.dashboard-sidebar-toggle {
-    position: fixed;
-    bottom: 18px;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    background: #111111;
-    color: #777777;
-    border: 1px solid #292929;
-    border-radius: 50%;
-    font-size: 17px;
-    line-height: 1;
-    cursor: pointer;
-    z-index: 9999;
-    transition: left 0.25s ease, color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-}
-
-.dashboard-toggle-open {
-    left: 220px;
-}
-
-.dashboard-toggle-closed {
-    left: 13px;
-}
-
-.dashboard-sidebar-toggle:hover {
-    color: #d7ff36;
-    background: #151515;
-    border-color: #d7ff36;
+    background: #080909;
 }
 
 
 /* =========================================================
    TOP BAR
-========================================================= */
+   ========================================================= */
 
 .dashboard-topbar {
-    height: 54px;
+    width: 100%;
+    height: 59px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
-    background: #0b0b0b;
+    padding: 0 26px 0 24px;
+    background: #0b0c0c;
     border-bottom: 1px solid #252525;
+    position: relative;
+    z-index: 5;
 }
 
 
-/* =========================================================
-   BREADCRUMB
-========================================================= */
+/* Breadcrumb */
 
 .dashboard-breadcrumb {
     display: flex;
     align-items: center;
     gap: 9px;
-    font-size: 11px;
-    line-height: 1;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
 }
 
 .dashboard-breadcrumb span {
-    color: #707070;
+    color: #62676b;
 }
 
 .dashboard-breadcrumb b {
-    color: #414141;
+    color: #4b4f51;
     font-weight: 400;
 }
 
 .dashboard-breadcrumb strong {
     color: #eeeeee;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 
-/* =========================================================
-   TOP ACTIONS
-========================================================= */
+/* Top right */
 
 .dashboard-top-actions {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 14px;
 }
 
 
-/* ROLE */
+/* Role */
 
 .dashboard-role-badge {
-    padding: 5px 9px;
-    border: 1px solid rgba(215, 255, 54, 0.35);
+    height: 28px;
+    min-width: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 11px;
+    border: 1px solid rgba(205, 255, 30, 0.38);
     border-radius: 4px;
-    color: #d7ff36;
-    font-size: 8px;
-    line-height: 1;
-    font-weight: 800;
-    letter-spacing: 0.04em;
+    color: #d7ff36 !important;
+    background: transparent;
+    font-family: "Barlow Condensed", Arial, sans-serif !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
 }
 
 
-/* AI ALERT */
+/* AI alerts */
 
 .dashboard-ai-alert {
-    height: 29px;
+    height: 28px;
     display: flex;
     align-items: center;
-    gap: 7px;
-    padding: 0 9px;
-    border: 1px solid #292929;
+    gap: 8px;
+    padding: 0 12px;
+    border: 1px solid #252525;
     border-radius: 5px;
-    color: #777777;
-    font-size: 9px;
-    line-height: 1;
+    color: #777b7e;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
 }
 
 .dashboard-status-dot {
     width: 6px;
     height: 6px;
-    flex-shrink: 0;
     border-radius: 50%;
-    background: #19d96b;
-    box-shadow: 0 0 7px rgba(25, 217, 107, 0.35);
+    background: #16dc7d;
 }
 
 
-/* =========================================================
-   USER BUTTON
-========================================================= */
+/* User / home button */
 
 .dashboard-user-button {
-    width: 30px;
-    height: 30px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none;
     border-radius: 50%;
-    background: #d7ff36;
-    color: #050505;
-    font-size: 12px;
-    line-height: 1;
-    cursor: pointer;
+    background: #c9ff20;
+    color: #101010;
     text-decoration: none;
-    transition: 0.2s ease;
+    font-size: 16px;
+    font-weight: 700;
+    transition: transform 0.2s ease;
 }
 
 .dashboard-user-button:hover {
-    filter: brightness(1.08);
-    box-shadow: 0 0 20px rgba(215, 255, 54, 0.18);
+    transform: scale(1.05);
 }
 
 
 /* =========================================================
    CONTENT
-========================================================= */
+   ========================================================= */
 
 .dashboard-content {
     width: 100%;
-    padding: 24px 22px 38px;
+    padding: 26px 24px 45px;
+    background: #080909;
 }
 
 
 /* =========================================================
    PAGE HEADING
-========================================================= */
+   ========================================================= */
 
 .dashboard-page-heading {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .dashboard-date {
-    margin-bottom: 8px;
-    color: #d7ff36;
-    font-size: 8px;
-    line-height: 1;
-    font-weight: 700;
-    letter-spacing: 0.14em;
+    margin-bottom: 9px;
+    color: #c9ff20;
+    font-family: "Barlow Condensed", Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
 }
-
-
-/*
-   Figma-style condensed display heading
-*/
 
 .dashboard-page-heading h1 {
     margin: 0;
-    color: #ffffff;
-    font-family: "Arial Narrow", "Roboto Condensed", Arial, Helvetica, sans-serif;
-    font-size: 30px;
-    line-height: 0.95;
-    font-weight: 900;
-    letter-spacing: -0.045em;
-}
-
-
-/* =========================================================
-   STAT GRID
-========================================================= */
-
-.dashboard-stat-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
-    margin-bottom: 20px;
+    color: #f1f1f1;
+    font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.015em;
 }
 
 
 /* =========================================================
    STAT CARDS
-========================================================= */
+   ========================================================= */
+
+.dashboard-stat-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 13px;
+    margin-bottom: 25px;
+}
 
 .dashboard-stat-card {
-    min-height: 102px;
-    padding: 15px;
-    background: #151515;
-    border: 1px solid #282828;
+    height: 114px;
+    padding: 20px 17px;
+    background: #151616;
+    border: 1px solid #282929;
     border-radius: 6px;
-    transition: 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: hidden;
 }
-
-.dashboard-stat-card:hover {
-    background: #171717;
-    border-color: #383838;
-}
-
-
-/* LABEL */
 
 .dashboard-stat-label {
     display: block;
-    margin-bottom: 8px;
-    color: #6c6c6c;
-    font-size: 8px;
-    line-height: 1;
-    font-weight: 600;
+    margin-bottom: 7px;
+    color: #696d70;
+    font-family: "Barlow Condensed", Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 500;
     letter-spacing: 0.09em;
 }
 
-
-/* VALUE */
-
 .dashboard-stat-value {
     display: block;
-    margin-bottom: 7px;
+    margin: 0 0 7px;
     color: #eeeeee;
-    font-size: 25px;
-    line-height: 1;
+    font-family: "Barlow Condensed", Arial, sans-serif;
+    font-size: 31px;
     font-weight: 800;
-    letter-spacing: -0.02em;
+    line-height: 1;
 }
 
 .dashboard-stat-value.green {
-    color: #d7ff36;
+    color: #c9ff20;
+}
+
+.dashboard-stat-description {
+    color: #62676a;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
 }
 
 
-/* DESCRIPTION */
+/* Revenue percentage */
 
-.dashboard-stat-description {
-    color: #5c5c5c;
-    font-size: 9px;
-    line-height: 1.2;
+.dashboard-stat-card:nth-child(2) .dashboard-stat-description {
+    color: #c9ff20;
 }
 
 
 /* =========================================================
    MAIN GRID
-========================================================= */
+   ========================================================= */
 
 .dashboard-main-grid {
+    width: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 2.05fr) minmax(310px, 1fr);
-    gap: 10px;
-    margin-bottom: 10px;
+    grid-template-columns: minmax(0, 2.065fr) minmax(390px, 1fr);
+    gap: 25px;
+    align-items: start;
+    margin-bottom: 25px;
 }
 
 
 /* =========================================================
-   PANEL
-========================================================= */
+   COMMON PANEL
+   ========================================================= */
 
 .dashboard-panel {
-    background: #151515;
-    border: 1px solid #282828;
+    background: #151616;
+    border: 1px solid #282929;
     border-radius: 6px;
     overflow: hidden;
 }
 
 .dashboard-panel-header {
-    height: 40px;
+    width: 100%;
+    height: 45px;
     display: flex;
     align-items: center;
-    padding: 0 14px;
+    padding: 0 17px;
     border-bottom: 1px solid #292929;
-    color: #dedede;
-    font-size: 9px;
-    line-height: 1;
+    color: #eeeeee;
+    font-family: "Barlow Condensed", Arial, sans-serif;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.03em;
 }
 
 
 /* =========================================================
-   JOB TABLE
-========================================================= */
+   ACTIVE JOB CARDS
+   ========================================================= */
+
+.dashboard-jobs-panel {
+    width: 100%;
+    min-width: 0;
+}
 
 .dashboard-table-wrapper {
     width: 100%;
@@ -484,86 +305,113 @@ body {
 
 .dashboard-jobs-table {
     width: 100%;
-    min-width: 680px;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
-
-/* TABLE HEADER */
+.dashboard-jobs-table thead {
+    height: 37px;
+}
 
 .dashboard-jobs-table th {
-    height: 36px;
-    padding: 0 14px;
-    text-align: left;
-    color: #626262;
-    font-size: 8px;
-    line-height: 1;
-    font-weight: 600;
+    padding: 0 17px;
+    color: #696d70;
+    font-family: "Barlow Condensed", Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 500;
     letter-spacing: 0.05em;
-    border-bottom: 1px solid #292929;
-}
-
-
-/* TABLE DATA */
-
-.dashboard-jobs-table td {
-    height: 43px;
-    padding: 0 14px;
-    color: #737373;
-    font-size: 9px;
-    line-height: 1;
-    border-bottom: 1px solid #252525;
+    text-align: left;
     white-space: nowrap;
 }
 
-.dashboard-jobs-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
 .dashboard-jobs-table tbody tr {
-    transition: 0.15s ease;
+    height: 58px;
+    border-top: 1px solid #282929;
 }
 
-.dashboard-jobs-table tbody tr:hover {
-    background: #1a1a1a;
+.dashboard-jobs-table td {
+    padding: 0 17px;
+    color: #72777a;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.25;
+    vertical-align: middle;
 }
 
 
-/* JOB ID */
+/* Column widths */
+
+.dashboard-jobs-table th:nth-child(1),
+.dashboard-jobs-table td:nth-child(1) {
+    width: 10%;
+}
+
+.dashboard-jobs-table th:nth-child(2),
+.dashboard-jobs-table td:nth-child(2) {
+    width: 16%;
+}
+
+.dashboard-jobs-table th:nth-child(3),
+.dashboard-jobs-table td:nth-child(3) {
+    width: 24%;
+}
+
+.dashboard-jobs-table th:nth-child(4),
+.dashboard-jobs-table td:nth-child(4) {
+    width: 15%;
+}
+
+.dashboard-jobs-table th:nth-child(5),
+.dashboard-jobs-table td:nth-child(5) {
+    width: 14%;
+}
+
+.dashboard-jobs-table th:nth-child(6),
+.dashboard-jobs-table td:nth-child(6) {
+    width: 14%;
+}
+
+.dashboard-jobs-table th:nth-child(7),
+.dashboard-jobs-table td:nth-child(7) {
+    width: 12%;
+    text-align: right;
+}
+
+
+/* Job ID */
 
 .dashboard-jobs-table .job-id {
-    color: #d7ff36;
-    font-size: 9px;
+    color: #c9ff20;
+    font-family: "Barlow Condensed", Arial, sans-serif;
+    font-size: 12px;
     font-weight: 700;
+    line-height: 1.05;
 }
 
 
-/* CUSTOMER */
+/* Customer */
 
 .dashboard-jobs-table .customer-name {
     color: #eeeeee;
-    font-size: 10px;
-    line-height: 1;
+    font-size: 13px;
     font-weight: 700;
 }
 
 
-/* MECHANIC */
+/* Mechanic */
 
 .dashboard-jobs-table .mechanic-name {
     color: #eeeeee;
-    font-size: 10px;
-    line-height: 1;
+    font-size: 12px;
     font-weight: 600;
 }
 
 
-/* AMOUNT */
+/* Amount */
 
 .dashboard-jobs-table .amount {
     color: #eeeeee;
-    font-size: 10px;
-    line-height: 1;
+    font-size: 13px;
     font-weight: 700;
     text-align: right;
 }
@@ -571,107 +419,125 @@ body {
 
 /* =========================================================
    STATUS BADGES
-========================================================= */
+   ========================================================= */
 
 .status {
-    display: inline-block;
-    padding: 4px 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 3px 9px;
     border-radius: 4px;
-    font-size: 8px;
-    line-height: 1;
-    font-weight: 700;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 
-/* REPAIR */
+/* Repair */
 
 .status-repair {
-    color: #24d879;
-    border: 1px solid rgba(36, 216, 121, 0.35);
-    background: rgba(36, 216, 121, 0.07);
+    color: #16df7d;
+    background: rgba(0, 210, 110, 0.08);
+    border: 1px solid rgba(0, 210, 110, 0.55);
 }
 
 
-/* QUALITY */
+/* Quality */
 
 .status-quality {
-    color: #b96cff;
-    border: 1px solid rgba(185, 108, 255, 0.35);
-    background: rgba(185, 108, 255, 0.07);
+    color: #c979ff;
+    background: rgba(183, 66, 255, 0.10);
+    border: 1px solid rgba(183, 66, 255, 0.55);
 }
 
 
-/* DELIVERED */
+/* Delivered */
 
 .status-delivered {
-    color: #b8ef22;
-    border: 1px solid rgba(184, 239, 34, 0.35);
-    background: rgba(184, 239, 34, 0.07);
+    color: #c9ff20;
+    background: rgba(201, 255, 32, 0.08);
+    border: 1px solid rgba(201, 255, 32, 0.45);
 }
 
 
-/* INSPECTION */
+/* Inspection */
 
 .status-inspection {
-    color: #f0a000;
-    border: 1px solid rgba(240, 160, 0, 0.35);
-    background: rgba(240, 160, 0, 0.07);
+    color: #ff9e00;
+    background: rgba(255, 140, 0, 0.08);
+    border: 1px solid rgba(255, 140, 0, 0.55);
 }
 
 
-/* RECEIVED */
+/* Received */
 
 .status-received {
-    color: #28b9ed;
-    border: 1px solid rgba(40, 185, 237, 0.35);
-    background: rgba(40, 185, 237, 0.07);
+    color: #00aaff;
+    background: rgba(0, 170, 255, 0.08);
+    border: 1px solid rgba(0, 170, 255, 0.55);
 }
 
 
 /* =========================================================
    RIGHT COLUMN
-========================================================= */
+   ========================================================= */
 
 .dashboard-right-column {
+    width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
 
 /* =========================================================
-   WORKLOAD
-========================================================= */
+   MECHANIC WORKLOAD
+   ========================================================= */
+
+.workload-panel {
+    width: 100%;
+    height: 230px;
+    min-height: 230px;
+    max-height: 230px;
+    overflow: hidden;
+}
+
+.workload-panel .dashboard-panel-header {
+    height: 45px;
+    min-height: 45px;
+    color: #696d70;
+    font-weight: 500;
+}
 
 .workload-list {
-    padding: 9px 14px;
+    width: 100%;
+    height: 185px;
+    margin: 0;
+    padding: 9px 17px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
 }
 
 .workload-item {
+    width: 100%;
     height: 29px;
+    min-height: 29px;
     display: flex;
     align-items: center;
-    gap: 8px;
-}
-
-.workload-item strong {
-    color: #eeeeee;
-    font-size: 10px;
-    line-height: 1;
-    font-weight: 600;
-}
-
-.workload-item>span:last-child {
-    margin-left: auto;
-    color: #626262;
-    font-size: 8px;
-    line-height: 1;
+    gap: 9px;
+    margin: 0;
+    padding: 0;
 }
 
 .workload-dot {
-    width: 6px;
-    height: 6px;
-    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    min-width: 7px;
+    max-width: 7px;
+    flex: 0 0 7px;
     border-radius: 50%;
 }
 
@@ -680,23 +546,55 @@ body {
 }
 
 .workload-dot.green {
-    background: #20d979;
+    background: #18df7e;
+}
+
+.workload-item strong {
+    flex: 1;
+    margin: 0;
+    color: #eeeeee;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.workload-item>span:last-child {
+    width: 45px;
+    min-width: 45px;
+    color: #65696c;
+    font-family: "Barlow Condensed", Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 400;
+    text-align: right;
+    white-space: nowrap;
 }
 
 
 /* =========================================================
    AI ALERTS
-========================================================= */
+   ========================================================= */
+
+.alerts-panel {
+    width: 100%;
+}
+
+.alerts-panel .dashboard-panel-header {
+    color: #696d70;
+    font-weight: 500;
+}
 
 .alert-list {
-    padding: 0 14px;
+    width: 100%;
+    padding: 7px 10px 10px;
 }
 
 .alert-item {
-    min-height: 51px;
+    min-height: 57px;
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 12px;
+    padding: 8px 10px;
     border-bottom: 1px solid #292929;
 }
 
@@ -705,88 +603,91 @@ body {
 }
 
 .alert-icon {
-    width: 22px;
-    color: #d7ff36;
-    font-size: 12px;
-    line-height: 1;
-    text-align: center;
+    width: 24px;
+    min-width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.alert-item>div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
 .alert-item strong {
-    display: block;
-    margin-bottom: 3px;
     color: #eeeeee;
-    font-size: 9px;
-    line-height: 1.1;
+    font-size: 12px;
     font-weight: 700;
 }
 
 .alert-item span {
-    display: block;
-    color: #686868;
-    font-size: 8px;
-    line-height: 1;
+    color: #656a6d;
+    font-size: 10px;
 }
 
 
 /* =========================================================
    BOTTOM GRID
-========================================================= */
+   ========================================================= */
 
 .dashboard-bottom-grid {
+    width: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 25px;
 }
 
 
 /* =========================================================
    REVENUE
-========================================================= */
+   ========================================================= */
 
-.revenue-panel {
-    min-height: 175px;
+.revenue-panel,
+.service-panel {
+    min-height: 220px;
 }
 
 .revenue-chart {
     position: relative;
-    height: 122px;
-    margin: 0 14px;
+    height: 175px;
+    padding: 20px;
 }
 
 .chart-line {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 31px;
+    left: 30px;
+    right: 30px;
+    top: 70px;
     height: 1px;
-    background: #292929;
+    background: #282929;
 }
 
 .chart-days {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 3px;
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    color: #686868;
-    font-size: 8px;
-    line-height: 1;
-    text-align: center;
+    left: 30px;
+    right: 30px;
+    bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    color: #62676a;
+    font-family: "Barlow Condensed", Arial, sans-serif;
+    font-size: 10px;
 }
 
 
 /* =========================================================
    SERVICE DISTRIBUTION
-========================================================= */
+   ========================================================= */
 
 .service-list {
-    padding: 11px 14px;
+    padding: 16px 18px;
 }
 
 .service-item {
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .service-item:last-child {
@@ -795,200 +696,117 @@ body {
 
 .service-item-top {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    margin-bottom: 5px;
+    margin-bottom: 7px;
 }
 
 .service-item-top strong {
-    color: #eeeeee;
-    font-size: 9px;
-    line-height: 1;
-    font-weight: 600;
+    color: #dddddd;
+    font-size: 11px;
+    font-weight: 500;
 }
 
 .service-item-top span {
-    color: #666666;
-    font-size: 8px;
-    line-height: 1;
+    color: #777b7e;
+    font-family: "Barlow Condensed", Arial, sans-serif;
+    font-size: 11px;
 }
 
 .service-bar {
     width: 100%;
     height: 5px;
-    background: #242424;
-    border-radius: 5px;
+    background: #252626;
+    border-radius: 4px;
     overflow: hidden;
 }
 
 .service-fill {
     height: 100%;
-    border-radius: 5px;
+    border-radius: 4px;
 }
 
 .service-fill.full {
-    background: #c9f92d;
+    background: #c9ff20;
 }
 
 .service-fill.engine {
-    background: #35bce8;
+    background: #00aaff;
 }
 
 .service-fill.electrical {
-    background: #bb72ff;
+    background: #b96cff;
 }
 
 .service-fill.tyres {
-    background: #26d878;
+    background: #ff9e00;
 }
 
 
 /* =========================================================
-   LARGE SCREEN
-========================================================= */
+   REMOVE OLD TOGGLE
+   ========================================================= */
 
-@media (min-width: 1400px) {
-    .dashboard-sidebar {
-        width: 235px;
-    }
-    .dashboard-main {
-        width: calc(100% - 235px);
-        margin-left: 235px;
-    }
-    .dashboard-page.sidebar-closed .dashboard-main {
-        width: 100%;
-        margin-left: 0;
-    }
-    .dashboard-toggle-open {
-        left: 220px;
-    }
-    .dashboard-content {
-        padding-left: 24px;
-        padding-right: 24px;
-    }
-    .dashboard-page-heading h1 {
-        font-size: 31px;
-    }
-    .dashboard-stat-value {
-        font-size: 26px;
-    }
+.dashboard-sidebar-toggle {
+    display: none !important;
 }
 
 
 /* =========================================================
-   MEDIUM SCREEN
-========================================================= */
+   RESPONSIVE
+   ========================================================= */
 
-@media (max-width: 1100px) {
-    .dashboard-sidebar {
-        width: 205px;
+@media (max-width: 1250px) {
+    .dashboard-main-grid {
+        grid-template-columns: minmax(0, 1.8fr) minmax(350px, 1fr);
     }
+    .dashboard-jobs-table th,
+    .dashboard-jobs-table td {
+        padding-left: 11px;
+        padding-right: 11px;
+    }
+}
+
+@media (max-width: 1000px) {
     .dashboard-main {
-        width: calc(100% - 205px);
-        margin-left: 205px;
-    }
-    .dashboard-page.sidebar-closed .dashboard-main {
-        width: 100%;
-        margin-left: 0;
-    }
-    .dashboard-toggle-open {
-        left: 190px;
+        margin-left: 220px;
+        width: calc(100% - 220px);
     }
     .dashboard-stat-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, 1fr);
     }
     .dashboard-main-grid {
         grid-template-columns: 1fr;
     }
     .dashboard-bottom-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
     }
 }
 
-
-/* =========================================================
-   TABLET
-========================================================= */
-
-@media (max-width: 750px) {
-    .dashboard-sidebar {
-        width: 230px;
-        height: 100vh;
-        position: fixed;
-    }
+@media (max-width: 700px) {
     .dashboard-main {
-        width: 100%;
-        margin-left: 0;
+        margin-left: 70px;
+        width: calc(100% - 70px);
     }
-    .dashboard-page.sidebar-open .dashboard-main {
-        margin-left: 0;
+    .dashboard-content {
+        padding: 20px 15px 35px;
     }
-    .dashboard-page.sidebar-closed .dashboard-main {
-        width: 100%;
-        margin-left: 0;
-    }
-    .dashboard-toggle-open {
-        left: 215px;
+    .dashboard-stat-grid {
+        grid-template-columns: 1fr;
     }
     .dashboard-topbar {
-        padding: 0 14px;
+        padding: 0 15px;
     }
     .dashboard-breadcrumb {
-        font-size: 10px;
-    }
-    .dashboard-ai-alert {
-        display: none;
-    }
-    .dashboard-stat-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-    .dashboard-main-grid {
-        grid-template-columns: 1fr;
-    }
-    .dashboard-bottom-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 500px) {
-    .dashboard-content {
-        padding: 18px 12px 25px;
-    }
-    .dashboard-page-heading {
-        margin-bottom: 16px;
-    }
-    .dashboard-page-heading h1 {
-        font-size: 23px;
-    }
-    .dashboard-date {
-        font-size: 7px;
-    }
-    .dashboard-top-actions {
-        gap: 5px;
+        font-size: 11px;
     }
     .dashboard-role-badge {
         display: none;
     }
-    .dashboard-stat-grid {
-        grid-template-columns: 1fr;
+    .dashboard-ai-alert {
+        display: none;
     }
-    .dashboard-stat-card {
-        min-height: 88px;
-    }
-    .dashboard-stat-value {
-        font-size: 21px;
-    }
-    .dashboard-panel-header {
-        padding: 0 12px;
-    }
-    .dashboard-jobs-table th {
-        padding: 0 10px;
-    }
-    .dashboard-jobs-table td {
-        padding: 0 10px;
+    .dashboard-page-heading h1 {
+        font-size: 28px;
     }
 }

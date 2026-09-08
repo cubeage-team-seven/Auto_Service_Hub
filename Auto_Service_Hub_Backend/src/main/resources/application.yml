@@ -3,9 +3,9 @@ spring:
     name: autoservicehub-backend
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:auto_service_hub}?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:auto_service_hub}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:root}
+    password: ${DB_PASSWORD:YOUR_MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -22,6 +22,18 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 server:
   port: 8080
   servlet:
@@ -32,8 +44,10 @@ app:
     secret: ${JWT_SECRET:change-this-secret-in-env}
     access-token-expiry-ms: 3600000
     refresh-token-expiry-ms: 604800000
+
   cors:
     allowed-origins: ${CORS_ORIGINS:http://localhost:5173,http://localhost:3000}
+
   ai:
     provider: ${AI_PROVIDER:none}
     base-url: ${AI_BASE_URL:}

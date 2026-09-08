@@ -41,10 +41,6 @@ function LandingPage() {
               <div className="landing-logo-title">
                 Auto_Service_Hub
               </div>
-
-              <div className="landing-logo-subtitle">
-                AI CRM
-              </div>
             </div>
 
           </div>
@@ -129,7 +125,7 @@ function LandingPage() {
 
 
           <p className="landing-hero-description">
-            The all-new SmartGarage AI CRM. AI-powered diagnosis,
+            The all-new Auto_Service_Hub AI-powered diagnosis,
             <br />
             booking, billing and customer retention — in one platform.
           </p>
