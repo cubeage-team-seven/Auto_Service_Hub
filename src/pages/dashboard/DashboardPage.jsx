@@ -1,10 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getDashboardSummary } from "../../services/dashboardService";
 import "./DashboardPage.css";
 
 function DashboardPage() {
-
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [summary, setSummary] = useState(null);
+
+  useEffect(() => {
+    getDashboardSummary().then(setSummary).catch(() => {});
+  }, []);
 
   return (
 
@@ -188,11 +193,11 @@ function DashboardPage() {
               </span>
 
               <strong className="dashboard-stat-value green">
-                14
+                {summary ? summary.todaysJobs : "—"}
               </strong>
 
               <span className="dashboard-stat-description">
-                8 active · 6 delivered
+                {summary ? `${summary.pendingJobs} active · ${summary.completedJobs} delivered` : "loading..."}
               </span>
 
             </div>
@@ -207,7 +212,7 @@ function DashboardPage() {
               </span>
 
               <strong className="dashboard-stat-value">
-                ₹42,500
+                {summary ? `₹${Number(summary.revenue ?? 0).toLocaleString("en-IN")}` : "—"}
               </strong>
 
               <span className="dashboard-stat-description">
@@ -226,11 +231,11 @@ function DashboardPage() {
               </span>
 
               <strong className="dashboard-stat-value">
-                6
+                {summary ? summary.upcomingAppointments : "—"}
               </strong>
 
               <span className="dashboard-stat-description">
-                ₹48,294 outstanding
+                Upcoming appointments
               </span>
 
             </div>
@@ -245,7 +250,7 @@ function DashboardPage() {
               </span>
 
               <strong className="dashboard-stat-value">
-                3
+                {summary ? summary.lowStockParts : "—"}
               </strong>
 
               <span className="dashboard-stat-description">

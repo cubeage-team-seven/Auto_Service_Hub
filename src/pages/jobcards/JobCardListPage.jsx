@@ -1,118 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { getJobCards } from "../../services/jobCardService";
 import "./JobCardListPage.css";
 
 function JobCardListPage() {
   const [activeFilter, setActiveFilter] = useState("ALL");
-  const [savedJobs, setSavedJobs] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    const storedJobs =
-      JSON.parse(localStorage.getItem("smartgarage_jobcards")) || [];
-
-    setSavedJobs(storedJobs);
+    getJobCards(0, 50)
+      .then((page) => setJobs(page.content ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
-
-  // =========================================================
-  // DEFAULT JOBS
-  // =========================================================
-
-  const jobs = [
-    {
-      id: "JC-2408",
-      customer: "Arjun Mehta",
-      vehicle: "MH-12-AB-4521 | Swift",
-      service: "Engine Overhaul",
-      mechanic: "Ravi Kumar",
-      status: "In Repair",
-      eta: "Today 5:00 PM",
-      amount: "₹18,500",
-      progress: 3,
-    },
-
-    {
-      id: "JC-2407",
-      customer: "Priya Sharma",
-      vehicle: "DL-01-CZ-9834 | Creta",
-      service: "Full Service",
-      mechanic: "Amit Patel",
-      status: "Quality Check",
-      eta: "Today 3:30 PM",
-      amount: "₹8,200",
-      progress: 4,
-    },
-
-    {
-      id: "JC-2406",
-      customer: "Rohit Desai",
-      vehicle: "GJ-05-XY-7712 | Innova",
-      service: "AC Repair + Service",
-      mechanic: "Suresh Nair",
-      status: "Delivered",
-      eta: "Delivered",
-      amount: "₹12,400",
-      progress: 5,
-    },
-
-    {
-      id: "JC-2405",
-      customer: "Neha Joshi",
-      vehicle: "MH-14-PQ-3356 | City",
-      service: "Brake Replacement",
-      mechanic: "Ravi Kumar",
-      status: "Inspection",
-      eta: "Today 6:00 PM",
-      amount: "₹4,800",
-      progress: 2,
-    },
-
-    {
-      id: "JC-2404",
-      customer: "Vikram Singh",
-      vehicle: "UP-32-GH-1190 | Fortuner",
-      service: "Suspension + Tyres",
-      mechanic: "Amit Patel",
-      status: "Received",
-      eta: "Tomorrow 12:00 PM",
-      amount: "₹32,000",
-      progress: 1,
-    },
-
-    {
-      id: "JC-2403",
-      customer: "Kavita Rao",
-      vehicle: "KA-03-MN-5567 | Baleno",
-      service: "Basic Service",
-      mechanic: "Deepak Verma",
-      status: "Delivered",
-      eta: "Delivered",
-      amount: "₹3,200",
-      progress: 5,
-    },
-  ];
 
   // =========================================================
   // FILTERS
   // =========================================================
 
-  const filters = [
-    "ALL",
-    "RECEIVED",
-    "INSPECTION",
-    "REPAIR",
-    "QC",
-    "DELIVERED",
-  ];
-
-  // =========================================================
-  // ALL JOBS
-  // =========================================================
-
-  const allJobs = [
-    ...jobs,
-    ...savedJobs,
-  ];
+  const filters = ["ALL", "RECEIVED", "INSPECTION", "REPAIR", "QC", "DELIVERED"];
 
   // =========================================================
   // FILTER JOBS
@@ -120,18 +28,17 @@ function JobCardListPage() {
 
   const filteredJobs =
     activeFilter === "ALL"
-      ? allJobs
-      : allJobs.filter((job) => {
-          if (activeFilter === "REPAIR") {
-            return job.status === "In Repair";
-          }
-
-          if (activeFilter === "QC") {
-            return job.status === "Quality Check";
-          }
-
-          return job.status.toUpperCase() === activeFilter;
+      ? jobs
+      : jobs.filter((job) => {
+          if (activeFilter === "REPAIR") return job.status === "IN_REPAIR";
+          if (activeFilter === "QC") return job.status === "QUALITY_CHECK";
+          return job.status === activeFilter;
         });
+
+  const statusLabel = (s) => {
+    const map = { RECEIVED: "Received", INSPECTION: "Inspection", IN_REPAIR: "In Repair", QUALITY_CHECK: "Quality Check", DELIVERED: "Delivered" };
+    return map[s] ?? s;
+  };
 
   // =========================================================
   // STATUS CLASS
@@ -139,23 +46,12 @@ function JobCardListPage() {
 
   const getStatusClass = (status) => {
     switch (status) {
-      case "In Repair":
-        return "status-repair";
-
-      case "Quality Check":
-        return "status-qc";
-
-      case "Delivered":
-        return "status-delivered";
-
-      case "Inspection":
-        return "status-inspection";
-
-      case "Received":
-        return "status-received";
-
-      default:
-        return "";
+      case "IN_REPAIR": return "status-repair";
+      case "QUALITY_CHECK": return "status-qc";
+      case "DELIVERED": return "status-delivered";
+      case "INSPECTION": return "status-inspection";
+      case "RECEIVED": return "status-received";
+      default: return "";
     }
   };
 
@@ -442,7 +338,9 @@ function JobCardListPage() {
 
           <div className="jobcard-list">
 
-            {filteredJobs.map((job) => (
+            {loading && <div className="jobcard-empty">Loading...</div>}
+
+            {!loading && filteredJobs.map((job) => (
 
               <div
                 className="jobcard-item"
@@ -458,15 +356,15 @@ function JobCardListPage() {
                   <div className="jobcard-customer">
 
                     <span className="jobcard-id">
-                      {job.id}
+                      {job.jobCardNumber}
                     </span>
 
                     <h2>
-                      {job.customer}
+                      {job.customerName}
                     </h2>
 
                     <p>
-                      {job.vehicle}
+                      {job.vehicleInfo}
                     </p>
 
                   </div>
@@ -481,11 +379,11 @@ function JobCardListPage() {
                     </span>
 
                     <strong>
-                      {job.service}
+                      {job.serviceType}
                     </strong>
 
                     <p>
-                      Mechanic: {job.mechanic}
+                      Mechanic: {job.mechanicName ?? "Unassigned"}
                     </p>
 
                   </div>
@@ -496,11 +394,9 @@ function JobCardListPage() {
                   <div className="jobcard-status-area">
 
                     <span
-                      className={`jobcard-status ${getStatusClass(
-                        job.status
-                      )}`}
+                      className={`jobcard-status ${getStatusClass(job.status)}`}
                     >
-                      {job.status}
+                      {statusLabel(job.status)}
                     </span>
 
                   </div>
@@ -511,11 +407,11 @@ function JobCardListPage() {
                   <div className="jobcard-amount-area">
 
                     <span>
-                      {job.eta}
+                      {job.estimatedDelivery ? new Date(job.estimatedDelivery).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—"}
                     </span>
 
                     <strong>
-                      {job.amount}
+                      {job.estimatedCost ? `₹${Number(job.estimatedCost).toLocaleString("en-IN")}` : "—"}
                     </strong>
 
                   </div>
@@ -525,7 +421,6 @@ function JobCardListPage() {
 
                   <Link
                     to={`/job-cards/${job.id}`}
-                    state={{ job }}
                     className="jobcard-details-button"
                   >
                     Details

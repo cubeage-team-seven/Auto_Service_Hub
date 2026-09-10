@@ -1,438 +1,160 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getCustomers } from "../../services/customerService";
+import { getVehicles } from "../../services/vehicleService";
+import { getMechanics } from "../../services/mechanicService";
+import { createJobCard } from "../../services/jobCardService";
 import "./JobCardCreatePage.css";
 
 function JobCardCreatePage() {
   const navigate = useNavigate();
 
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [mechanics, setMechanics] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
   const [formData, setFormData] = useState({
-    appointment: "Create without appointment",
-    customer: "",
-    vehicle: "",
-    odometer: "43200",
+    customerId: "",
+    vehicleId: "",
+    mechanicId: "",
+    odometer: "",
     serviceType: "Basic Service",
-    mechanic: "Auto-assign via AI",
     complaint: "",
     estimatedDelivery: "",
-    estimatedCost: "0",
+    estimatedCost: "",
     technicianNotes: "",
   });
 
+  useEffect(() => {
+    getCustomers(0, 100).then((p) => setCustomers(p.content ?? [])).catch(() => {});
+    getVehicles(0, 100).then((p) => setVehicles(p.content ?? [])).catch(() => {});
+    getMechanics(0, 100).then((p) => setMechanics(p.content ?? [])).catch(() => {});
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const closeModal = () => {
-    navigate("/job-cards");
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const existingJobs =
-      JSON.parse(localStorage.getItem("smartgarage_jobcards")) || [];
-
-    const newJob = {
-      id: `JC-${2409 + existingJobs.length}`,
-
-      customer: formData.customer || "New Customer",
-
-      phone: "",
-
-      vehicle: formData.vehicle || "Vehicle",
-
-      service: formData.serviceType,
-
-      mechanic:
-        formData.mechanic === "Auto-assign via AI"
-          ? "Ravi Kumar"
-          : formData.mechanic,
-
-      status: "Received",
-
-      eta: formData.estimatedDelivery
-        ? new Date(formData.estimatedDelivery).toLocaleString()
-        : "Not specified",
-
-      amount: formData.estimatedCost
-        ? `₹${Number(formData.estimatedCost).toLocaleString("en-IN")}`
-        : "₹0",
-
-      progress: 1,
-
-      description: formData.complaint,
-
-      odometer: formData.odometer,
-
-      technicianNotes: formData.technicianNotes,
-
-      createdAt: new Date().toISOString(),
-    };
-
-    localStorage.setItem(
-      "smartgarage_jobcards",
-      JSON.stringify([...existingJobs, newJob])
-    );
-
-    alert("Job Card created successfully!");
-
-    navigate("/job-cards");
+    setError("");
+    setSubmitting(true);
+    try {
+      await createJobCard({
+        customerId: Number(formData.customerId),
+        vehicleId: Number(formData.vehicleId),
+        mechanicId: formData.mechanicId ? Number(formData.mechanicId) : null,
+        serviceType: formData.serviceType,
+        complaint: formData.complaint,
+        technicianNotes: formData.technicianNotes,
+        odometerReading: formData.odometer ? Number(formData.odometer) : null,
+        estimatedDelivery: formData.estimatedDelivery || null,
+        estimatedCost: formData.estimatedCost ? Number(formData.estimatedCost) : null,
+        status: "RECEIVED",
+      });
+      navigate("/job-cards");
+    } catch (err) {
+      setError(err.response?.data?.message ?? "Failed to create job card.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div className="job-create-overlay">
+      <div className="job-create-backdrop" onClick={() => navigate("/job-cards")}></div>
 
-      {/* DARK BACKGROUND */}
-      <div
-        className="job-create-backdrop"
-        onClick={closeModal}
-      ></div>
-
-
-      {/* MODAL */}
       <div className="job-create-modal">
-
-        {/* HEADER */}
         <div className="job-create-modal-header">
-
-          <h2>
-            NEW JOB CARD
-          </h2>
-
-          <button
-            type="button"
-            className="job-create-close"
-            onClick={closeModal}
-          >
-            ×
-          </button>
-
+          <h2>NEW JOB CARD</h2>
+          <button type="button" className="job-create-close" onClick={() => navigate("/job-cards")}>×</button>
         </div>
 
+        {error && <div style={{ color: "#f87171", padding: "0 1.5rem", fontSize: "0.85rem" }}>{error}</div>}
 
-        {/* FORM */}
-        <form
-          className="job-create-modal-form"
-          onSubmit={handleSubmit}
-        >
+        <form className="job-create-modal-form" onSubmit={handleSubmit}>
 
-          {/* FROM APPOINTMENT */}
           <div className="job-create-field">
-
-            <label>
-              FROM APPOINTMENT
-            </label>
-
-            <select
-              name="appointment"
-              value={formData.appointment}
-              onChange={handleChange}
-            >
-              <option value="Create without appointment">
-                Create without appointment
-              </option>
-
-              <option value="Appointment #1001">
-                Appointment #1001
-              </option>
-
-              <option value="Appointment #1002">
-                Appointment #1002
-              </option>
+            <label>CUSTOMER</label>
+            <select name="customerId" value={formData.customerId} onChange={handleChange} required>
+              <option value="">Select customer...</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>{c.name} — {c.phone}</option>
+              ))}
             </select>
-
           </div>
 
-
-          {/* CUSTOMER */}
           <div className="job-create-field">
-
-            <label>
-              CUSTOMER
-            </label>
-
-            <select
-              name="customer"
-              value={formData.customer}
-              onChange={handleChange}
-              required
-            >
-              <option value="">
-                Select customer...
-              </option>
-
-              <option value="Arjun Mehta">
-                Arjun Mehta
-              </option>
-
-              <option value="Priya Sharma">
-                Priya Sharma
-              </option>
-
-              <option value="Rohit Desai">
-                Rohit Desai
-              </option>
-
-              <option value="Neha Joshi">
-                Neha Joshi
-              </option>
-
-              <option value="Vikram Singh">
-                Vikram Singh
-              </option>
-
-              <option value="Kavita Rao">
-                Kavita Rao
-              </option>
+            <label>VEHICLE</label>
+            <select name="vehicleId" value={formData.vehicleId} onChange={handleChange} required>
+              <option value="">Select vehicle...</option>
+              {vehicles.map((v) => (
+                <option key={v.id} value={v.id}>{v.registrationNo} | {v.make} {v.model}</option>
+              ))}
             </select>
-
           </div>
 
-
-          {/* VEHICLE */}
           <div className="job-create-field">
-
-            <label>
-              VEHICLE
-            </label>
-
-            <select
-              name="vehicle"
-              value={formData.vehicle}
-              onChange={handleChange}
-              required
-            >
-              <option value="">
-                Select vehicle...
-              </option>
-
-              <option value="MH-12-AB-4521 | Swift">
-                MH-12-AB-4521 | Swift
-              </option>
-
-              <option value="DL-01-CZ-9834 | Creta">
-                DL-01-CZ-9834 | Creta
-              </option>
-
-              <option value="GJ-05-XY-7712 | Innova">
-                GJ-05-XY-7712 | Innova
-              </option>
-
-              <option value="MH-14-PQ-3356 | City">
-                MH-14-PQ-3356 | City
-              </option>
+            <label>ASSIGN MECHANIC</label>
+            <select name="mechanicId" value={formData.mechanicId} onChange={handleChange}>
+              <option value="">Unassigned</option>
+              {mechanics.map((m) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
             </select>
-
           </div>
 
-
-          {/* ODOMETER */}
           <div className="job-create-field">
-
-            <label>
-              ODOMETER READING (KM)
-            </label>
-
-            <input
-              type="number"
-              name="odometer"
-              value={formData.odometer}
-              onChange={handleChange}
-              placeholder="43200"
-            />
-
+            <label>ODOMETER READING (KM)</label>
+            <input type="number" name="odometer" value={formData.odometer} onChange={handleChange} placeholder="43200" />
           </div>
 
-
-          {/* SERVICE TYPE */}
           <div className="job-create-field">
-
-            <label>
-              SERVICE TYPE
-            </label>
-
-            <select
-              name="serviceType"
-              value={formData.serviceType}
-              onChange={handleChange}
-            >
-              <option value="Basic Service">
-                Basic Service
-              </option>
-
-              <option value="Full Service">
-                Full Service
-              </option>
-
-              <option value="Engine Overhaul">
-                Engine Overhaul
-              </option>
-
-              <option value="AC Repair + Service">
-                AC Repair + Service
-              </option>
-
-              <option value="Brake Replacement">
-                Brake Replacement
-              </option>
-
-              <option value="Suspension + Tyres">
-                Suspension + Tyres
-              </option>
-
-              <option value="Electrical">
-                Electrical
-              </option>
-
-              <option value="Tyre Replacement">
-                Tyre Replacement
-              </option>
+            <label>SERVICE TYPE</label>
+            <select name="serviceType" value={formData.serviceType} onChange={handleChange}>
+              <option>Basic Service</option>
+              <option>Full Service</option>
+              <option>Engine Overhaul</option>
+              <option>AC Repair + Service</option>
+              <option>Brake Replacement</option>
+              <option>Suspension + Tyres</option>
+              <option>Electrical</option>
+              <option>Tyre Replacement</option>
             </select>
-
           </div>
 
-
-          {/* ASSIGN MECHANIC */}
           <div className="job-create-field">
-
-            <label>
-              ASSIGN MECHANIC
-            </label>
-
-            <select
-              name="mechanic"
-              value={formData.mechanic}
-              onChange={handleChange}
-            >
-              <option value="Auto-assign via AI">
-                Auto-assign via AI
-              </option>
-
-              <option value="Ravi Kumar">
-                Ravi Kumar
-              </option>
-
-              <option value="Amit Patel">
-                Amit Patel
-              </option>
-
-              <option value="Suresh Nair">
-                Suresh Nair
-              </option>
-
-              <option value="Deepak Verma">
-                Deepak Verma
-              </option>
-
-              <option value="Kiran Joshi">
-                Kiran Joshi
-              </option>
-            </select>
-
+            <label>CUSTOMER COMPLAINT</label>
+            <textarea name="complaint" value={formData.complaint} onChange={handleChange} placeholder="Describe the customer's complaint..." rows="3" />
           </div>
 
-
-          {/* CUSTOMER COMPLAINT */}
           <div className="job-create-field">
-
-            <label>
-              CUSTOMER COMPLAINT
-            </label>
-
-            <textarea
-              name="complaint"
-              value={formData.complaint}
-              onChange={handleChange}
-              placeholder="Describe the customer's complaint in detail..."
-              rows="3"
-            />
-
+            <label>ESTIMATED DELIVERY</label>
+            <input type="datetime-local" name="estimatedDelivery" value={formData.estimatedDelivery} onChange={handleChange} />
           </div>
 
-
-          {/* ESTIMATED DELIVERY */}
           <div className="job-create-field">
-
-            <label>
-              ESTIMATED DELIVERY
-            </label>
-
-            <input
-              type="datetime-local"
-              name="estimatedDelivery"
-              value={formData.estimatedDelivery}
-              onChange={handleChange}
-            />
-
+            <label>ESTIMATED COST (₹)</label>
+            <input type="number" name="estimatedCost" value={formData.estimatedCost} onChange={handleChange} placeholder="0" min="0" />
           </div>
 
-
-          {/* ESTIMATED COST */}
           <div className="job-create-field">
-
-            <label>
-              ESTIMATED COST (₹)
-            </label>
-
-            <input
-              type="number"
-              name="estimatedCost"
-              value={formData.estimatedCost}
-              onChange={handleChange}
-              placeholder="0"
-              min="0"
-            />
-
+            <label>TECHNICIAN NOTES</label>
+            <textarea name="technicianNotes" value={formData.technicianNotes} onChange={handleChange} placeholder="Initial technician observations..." rows="3" />
           </div>
 
-
-          {/* TECHNICIAN NOTES */}
-          <div className="job-create-field">
-
-            <label>
-              TECHNICIAN NOTES
-            </label>
-
-            <textarea
-              name="technicianNotes"
-              value={formData.technicianNotes}
-              onChange={handleChange}
-              placeholder="Initial technician observations..."
-              rows="3"
-            />
-
-          </div>
-
-
-          {/* BUTTONS */}
           <div className="job-create-actions">
-
-            <button
-              type="submit"
-              className="job-create-submit"
-            >
-              CREATE JOB CARD
+            <button type="submit" className="job-create-submit" disabled={submitting}>
+              {submitting ? "CREATING..." : "CREATE JOB CARD"}
             </button>
-
-            <button
-              type="button"
-              className="job-create-cancel"
-              onClick={closeModal}
-            >
-              Cancel
-            </button>
-
+            <button type="button" className="job-create-cancel" onClick={() => navigate("/job-cards")}>Cancel</button>
           </div>
 
         </form>
-
       </div>
-
     </div>
   );
 }
