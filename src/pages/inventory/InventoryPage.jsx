@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-
+import { getParts } from "../../services/inventoryService";
 import "./InventoryPage.css";
 
 function InventoryPage() {
@@ -8,114 +8,26 @@ function InventoryPage() {
   const [category, setCategory] = useState("All Categories");
   const [stock, setStock] = useState("All Stock");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const inventory = [
-    {
-      sku: "ENO-7742",
-      name: "Engine Oil 5W-30 (1L)",
-      category: "Lubricants",
-      location: "Rack A1",
-      stock: 48,
-      min: 20,
-      price: "₹320",
-      supplier: "Castrol India",
-      status: "OK",
-    },
-    {
-      sku: "BRP-2211",
-      name: "Brake Pads — Front (Pair)",
-      category: "Brakes",
-      location: "Rack B3",
-      stock: 12,
-      min: 8,
-      price: "₹1,200",
-      supplier: "Bosch India",
-      status: "OK",
-    },
-    {
-      sku: "ACF-5503",
-      name: "AC Filter",
-      category: "Filters",
-      location: "Rack C2",
-      stock: 3,
-      min: 5,
-      price: "₹450",
-      supplier: "Mahle Filters",
-      status: "Low Stock",
-    },
-    {
-      sku: "ATF-9902",
-      name: "ATF Oil (1L)",
-      category: "Lubricants",
-      location: "Rack A2",
-      stock: 18,
-      min: 10,
-      price: "₹580",
-      supplier: "Shell India",
-      status: "OK",
-    },
-    {
-      sku: "SPK-1144",
-      name: "Spark Plugs (Set of 4)",
-      category: "Ignition",
-      location: "Rack D1",
-      stock: 22,
-      min: 8,
-      price: "₹880",
-      supplier: "NGK India",
-      status: "OK",
-    },
-    {
-      sku: "TYR-3389",
-      name: "Tyre 195/65 R15",
-      category: "Tyres",
-      location: "Bay Store",
-      stock: 4,
-      min: 4,
-      price: "₹4,800",
-      supplier: "MRF Ltd",
-      status: "Low Stock",
-    },
-    {
-      sku: "BAT-6670",
-      name: "Battery 60Ah",
-      category: "Electrical",
-      location: "Rack E1",
-      stock: 7,
-      min: 3,
-      price: "₹6,200",
-      supplier: "Amaron India",
-      status: "OK",
-    },
-    {
-      sku: "OIF-3301",
-      name: "Oil Filter",
-      category: "Filters",
-      location: "Rack C1",
-      stock: 2,
-      min: 10,
-      price: "₹180",
-      supplier: "Mann Filters",
-      status: "Low Stock",
-    },
-  ];
+  useEffect(() => {
+    getParts(0, 200)
+      .then((page) => setInventory(page.content ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredInventory = inventory.filter((item) => {
     const searchMatch =
-      item.sku.toLowerCase().includes(search.toLowerCase()) ||
-      item.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.category.toLowerCase().includes(search.toLowerCase());
-
-    const categoryMatch =
-      category === "All Categories" ||
-      item.category === category;
-
+      item.sku?.toLowerCase().includes(search.toLowerCase()) ||
+      item.name?.toLowerCase().includes(search.toLowerCase());
+    const categoryMatch = category === "All Categories";
     const stockMatch =
       stock === "All Stock" ||
-      (stock === "In Stock" && item.status === "OK") ||
-      (stock === "Low Stock" && item.status === "Low Stock") ||
-      (stock === "Out of Stock" && item.stock === 0);
-
+      (stock === "In Stock" && !item.lowStock) ||
+      (stock === "Low Stock" && item.lowStock) ||
+      (stock === "Out of Stock" && item.stockQty === 0);
     return searchMatch && categoryMatch && stockMatch;
   });
 
@@ -263,26 +175,26 @@ function InventoryPage() {
 
             <StatCard
               title="TOTAL SKUS"
-              value="124"
+              value={inventory.length}
               text="Active inventory items"
             />
 
             <StatCard
               title="LOW STOCK"
-              value="3"
+              value={inventory.filter((i) => i.lowStock).length}
               text="Items need attention"
               green
             />
 
             <StatCard
               title="OUT OF STOCK"
-              value="0"
-              text="No unavailable parts"
+              value={inventory.filter((i) => i.stockQty === 0).length}
+              text="Unavailable parts"
             />
 
             <StatCard
               title="INVENTORY VALUE"
-              value="₹3.2L"
+              value={`₹${inventory.reduce((s, i) => s + (i.sellingPrice ?? 0) * (i.stockQty ?? 0), 0).toLocaleString("en-IN")}`}
               text="Current stock value"
             />
 
@@ -380,13 +292,12 @@ function InventoryPage() {
 
                 <tbody>
 
-                  {filteredInventory.map((item) => (
+                  {loading && (
+                    <tr><td colSpan="9" className="inventory-empty">Loading...</td></tr>
+                  )}
 
-                    <InventoryRow
-                      key={item.sku}
-                      {...item}
-                    />
-
+                  {!loading && filteredInventory.map((item) => (
+                    <InventoryRow key={item.id} {...item} />
                   ))}
 
 
@@ -463,69 +374,26 @@ function StatCard({
 function InventoryRow({
   sku,
   name,
-  category,
-  location,
-  stock,
-  min,
-  price,
-  supplier,
-  status,
+  stockQty,
+  minStock,
+  sellingPrice,
+  lowStock,
 }) {
-  const lowStock = status === "Low Stock";
-
   return (
     <tr>
-
-      <td className="inventory-sku">
-        {sku}
-      </td>
-
-      <td className="inventory-part-name">
-        {name}
-      </td>
-
+      <td className="inventory-sku">{sku}</td>
+      <td className="inventory-part-name">{name}</td>
+      <td>—</td>
+      <td>—</td>
+      <td className={lowStock ? "inventory-stock low" : "inventory-stock"}>{stockQty}</td>
+      <td>{minStock}</td>
+      <td className="inventory-price">{sellingPrice ? `₹${Number(sellingPrice).toLocaleString("en-IN")}` : "—"}</td>
+      <td>—</td>
       <td>
-        {category}
-      </td>
-
-      <td>
-        {location}
-      </td>
-
-      <td
-        className={
-          lowStock
-            ? "inventory-stock low"
-            : "inventory-stock"
-        }
-      >
-        {stock}
-      </td>
-
-      <td>
-        {min}
-      </td>
-
-      <td className="inventory-price">
-        {price}
-      </td>
-
-      <td>
-        {supplier}
-      </td>
-
-      <td>
-
-        <span
-          className={`inventory-status ${
-            lowStock ? "low" : "ok"
-          }`}
-        >
-          {status}
+        <span className={`inventory-status ${lowStock ? "low" : "ok"}`}>
+          {lowStock ? "Low Stock" : "OK"}
         </span>
-
       </td>
-
     </tr>
   );
 }
