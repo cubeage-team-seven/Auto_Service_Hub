@@ -1,177 +1,474 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 
-import jobCardImage from "../../assets/job-card.png";
-import retentionImage from "../../assets/retention.png";
+const modules = [
+  {
+    number: "01",
+    title: "CUSTOMER CRM",
+    description:
+      "Centralized profiles with full service history, communication records, loyalty tracking and 360° view.",
+  },
+  {
+    number: "02",
+    title: "DIGITAL JOB CARD",
+    description:
+      "Complete repair lifecycle — Vehicle Received → Inspection → Repair → QC → Delivered with real-time status.",
+  },
+  {
+    number: "03",
+    title: "AI DIAGNOSIS",
+    description:
+      "AI-assisted diagnosis from complaint text and warning images. Confidence-scored recommendations.",
+  },
+  {
+    number: "04",
+    title: "SMART INVENTORY",
+    description:
+      "Spare parts ledger with supplier management, purchase orders, low-stock alerts and demand forecasting.",
+  },
+  {
+    number: "05",
+    title: "GST BILLING",
+    description:
+      "Estimate-to-invoice workflow with auto GST, discount rules, printable invoices and payment recording.",
+  },
+  {
+    number: "06",
+    title: "MECHANIC MANAGER",
+    description:
+      "Profiles, skills, attendance, live workload and AI-recommended job assignments based on experience.",
+  },
+];
+
+const aiFeatures = [
+  {
+    icon: "🔍",
+    title: "AI Diagnosis",
+    value: "85%+",
+  },
+  {
+    icon: "🤑",
+    title: "Cost Estimation",
+    value: "Auto",
+  },
+  {
+    icon: "🗓️",
+    title: "Maintenance",
+    value: "Predictive",
+  },
+  {
+    icon: "📷",
+    title: "Damage Detection",
+    value: "CV-powered",
+  },
+  {
+    icon: "🔧",
+    title: "Mechanic AI",
+    value: "Skill-matched",
+  },
+  {
+    icon: "📦",
+    title: "Parts Forecast",
+    value: "Demand AI",
+  },
+];
 
 function LandingPage() {
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    workshop: "",
+  });
+
+  const [submitted, setSubmitted] = useState(false);
+
+  const goToModule = () => {
+    navigate("/module");
+  };
+
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    console.log("Platform Access Request:", formData);
+
+    setSubmitted(true);
+
+    setTimeout(() => {
+      setSubmitted(false);
+    }, 4000);
+  };
+
   return (
     <div className="landing-page">
 
       {/* =====================================================
-          PAGE 1 — FIGMA HERO
-      ===================================================== */}
+          NAVBAR
+      ====================================================== */}
+      <header className="landing-navbar">
+        <div className="navbar-inner">
 
-      <section className="landing-hero">
-
-        {/* HERO BACKGROUND */}
-        <div className="landing-hero-background"></div>
-
-        {/* DARK OVERLAY */}
-        <div className="landing-hero-overlay"></div>
-
-
-        {/* =================================================
-            OLD NAVBAR
-            MOVED INSIDE PAGE 1 HERO
-        ================================================= */}
-
-        <header className="landing-navbar">
-
-          {/* LOGO */}
-
-          <div className="landing-logo">
-
-            <div className="landing-logo-icon">
-              ⌂
+          <div
+            className="brand"
+            onClick={() => scrollToSection("home")}
+          >
+            <div className="brand-icon">
+              <span>◆</span>
             </div>
 
-            <div>
-              <div className="landing-logo-title">
-                Auto_Service_Hub
+            <div className="brand-text">
+              <div className="brand-name">
+                SMARTGARAGE
               </div>
 
-              <div className="landing-logo-subtitle">
+              <div className="brand-badge">
                 AI CRM
               </div>
             </div>
-
           </div>
 
-
-          {/* NAVIGATION */}
-
-          <nav className="landing-nav">
-
-            <a href="#features">
+          <nav className="desktop-nav">
+            <button onClick={() => scrollToSection("modules")}>
               Features
-            </a>
+            </button>
 
-            <a href="#modules">
+            <button onClick={() => scrollToSection("modules")}>
               Modules
-            </a>
+            </button>
 
-            <a href="#ai">
+            <button onClick={() => scrollToSection("ai-engine")}>
               AI Engine
-            </a>
+            </button>
 
-            <a href="#pricing">
+            <button onClick={() => scrollToSection("pricing")}>
               Pricing
-            </a>
+            </button>
 
-            <a href="#about">
+            <button onClick={() => scrollToSection("about")}>
               About
-            </a>
-
+            </button>
           </nav>
 
+          <div className="navbar-actions">
 
-          {/* BUTTONS */}
-
-          <div className="landing-nav-buttons">
-
-            <Link
-              to="/modules"
-              className="landing-signin"
+            <button
+              className="btn-signin"
+              onClick={goToModule}
             >
               Sign In
-            </Link>
+            </button>
 
-            <Link
-              to="/modules"
-              className="landing-access"
+            <button
+              className="btn-access"
+              onClick={goToModule}
             >
               Get Access →
-            </Link>
+            </button>
 
           </div>
 
-        </header>
+        </div>
+      </header>
 
 
-        {/* =================================================
-            HERO CONTENT
-        ================================================= */}
+      {/* =====================================================
+          HERO
+      ====================================================== */}
+      <section
+        id="home"
+        className="hero-section"
+      >
 
-        <div className="landing-hero-content">
+        <div className="hero-background">
+          <div className="hero-image" />
+          <div className="hero-overlay" />
+        </div>
 
-          <div className="landing-hero-label">
+        <div className="hero-content">
+
+          <div className="hero-eyebrow">
             — THE FUTURE OF WORKSHOP MANAGEMENT
           </div>
 
-
-          <h1 className="landing-hero-title">
-
-            <span>
-              INTELLIGENT.
-            </span>
-
-            <span>
-              PRECISE.
-            </span>
-
-            <span className="landing-hero-green">
-              CONNECTED.
-            </span>
-
+          <h1 className="hero-title">
+            <span>INTELLIGENT.</span>
+            <span>PRECISE.</span>
+            <span className="lime-text">CONNECTED.</span>
           </h1>
 
-
-          <p className="landing-hero-description">
+          <p className="hero-description">
             The all-new SmartGarage AI CRM. AI-powered diagnosis,
-            <br />
             booking, billing and customer retention — in one platform.
           </p>
 
-
-          {/* HERO BUTTONS */}
-
-          <div className="landing-hero-buttons">
-
-            <Link
-              to="/modules"
-              className="landing-hero-access-button"
-            >
-              ACCESS PLATFORM →
-            </Link>
-
+          <div className="hero-buttons">
 
             <button
-              type="button"
-              className="landing-hero-demo-button"
+              className="primary-button"
+              onClick={goToModule}
             >
-              <span>
-                ▶
-              </span>
+              ACCESS PLATFORM →
+            </button>
 
+            <button
+              className="secondary-button"
+              onClick={() => scrollToSection("ai-engine")}
+            >
+              <span className="play-icon">▶</span>
               WATCH DEMO
             </button>
 
           </div>
 
+          <div className="hero-slider">
+            <span className="active" />
+            <span />
+            <span />
+            <span />
+          </div>
 
-          {/* SLIDER INDICATORS */}
+        </div>
 
-          <div className="landing-hero-slider">
+      </section>
 
-            <span className="active"></span>
 
-            <span></span>
+      {/* =====================================================
+          STATS
+      ====================================================== */}
+      <section className="stats-section">
 
-            <span></span>
+        <div className="stats-grid">
 
-            <span></span>
+          <div className="stat-item">
+            <div className="stat-number">
+              2,400+
+            </div>
+
+            <div className="stat-label">
+              CUSTOMERS MANAGED
+            </div>
+          </div>
+
+          <div className="stat-item">
+            <div className="stat-number">
+              18,000
+            </div>
+
+            <div className="stat-label">
+              JOBS COMPLETED
+            </div>
+          </div>
+
+          <div className="stat-item">
+            <div className="stat-number">
+              6
+            </div>
+
+            <div className="stat-label">
+              AI CAPABILITIES
+            </div>
+          </div>
+
+          <div className="stat-item">
+            <div className="stat-number">
+              99.2%
+            </div>
+
+            <div className="stat-label">
+              UPTIME SLA
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      {/* =====================================================
+          MODULES
+      ====================================================== */}
+      <section
+        id="modules"
+        className="modules-section section"
+      >
+
+        <div className="section-heading-row">
+
+          <div className="section-heading-left">
+
+            <div className="section-eyebrow">
+              — THE MODULES
+            </div>
+
+            <h2 className="section-title">
+              BUILT TO
+              <br />
+              MANAGE.
+            </h2>
+
+          </div>
+
+          <div className="section-heading-right">
+
+            <p>
+              Twelve integrated modules covering every stage
+              of the workshop lifecycle. One platform. Zero gaps.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div className="modules-grid">
+
+          {modules.map((module) => (
+            <div
+              className="module-card"
+              key={module.number}
+            >
+
+              <div className="module-number">
+                {module.number}
+              </div>
+
+              <h3>
+                {module.title}
+              </h3>
+
+              <p>
+                {module.description}
+              </p>
+
+              <div className="module-line" />
+
+            </div>
+          ))}
+
+        </div>
+
+      </section>
+
+
+      {/* =====================================================
+          AI ENGINE
+      ====================================================== */}
+      <section
+        id="ai-engine"
+        className="ai-section section"
+      >
+
+        <div className="ai-content">
+
+          <div className="section-eyebrow">
+            — SMARTGARAGE AI ENGINE
+          </div>
+
+          <h2 className="section-title ai-title">
+            DIAGNOSE.
+            <br />
+            PREDICT.
+            <br />
+            <span className="lime-text">
+              AUTOMATE.
+            </span>
+          </h2>
+
+          <p className="section-description">
+            AI-assisted diagnosis, maintenance prediction,
+            damage detection and smart mechanic assignment —
+            all with human-approval governance.
+          </p>
+
+
+          <div className="ai-feature-grid">
+
+            {aiFeatures.map((feature) => (
+              <div
+                className="ai-feature-card"
+                key={feature.title}
+              >
+
+                <div className="ai-feature-icon">
+                  {feature.icon}
+                </div>
+
+                <div className="ai-feature-content">
+                  <strong>
+                    {feature.title}
+                  </strong>
+
+                  <span>
+                    {feature.value}
+                  </span>
+                </div>
+
+              </div>
+            ))}
+
+          </div>
+
+
+          <button
+            className="primary-button ai-button"
+            onClick={goToModule}
+          >
+            EXPLORE AI HUB →
+          </button>
+
+        </div>
+
+
+        <div className="ai-visual">
+
+          <div className="ai-image" />
+
+          <div className="diagnosis-box">
+
+            <div className="diagnosis-top">
+
+              <span>
+                🔍 AI Diagnosis Active
+              </span>
+
+              <strong>
+                96% confidence
+              </strong>
+
+            </div>
+
+            <div className="confidence-bar">
+              <span />
+            </div>
+
+            <p>
+              Battery degradation detected —
+              Recommend load test
+            </p>
 
           </div>
 
@@ -181,89 +478,63 @@ function LandingPage() {
 
 
       {/* =====================================================
-          PAGE 3 — EXISTING CONTENT
-          NOTHING CHANGED
-      ===================================================== */}
+          DIGITAL JOB CARD
+      ====================================================== */}
+      <section className="job-card-section section">
 
-
-      {/* =====================================================
-          SECTION 1 — DIGITAL JOB CARD
-      ===================================================== */}
-
-      <section
-        className="landing-feature-section"
-        id="features"
-      >
-
-        <div className="landing-feature-image">
-
-          <img
-            src={jobCardImage}
-            alt="Car service garage"
-          />
-
+        <div className="job-card-image">
+          <div className="garage-image" />
         </div>
 
+        <div className="job-card-content">
 
-        <div className="landing-feature-content">
-
-          <div className="landing-section-label">
+          <div className="section-eyebrow">
             — DIGITAL JOB CARD
           </div>
 
-
-          <h1>
+          <h2 className="section-title">
             ZERO PAPERWORK.
             <br />
             COMPLETE
-            <br />
+            <br className="desktop-break" />
             VISIBILITY.
-          </h1>
+          </h2>
 
-
-          <p>
+          <p className="section-description">
             Every repair tracked from reception to delivery.
             Mechanics update tasks in real time.
           </p>
 
 
-          <div className="landing-process">
+          <div className="job-flow">
 
-            <span>
+            <div className="flow-item">
               Vehicle Received
-            </span>
+            </div>
 
-            <b>
-              →
-            </b>
+            <span>→</span>
 
-            <span>
+            <div className="flow-item">
               Inspection
-            </span>
+            </div>
 
-            <b>
-              →
-            </b>
+            <span>→</span>
 
-            <span>
+            <div className="flow-item">
               Repair
-            </span>
+            </div>
 
-            <b>
-              →
-            </b>
+            <span>→</span>
 
-            <span>
+            <div className="flow-item">
               Quality Check
-            </span>
+            </div>
 
-            <b>
-              →
-            </b>
+            <span>→</span>
 
-            <span>
+            <div className="flow-item">
               Delivered
-            </span>
+            </div>
 
           </div>
 
@@ -273,39 +544,31 @@ function LandingPage() {
 
 
       {/* =====================================================
-          SECTION 2 — CUSTOMER RETENTION
-      ===================================================== */}
+          CUSTOMER RETENTION
+      ====================================================== */}
+      <section className="retention-section section">
 
-      <section
-        className="landing-retention-section"
-        id="modules"
-      >
+        <div className="retention-content">
 
-        <div className="landing-retention-content">
-
-          <div className="landing-section-label">
+          <div className="section-eyebrow">
             — CUSTOMER RETENTION
           </div>
 
-
-          <h2>
+          <h2 className="section-title">
             REPEAT SERVICE.
             <br />
-            LOYAL
-            <br />
-            CUSTOMERS.
+            LOYAL CUSTOMERS.
           </h2>
 
-
-          <p>
+          <p className="section-description">
             Automated reminders, WhatsApp follow-up,
             feedback collection and loyalty tier management.
           </p>
 
 
-          <div className="landing-stats">
+          <div className="retention-stats">
 
-            <div className="landing-stat">
+            <div className="retention-card">
 
               <strong>
                 78%
@@ -317,8 +580,7 @@ function LandingPage() {
 
             </div>
 
-
-            <div className="landing-stat">
+            <div className="retention-card">
 
               <strong>
                 4.7★
@@ -330,8 +592,7 @@ function LandingPage() {
 
             </div>
 
-
-            <div className="landing-stat">
+            <div className="retention-card">
 
               <strong>
                 3.2×
@@ -348,13 +609,8 @@ function LandingPage() {
         </div>
 
 
-        <div className="landing-retention-image">
-
-          <img
-            src={retentionImage}
-            alt="Mechanic working on car"
-          />
-
+        <div className="retention-image">
+          <div className="mechanic-image" />
         </div>
 
       </section>
@@ -362,16 +618,14 @@ function LandingPage() {
 
       {/* =====================================================
           FEATURED IN
-      ===================================================== */}
+      ====================================================== */}
+      <section className="featured-section">
 
-      <section className="landing-featured-section">
-
-        <div className="landing-featured-title">
+        <div className="featured-title">
           FEATURED IN
         </div>
 
-
-        <div className="landing-featured-logos">
+        <div className="featured-logos">
 
           <span>
             TOPGEAR INDIA
@@ -394,7 +648,7 @@ function LandingPage() {
           </span>
 
           <span>
-            TEAM-BHP
+            TEAMBHP
           </span>
 
         </div>
@@ -403,104 +657,268 @@ function LandingPage() {
 
 
       {/* =====================================================
-          SECTION 3 — ACCESS
-      ===================================================== */}
-
+          ACCESS / CONTACT
+      ====================================================== */}
       <section
-        className="landing-access-section"
         id="about"
+        className="access-section section"
       >
 
-        {/* LEFT CONTENT */}
+        <div className="access-content">
 
-        <div className="landing-access-content">
-
-          <div className="landing-section-label">
+          <div className="section-eyebrow">
             — ACCESS
           </div>
 
-
-          <h2>
+          <h2 className="section-title">
             MANAGE THE
             <br />
             FUTURE.
           </h2>
 
-
-          <p>
-            Auto_Service_Hub for automobile workshops,
+          <p className="section-description">
+            SmartGarage AI CRM for automobile workshops,
             multi-bay service centres and franchise networks.
           </p>
 
         </div>
 
 
-        {/* RIGHT FORM */}
+        <div className="access-form-wrapper">
 
-        <div className="landing-access-card">
+          <form
+            className="access-form"
+            onSubmit={handleSubmit}
+          >
 
-          <h3>
-            REQUEST PLATFORM ACCESS
-          </h3>
+            <h3>
+              REQUEST PLATFORM ACCESS
+            </h3>
 
-
-          <form>
-
-            {/* NAME */}
-
-            <div className="landing-name-row">
+            <div className="form-row">
 
               <input
                 type="text"
+                name="firstName"
                 placeholder="First Name"
+                value={formData.firstName}
+                onChange={handleChange}
+                required
               />
 
               <input
                 type="text"
+                name="lastName"
                 placeholder="Last Name"
+                value={formData.lastName}
+                onChange={handleChange}
+                required
               />
 
             </div>
 
 
-            {/* EMAIL */}
-
             <input
               type="email"
+              name="email"
               placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
             />
 
-
-            {/* PHONE */}
 
             <input
               type="tel"
+              name="phone"
               placeholder="Phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
             />
 
 
-            {/* WORKSHOP */}
-
-            <input
-              type="text"
+            <textarea
+              name="workshop"
               placeholder="Workshop name and number of bays..."
+              value={formData.workshop}
+              onChange={handleChange}
+              required
             />
 
 
-            {/* SUBMIT */}
-
-            <Link
-              to="/modules"
-              className="landing-submit"
+            <button
+              type="submit"
+              className="submit-button"
             >
-              SUBMIT INQUIRY →
-            </Link>
+              {submitted
+                ? "INQUIRY SENT ✓"
+                : "SUBMIT INQUIRY →"}
+            </button>
 
           </form>
 
         </div>
 
       </section>
+
+
+      {/* =====================================================
+          FOOTER
+      ====================================================== */}
+      <footer className="footer">
+
+        <div className="footer-main">
+
+          <div className="footer-brand">
+
+            <div className="footer-brand-title">
+
+              <div className="footer-icon">
+                ◆
+              </div>
+
+              <span>
+                SMARTGARAGE
+              </span>
+
+            </div>
+
+            <p>
+              AI-Powered Customer Relationship &
+              Car Repair Service Management Platform.
+            </p>
+
+          </div>
+
+
+          <div className="footer-column">
+
+            <h4>
+              MODULES
+            </h4>
+
+            <a href="#modules">
+              Customer CRM
+            </a>
+
+            <a href="#modules">
+              Vehicle Management
+            </a>
+
+            <a href="#modules">
+              Job Cards
+            </a>
+
+            <a href="#modules">
+              Mechanic Manager
+            </a>
+
+          </div>
+
+
+          <div className="footer-column">
+
+            <h4>
+              AI FEATURES
+            </h4>
+
+            <a href="#ai-engine">
+              AI Diagnosis
+            </a>
+
+            <a href="#ai-engine">
+              Cost Estimation
+            </a>
+
+            <a href="#ai-engine">
+              Maintenance Prediction
+            </a>
+
+            <a href="#ai-engine">
+              Damage Detection
+            </a>
+
+          </div>
+
+
+          <div className="footer-column">
+
+            <h4>
+              COMPANY
+            </h4>
+
+            <a href="#about">
+              About Us
+            </a>
+
+            <a href="#about">
+              Sustainability
+            </a>
+
+            <a href="#about">
+              Careers
+            </a>
+
+            <a href="#about">
+              News
+            </a>
+
+          </div>
+
+
+          <div className="footer-column">
+
+            <h4>
+              SUPPORT
+            </h4>
+
+            <a href="#about">
+              Documentation
+            </a>
+
+            <a href="#about">
+              API Reference
+            </a>
+
+            <a href="#about">
+              Status
+            </a>
+
+            <a href="#about">
+              Contact
+            </a>
+
+          </div>
+
+        </div>
+
+
+        <div className="footer-bottom">
+
+          <span>
+            © 2026 SmartGarage AI. All rights reserved.
+          </span>
+
+          <div className="footer-legal">
+
+            <a href="#privacy">
+              Privacy Policy
+            </a>
+
+            <a href="#terms">
+              Terms of Use
+            </a>
+
+            <a href="#security">
+              Security
+            </a>
+
+          </div>
+
+        </div>
+
+      </footer>
 
     </div>
   );

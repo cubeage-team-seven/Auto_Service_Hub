@@ -1,0 +1,870 @@
+/* =========================================================
+   GARAGE OWNER - VEHICLES PAGE
+   Figma matched content + Register Vehicle modal
+========================================================= */
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.garage-vehicles-page {
+    width: 100%;
+    min-height: calc(100vh - 59px);
+    background: #080909;
+    color: #f4f4f4;
+    padding: 27px 24px 40px;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   PAGE HEADING
+========================================================= */
+
+.vehicles-heading-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.vehicles-heading-row h1 {
+    margin: 0;
+    color: #f4f4f4;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: 27px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -0.4px;
+}
+
+
+/* =========================================================
+   REGISTER VEHICLE BUTTON
+========================================================= */
+
+.register-vehicle-button {
+    height: 35px;
+    padding: 0 17px;
+    border: none;
+    border-radius: 5px;
+    background: #b9ff00;
+    color: #111111;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.register-vehicle-button:hover {
+    background: #c8ff32;
+}
+
+.register-vehicle-button:active {
+    transform: scale(0.98);
+}
+
+
+/* =========================================================
+   STAT CARDS
+========================================================= */
+
+.vehicle-stats {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.vehicle-stat-card {
+    min-height: 113px;
+    background: #151616;
+    border: 1px solid #292b2c;
+    border-radius: 6px;
+    padding: 17px;
+    box-sizing: border-box;
+}
+
+.vehicle-stat-label {
+    margin-bottom: 10px;
+    color: #777c7e;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.3px;
+}
+
+.vehicle-stat-value {
+    color: #f2f2f2;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 29px;
+    line-height: 1;
+    font-weight: 800;
+}
+
+.vehicle-stat-value.lime {
+    color: #b9ff00;
+}
+
+.vehicle-stat-description {
+    margin-top: 7px;
+    color: #707577;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   FILTER AREA
+========================================================= */
+
+.vehicle-filter-area {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.vehicle-search {
+    display: block;
+    width: 331px;
+    height: 43px;
+    margin-bottom: 10px;
+    padding: 0 13px;
+    box-sizing: border-box;
+    background: #151616;
+    border: 1px solid #292b2c;
+    border-radius: 6px;
+    outline: none;
+    color: #ededed;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+.vehicle-search::placeholder {
+    color: #73787a;
+}
+
+.vehicle-search:focus {
+    border-color: #55595a;
+    background: #171818;
+}
+
+
+/* =========================================================
+   DROPDOWN FILTERS
+========================================================= */
+
+.vehicle-filter {
+    display: block;
+    width: 100%;
+    height: 42px;
+    margin-bottom: 10px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    background: #151616;
+    border: 1px solid #292b2c;
+    border-radius: 6px;
+    color: #eeeeee;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+}
+
+.vehicle-filter:last-child {
+    margin-bottom: 0;
+}
+
+.vehicle-filter:focus {
+    border-color: #55595a;
+}
+
+.vehicle-filter option {
+    background: #151616;
+    color: #eeeeee;
+}
+
+
+/* =========================================================
+   TABLE PANEL
+========================================================= */
+
+.vehicles-table-panel {
+    width: 100%;
+    background: #151616;
+    border: 1px solid #292b2c;
+    border-radius: 7px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.vehicles-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.vehicles-table {
+    width: 100%;
+    min-width: 1150px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.vehicles-table th {
+    height: 41px;
+    padding: 0 16px;
+    text-align: left;
+    color: #777d7f;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid #292b2c;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   COLUMN WIDTHS
+========================================================= */
+
+.vehicles-table th:nth-child(1),
+.vehicles-table td:nth-child(1) {
+    width: 12%;
+}
+
+.vehicles-table th:nth-child(2),
+.vehicles-table td:nth-child(2) {
+    width: 16%;
+}
+
+.vehicles-table th:nth-child(3),
+.vehicles-table td:nth-child(3) {
+    width: 6%;
+}
+
+.vehicles-table th:nth-child(4),
+.vehicles-table td:nth-child(4) {
+    width: 13%;
+}
+
+.vehicles-table th:nth-child(5),
+.vehicles-table td:nth-child(5) {
+    width: 10%;
+}
+
+.vehicles-table th:nth-child(6),
+.vehicles-table td:nth-child(6) {
+    width: 14%;
+}
+
+.vehicles-table th:nth-child(7),
+.vehicles-table td:nth-child(7) {
+    width: 13%;
+}
+
+.vehicles-table th:nth-child(8),
+.vehicles-table td:nth-child(8) {
+    width: 9%;
+}
+
+.vehicles-table th:nth-child(9),
+.vehicles-table td:nth-child(9) {
+    width: 7%;
+}
+
+
+/* =========================================================
+   TABLE BODY
+========================================================= */
+
+.vehicles-table td {
+    height: 64px;
+    padding: 9px 16px;
+    border-bottom: 1px solid #292b2c;
+    vertical-align: middle;
+    box-sizing: border-box;
+}
+
+.vehicles-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.vehicles-table tbody tr:hover {
+    background: #191a1a;
+}
+
+
+/* =========================================================
+   REGISTRATION NUMBER
+========================================================= */
+
+.vehicle-registration {
+    color: #b9ff00;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   MODEL
+========================================================= */
+
+.vehicle-model {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.vehicle-model strong {
+    color: #eeeeee;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.vehicle-model span {
+    color: #6f7476;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   YEAR
+========================================================= */
+
+.vehicle-year {
+    color: #73787a;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   OWNER
+========================================================= */
+
+.vehicle-owner {
+    color: #eeeeee;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   MILEAGE
+========================================================= */
+
+.vehicle-mileage {
+    color: #eeeeee;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   INSURANCE
+========================================================= */
+
+.vehicle-insurance {
+    color: #73787a;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.vehicle-insurance.warning {
+    color: #ffa900;
+}
+
+.warning-icon {
+    margin-left: 4px;
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   LAST SERVICE
+========================================================= */
+
+.vehicle-last-service {
+    color: #73787a;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   STATUS BADGES
+========================================================= */
+
+.vehicle-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+/* IN SERVICE */
+
+.vehicle-status.in-service {
+    color: #00e878;
+    background: #09261a;
+    border: 1px solid #095f39;
+}
+
+
+/* DELIVERED */
+
+.vehicle-status.delivered {
+    color: #b9ff00;
+    background: #1d290c;
+    border: 1px solid #506d14;
+}
+
+
+/* WAITING */
+
+.vehicle-status.waiting {
+    color: #ffa900;
+    background: #2b2109;
+    border: 1px solid #775000;
+}
+
+
+/* =========================================================
+   VIEW BUTTON
+========================================================= */
+
+.vehicle-view-button {
+    height: 26px;
+    padding: 0 10px;
+    background: transparent;
+    border: 1px solid #303334;
+    border-radius: 4px;
+    color: #777d7f;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.vehicle-view-button:hover {
+    color: #eeeeee;
+    border-color: #55595a;
+    background: #1b1c1c;
+}
+
+
+/* =========================================================
+   NO RESULTS
+========================================================= */
+
+.no-vehicles {
+    padding: 35px;
+    text-align: center;
+    color: #777;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   REGISTER VEHICLE MODAL
+========================================================= */
+
+.vehicle-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.vehicle-modal {
+    width: min(530px, 100%);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: #111212;
+    border: 1px solid #292b2c;
+    border-radius: 13px;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.02);
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: #454747 transparent;
+}
+
+
+/* =========================================================
+   MODAL SCROLLBAR
+========================================================= */
+
+.vehicle-modal::-webkit-scrollbar {
+    width: 5px;
+}
+
+.vehicle-modal::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.vehicle-modal::-webkit-scrollbar-thumb {
+    background: #454747;
+    border-radius: 10px;
+}
+
+
+/* =========================================================
+   MODAL HEADER
+========================================================= */
+
+.vehicle-modal-header {
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid #292b2c;
+    box-sizing: border-box;
+    position: sticky;
+    top: 0;
+    background: #111212;
+    z-index: 2;
+}
+
+.vehicle-modal-header h2 {
+    margin: 0;
+    color: #f4f4f4;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 0.2px;
+}
+
+
+/* =========================================================
+   MODAL CLOSE BUTTON
+========================================================= */
+
+.vehicle-modal-close {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #697072;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 22px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.vehicle-modal-close:hover {
+    color: #b9ff00;
+}
+
+
+/* =========================================================
+   MODAL FORM
+========================================================= */
+
+.vehicle-modal-form {
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   FORM GRID
+========================================================= */
+
+.vehicle-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+
+/* =========================================================
+   FORM GROUP
+========================================================= */
+
+.vehicle-form-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.vehicle-form-group.full {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.vehicle-form-grid .vehicle-form-group {
+    margin-bottom: 0;
+}
+
+
+/* =========================================================
+   LABEL
+========================================================= */
+
+.vehicle-form-group label {
+    margin-bottom: 8px;
+    color: #73797b;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+}
+
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+.vehicle-form-group input,
+.vehicle-form-group select,
+.vehicle-form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background: #171818;
+    border: 1px solid #2b2d2e;
+    border-radius: 7px;
+    outline: none;
+    color: #eeeeee;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    transition: 0.2s ease;
+}
+
+
+/* INPUT */
+
+.vehicle-form-group input,
+.vehicle-form-group select {
+    height: 43px;
+    padding: 0 13px;
+}
+
+
+/* TEXTAREA */
+
+.vehicle-form-group textarea {
+    min-height: 64px;
+    padding: 12px 13px;
+    resize: vertical;
+    line-height: 1.4;
+}
+
+
+/* PLACEHOLDER */
+
+.vehicle-form-group input::placeholder,
+.vehicle-form-group textarea::placeholder {
+    color: #707678;
+}
+
+
+/* FOCUS */
+
+.vehicle-form-group input:focus,
+.vehicle-form-group select:focus,
+.vehicle-form-group textarea:focus {
+    border-color: #566300;
+    box-shadow: 0 0 0 1px rgba(185, 255, 0, 0.08);
+}
+
+
+/* SELECT */
+
+.vehicle-form-group select {
+    cursor: pointer;
+    appearance: auto;
+}
+
+.vehicle-form-group select option {
+    background: #171818;
+    color: #eeeeee;
+}
+
+
+/* DATE */
+
+.vehicle-form-group input[type="date"] {
+    color-scheme: dark;
+}
+
+
+/* NUMBER */
+
+.vehicle-form-group input[type="number"] {
+    color-scheme: dark;
+}
+
+
+/* =========================================================
+   MODAL FOOTER
+========================================================= */
+
+.vehicle-modal-footer {
+    display: grid;
+    grid-template-columns: 1fr 92px;
+    gap: 12px;
+    padding-top: 16px;
+    margin-top: 2px;
+    border-top: 1px solid #292b2c;
+}
+
+
+/* =========================================================
+   REGISTER SUBMIT
+========================================================= */
+
+.vehicle-register-submit {
+    height: 43px;
+    border: none;
+    border-radius: 7px;
+    background: #b9ff00;
+    color: #111111;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.1px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.vehicle-register-submit:hover {
+    background: #c8ff32;
+}
+
+.vehicle-register-submit:active {
+    transform: scale(0.99);
+}
+
+
+/* =========================================================
+   CANCEL
+========================================================= */
+
+.vehicle-register-cancel {
+    height: 43px;
+    background: transparent;
+    border: 1px solid #292d2e;
+    border-radius: 7px;
+    color: #73797b;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.vehicle-register-cancel:hover {
+    color: #eeeeee;
+    border-color: #4b4f50;
+    background: #181919;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+    .vehicle-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 800px) {
+    .garage-vehicles-page {
+        padding: 20px 16px 35px;
+    }
+    .vehicle-search {
+        width: 100%;
+    }
+    .vehicle-modal {
+        width: min(530px, 100%);
+    }
+}
+
+@media (max-width: 600px) {
+    .garage-vehicles-page {
+        padding: 18px 12px 30px;
+    }
+    .vehicles-heading-row {
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .vehicles-heading-row h1 {
+        font-size: 23px;
+    }
+    .register-vehicle-button {
+        height: 34px;
+        padding: 0 11px;
+        font-size: 9px;
+    }
+    .vehicle-stats {
+        grid-template-columns: 1fr;
+    }
+    .vehicle-form-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .vehicle-modal-overlay {
+        padding: 10px;
+    }
+    .vehicle-modal {
+        max-height: calc(100vh - 20px);
+        border-radius: 10px;
+    }
+    .vehicle-modal-header {
+        padding: 0 18px;
+    }
+    .vehicle-modal-form {
+        padding: 18px;
+    }
+    .vehicle-modal-footer {
+        grid-template-columns: 1fr;
+    }
+}

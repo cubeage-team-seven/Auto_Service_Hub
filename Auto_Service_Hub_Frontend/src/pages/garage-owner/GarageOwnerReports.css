@@ -1,0 +1,74 @@
+/* =========================================
+   GARAGE OWNER REPORTS
+   FIGMA MATCH
+========================================= */
+
+.garage-reports-page {
+    width: 100%;
+    min-height: calc(100vh - 60px);
+    position: relative;
+    background: #050505;
+}
+
+
+/* =========================================
+   COMING SOON CONTENT
+========================================= */
+
+.garage-reports-coming-soon {
+    position: absolute;
+    top: 46%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    white-space: nowrap;
+}
+
+
+/* =========================================
+   REPORTS TITLE
+========================================= */
+
+.garage-reports-coming-soon h1 {
+    margin: 0;
+    color: #151515;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 60px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -2px;
+}
+
+
+/* =========================================
+   COMING SOON TEXT
+========================================= */
+
+.garage-reports-coming-soon p {
+    margin: 20px 0 0;
+    color: #777777;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 400;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+    .garage-reports-coming-soon h1 {
+        font-size: 52px;
+    }
+}
+
+@media (max-width: 700px) {
+    .garage-reports-coming-soon h1 {
+        font-size: 42px;
+    }
+    .garage-reports-coming-soon p {
+        font-size: 13px;
+    }
+}

@@ -1,12 +1,7 @@
-/* =========================================================
-   SMARTGARAGE LANDING PAGE
-   FIGMA MATCH
-========================================================= */
-
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 
 /* =========================================================
-   RESET
+   GLOBAL
 ========================================================= */
 
 * {
@@ -14,8 +9,6 @@
 }
 
 html {
-    margin: 0;
-    padding: 0;
     scroll-behavior: smooth;
 }
 
@@ -24,538 +17,310 @@ body {
     padding: 0;
     background: #050505;
     color: #f5f5f5;
-    font-family: "Inter", Arial, sans-serif;
-}
-
-a {
-    text-decoration: none;
-    color: inherit;
+    font-family: "Inter", sans-serif;
 }
 
 button,
-input {
+input,
+textarea {
     font-family: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
 }
 
 .landing-page {
     width: 100%;
     min-height: 100vh;
-    background: #050505;
     overflow-x: hidden;
-}
-
-
-/* =========================================================
-   COLORS
-========================================================= */
-
-:root {
-    --lime: #c8ff00;
-    --lime-bright: #cfff19;
-    --white: #f5f5f5;
-    --text-gray: #687078;
-    --dark: #050505;
-    --card: #111111;
-    --border: #222222;
-}
-
-
-/* =========================================================
-   PAGE 1 — HERO
-========================================================= */
-
-.landing-hero {
-    position: relative;
-    width: 100%;
-    height: 650px;
-    min-height: 650px;
-    overflow: hidden;
     background: #050505;
 }
 
-
-/* HERO IMAGE */
-
-.landing-hero-background {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background-image: url("../../assets/hero-bg.jpg");
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center center;
-    transform: scale(1.01);
+.section {
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
 }
 
-
-/* FIGMA DARK IMAGE */
-
-.landing-hero-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient( 90deg, rgba(0, 0, 0, 0.97) 0%, rgba(0, 0, 0, 0.94) 30%, rgba(0, 0, 0, 0.70) 58%, rgba(0, 0, 0, 0.70) 100%);
-    pointer-events: none;
+.lime-text {
+    color: #c7ff00;
 }
 
 
 /* =========================================================
    NAVBAR
-   OLD NAVBAR — ONLY ONE NAVBAR
 ========================================================= */
 
 .landing-navbar {
-    position: fixed;
+    position: sticky;
     top: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
+    z-index: 1000;
     width: 100%;
-    height: 72px;
-    display: flex;
-    align-items: center;
-    padding: 0 50px;
-    background: #050505;
+    height: 74px;
+    background: rgba(5, 5, 5, 0.96);
     border-bottom: 1px solid #171717;
+    backdrop-filter: blur(12px);
 }
 
-
-/* =========================================================
-   LOGO
-========================================================= */
-
-.landing-logo {
-    width: 260px;
+.navbar-inner {
+    width: 100%;
+    height: 100%;
+    padding: 0 50px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
+    justify-content: space-between;
 }
 
-.landing-logo-icon {
-    width: 33px;
-    height: 33px;
+
+/* Brand */
+
+.brand {
     display: flex;
     align-items: center;
-    justify-content: center;
-    background: var(--lime);
-    color: #050505;
-    border-radius: 3px;
-    font-size: 15px;
-    font-weight: 900;
-}
-
-.landing-logo-title {
-    color: #eeeeee;
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 13px;
-    font-weight: 800;
-    line-height: 1;
-    letter-spacing: 0.2px;
-}
-
-.landing-logo-subtitle {
-    display: inline-block;
-    margin-top: 4px;
-    padding: 2px 5px;
-    color: var(--lime);
-    border: 1px solid #354500;
-    border-radius: 3px;
-    font-size: 8px;
-    font-weight: 600;
-    line-height: 1;
-    letter-spacing: 0.4px;
-}
-
-
-/* =========================================================
-   NAV LINKS
-========================================================= */
-
-.landing-nav {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 34px;
-}
-
-.landing-nav a {
-    color: #626262;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1;
-    transition: color 0.2s ease;
-}
-
-.landing-nav a:hover {
-    color: var(--lime);
-}
-
-
-/* =========================================================
-   NAV BUTTONS
-========================================================= */
-
-.landing-nav-buttons {
-    width: 225px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
     gap: 12px;
-    flex-shrink: 0;
+    cursor: pointer;
+    min-width: 190px;
 }
 
-.landing-signin {
-    height: 40px;
+.brand-icon {
+    width: 35px;
+    height: 35px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 18px;
-    color: var(--lime);
-    border: 1px solid #384500;
+    background: #c7ff00;
     border-radius: 4px;
-    font-size: 13px;
-    font-weight: 600;
+    color: #080808;
+    font-size: 15px;
 }
 
-.landing-access {
-    height: 40px;
+.brand-text {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 0 18px;
-    color: #050505;
-    background: var(--lime);
-    border-radius: 4px;
-    font-size: 13px;
+    gap: 11px;
+}
+
+.brand-name {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+}
+
+.brand-badge {
+    padding: 3px 7px;
+    border: 1px solid #5e7800;
+    border-radius: 3px;
+    color: #c7ff00;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 11px;
     font-weight: 700;
 }
 
-.landing-signin:hover {
-    border-color: var(--lime);
-}
 
-.landing-access:hover {
-    background: #e0ff55;
-}
+/* Navigation */
 
-
-/* =========================================================
-   HERO CONTENT
-========================================================= */
-
-.landing-hero-content {
-    position: relative;
-    z-index: 5;
-    width: 100%;
-    height: 100%;
+.desktop-nav {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-left: 50px;
-    padding-top: 70px;
+    align-items: center;
+    gap: 38px;
+}
+
+.desktop-nav button {
+    border: none;
+    background: transparent;
+    color: #666;
+    font-size: 14px;
+    transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.desktop-nav button:hover {
+    color: #c7ff00;
+    transform: translateY(-1px);
 }
 
 
-/* =========================================================
-   HERO LABEL
-========================================================= */
+/* Navbar buttons */
 
-.landing-hero-label {
-    margin-bottom: 28px;
-    color: var(--lime);
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 2.8px;
-    line-height: 1;
-}
-
-
-/* =========================================================
-   HERO TITLE
-========================================================= */
-
-.landing-hero-title {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    font-family: "Barlow Condensed", Impact, sans-serif;
-    font-size: 88px;
-    font-weight: 900;
-    line-height: 0.84;
-    letter-spacing: -1px;
-    text-transform: uppercase;
-}
-
-.landing-hero-title span {
-    color: #f2f2f2;
-}
-
-.landing-hero-title .landing-hero-green {
-    color: var(--lime);
-}
-
-
-/* =========================================================
-   HERO DESCRIPTION
-========================================================= */
-
-.landing-hero-description {
-    margin: 30px 0 0;
-    color: #8a959d;
-    font-size: 15px;
-    font-weight: 400;
-    line-height: 1.65;
-    letter-spacing: 0;
-}
-
-
-/* =========================================================
-   HERO BUTTONS
-========================================================= */
-
-.landing-hero-buttons {
+.navbar-actions {
     display: flex;
     align-items: center;
     gap: 13px;
-    margin-top: 31px;
+    min-width: 190px;
+    justify-content: flex-end;
 }
 
-.landing-hero-access-button {
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 20px;
-    background: var(--lime);
-    color: #050505;
-    border-radius: 4px;
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.3px;
-}
-
-.landing-hero-demo-button {
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 0 20px;
-    background: transparent;
-    color: #e5e5e5;
-    border: 1px solid #333333;
-    border-radius: 4px;
+.btn-signin,
+.btn-access {
+    height: 40px;
+    padding: 0 19px;
+    border-radius: 5px;
     font-family: "Barlow Condensed", sans-serif;
     font-size: 14px;
     font-weight: 700;
-    cursor: pointer;
+    text-transform: uppercase;
 }
 
-.landing-hero-demo-button span {
-    color: #eeeeee;
+.btn-signin {
+    background: transparent;
+    border: 1px solid #536b00;
+    color: #c7ff00;
+}
+
+.btn-signin:hover {
+    background: rgba(199, 255, 0, 0.07);
+}
+
+.btn-access {
+    background: #c7ff00;
+    border: 1px solid #c7ff00;
+    color: #070707;
+}
+
+.btn-access:hover {
+    background: #d8ff4d;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero-section {
+    position: relative;
+    min-height: 650px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border-bottom: 1px solid #171717;
+}
+
+.hero-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.hero-image {
+    position: absolute;
+    inset: 0;
+    background-image: url("https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&fit=crop&w=2200&q=85");
+    background-size: cover;
+    background-position: center;
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( 90deg, #050505 0%, rgba(5, 5, 5, 0.97) 27%, rgba(5, 5, 5, 0.82) 49%, rgba(5, 5, 5, 0.58) 72%, rgba(5, 5, 5, 0.88) 100%);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 90px 50px 85px;
+}
+
+.hero-eyebrow,
+.section-eyebrow {
+    color: #c7ff00;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 13px;
-}
-
-
-/* =========================================================
-   HERO SLIDER
-========================================================= */
-
-.landing-hero-slider {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 47px;
-}
-
-.landing-hero-slider span {
-    width: 20px;
-    height: 3px;
-    display: block;
-    background: #3c3c3c;
-    border-radius: 2px;
-}
-
-.landing-hero-slider span.active {
-    width: 37px;
-    background: var(--lime);
-}
-
-
-/* =========================================================
-   SECTION 1 — DIGITAL JOB CARD
-========================================================= */
-
-.landing-feature-section {
-    width: 100%;
-    min-height: 600px;
-    display: grid;
-    grid-template-columns: 50% 50%;
-    padding: 20px 0;
-    background: #050505;
-}
-
-
-/* IMAGE CONTAINER */
-
-.landing-feature-image {
-    width: 100%;
-    height: 496px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-left: 210px;
-}
-
-.landing-feature-image img {
-    width: 580px;
-    height: 496px;
-    display: block;
-    object-fit: cover;
-    border-radius: 8px;
-}
-
-
-/* CONTENT */
-
-.landing-feature-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0 100px 0 65px;
-}
-
-
-/* SECTION LABEL */
-
-.landing-section-label {
-    margin-bottom: 23px;
-    color: var(--lime);
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 11px;
     font-weight: 600;
-    letter-spacing: 2.5px;
-    line-height: 1;
-}
-
-
-/* HEADING */
-
-.landing-feature-content h1 {
-    margin: 0;
-    color: #eeeeee;
-    font-family: "Barlow Condensed", Impact, sans-serif;
-    font-size: 52px;
-    font-weight: 900;
-    line-height: 0.91;
-    letter-spacing: -0.5px;
+    letter-spacing: 3px;
     text-transform: uppercase;
 }
 
-
-/* DESCRIPTION */
-
-.landing-feature-content p {
-    max-width: 590px;
-    margin: 25px 0 0;
-    color: #6d767c;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1.6;
-}
-
-
-/* PROCESS */
-
-.landing-process {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 22px;
-}
-
-.landing-process span {
-    padding: 6px 10px;
-    color: var(--lime);
-    background: #101500;
-    border: 1px solid #334000;
-    border-radius: 4px;
+.hero-title {
+    margin: 30px 0 25px;
+    max-width: 700px;
     font-family: "Barlow Condensed", sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.landing-process b {
-    color: #3b3f40;
-    font-size: 14px;
-    font-weight: 400;
-}
-
-
-/* =========================================================
-   SECTION 2 — CUSTOMER RETENTION
-========================================================= */
-
-.landing-retention-section {
-    width: 100%;
-    min-height: 600px;
-    display: grid;
-    grid-template-columns: 50% 50%;
-    padding: 20px 0;
-    background: #050505;
-}
-
-
-/* CONTENT */
-
-.landing-retention-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 0 70px 0 210px;
-}
-
-.landing-retention-content h2 {
-    margin: 0;
-    color: #eeeeee;
-    font-family: "Barlow Condensed", Impact, sans-serif;
-    font-size: 52px;
+    font-size: clamp(76px, 7vw, 116px);
+    line-height: 0.86;
     font-weight: 900;
-    line-height: 0.91;
-    letter-spacing: -0.5px;
+    letter-spacing: -2px;
     text-transform: uppercase;
 }
 
-.landing-retention-content p {
-    max-width: 550px;
-    margin: 25px 0 0;
-    color: #6d767c;
-    font-size: 14px;
-    line-height: 1.6;
+.hero-title span {
+    display: block;
 }
 
+.hero-description {
+    max-width: 590px;
+    margin: 0 0 32px;
+    color: #929292;
+    font-size: 17px;
+    line-height: 1.65;
+}
 
-/* RETENTION IMAGE */
-
-.landing-retention-image {
-    width: 100%;
-    height: 496px;
+.hero-buttons {
     display: flex;
     align-items: center;
-    padding-right: 210px;
+    gap: 13px;
 }
 
-.landing-retention-image img {
-    width: 580px;
-    height: 496px;
-    display: block;
-    object-fit: cover;
-    border-radius: 8px;
+.primary-button,
+.secondary-button {
+    min-height: 48px;
+    padding: 0 22px;
+    border-radius: 5px;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+}
+
+.primary-button {
+    background: #c7ff00;
+    color: #080808;
+    border: 1px solid #c7ff00;
+}
+
+.primary-button:hover {
+    background: #d7ff4a;
+}
+
+.secondary-button {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid #383838;
+    color: #f2f2f2;
+}
+
+.secondary-button:hover {
+    border-color: #c7ff00;
+    color: #c7ff00;
+}
+
+.play-icon {
+    margin-right: 7px;
+    font-size: 12px;
+}
+
+.hero-slider {
+    display: flex;
+    gap: 8px;
+    margin-top: 48px;
+}
+
+.hero-slider span {
+    width: 20px;
+    height: 2px;
+    background: #3d3d3d;
+}
+
+.hero-slider span.active {
+    width: 37px;
+    background: #c7ff00;
 }
 
 
@@ -563,78 +328,429 @@ input {
    STATS
 ========================================================= */
 
-.landing-stats {
-    display: flex;
-    gap: 13px;
-    margin-top: 23px;
+.stats-section {
+    border-bottom: 1px solid #181818;
 }
 
-.landing-stat {
-    width: 185px;
-    height: 81px;
+.stats-grid {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.stat-item {
+    min-height: 145px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: #101010;
-    border: 1px solid #222222;
-    border-radius: 5px;
+    border-right: 1px solid #181818;
 }
 
-.landing-stat strong {
-    color: var(--lime);
+.stat-item:last-child {
+    border-right: none;
+}
+
+.stat-number {
     font-family: "Barlow Condensed", sans-serif;
-    font-size: 24px;
-    font-weight: 800;
+    font-size: 50px;
     line-height: 1;
+    font-weight: 900;
+    letter-spacing: -1px;
 }
 
-.landing-stat span {
-    margin-top: 7px;
-    color: #687078;
+.stat-label {
+    margin-top: 8px;
+    color: #666;
+    font-family: "Barlow Condensed", sans-serif;
     font-size: 11px;
+    letter-spacing: 2px;
 }
 
 
 /* =========================================================
-   FEATURED IN
+   MODULES
 ========================================================= */
 
-.landing-featured-section {
+.modules-section {
+    padding: 100px 50px 110px;
+}
+
+.section-heading-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 100px;
+    margin-bottom: 65px;
+}
+
+.section-title {
+    margin: 27px 0 0;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: clamp(55px, 5.5vw, 80px);
+    line-height: 0.9;
+    font-weight: 900;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+}
+
+.section-heading-right {
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 7px;
+}
+
+.section-heading-right p {
+    max-width: 540px;
+    margin: 0;
+    color: #777;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.modules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid #1b1b1b;
+    border-left: 1px solid #1b1b1b;
+}
+
+.module-card {
+    position: relative;
+    min-height: 260px;
+    padding: 35px 33px 30px;
+    border-right: 1px solid #1b1b1b;
+    border-bottom: 1px solid #1b1b1b;
+}
+
+.module-number {
+    color: #6b8a00;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 13px;
+    margin-bottom: 24px;
+}
+
+.module-card h3 {
+    margin: 0 0 17px;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+.module-card p {
+    max-width: 350px;
+    margin: 0;
+    color: #707070;
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.module-line {
+    position: absolute;
+    left: 33px;
+    right: 33px;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient( 90deg, #c7ff00, rgba(199, 255, 0, 0));
+}
+
+
+/* =========================================================
+   AI ENGINE
+========================================================= */
+
+.ai-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 65px;
+    padding: 110px 50px;
+    align-items: center;
+}
+
+.ai-title {
+    font-size: clamp(55px, 5vw, 78px);
+}
+
+.section-description {
+    max-width: 610px;
+    margin: 28px 0 0;
+    color: #777;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.ai-feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 11px;
+    margin-top: 32px;
+}
+
+.ai-feature-card {
+    min-height: 61px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #111;
+    border: 1px solid #242424;
+    border-radius: 4px;
+}
+
+.ai-feature-icon {
+    width: 25px;
+    display: flex;
+    justify-content: center;
+    font-size: 17px;
+}
+
+.ai-feature-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ai-feature-content strong {
+    font-size: 13px;
+}
+
+.ai-feature-content span {
+    color: #c7ff00;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ai-button {
+    margin-top: 32px;
+}
+
+.ai-visual {
+    position: relative;
+    min-height: 510px;
+    border-radius: 9px;
+    overflow: hidden;
+    background: #101010;
+}
+
+.ai-image {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient( rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.55)), url("https://images.unsplash.com/photo-1542362567-b07e54358753?auto=format&fit=crop&w=1400&q=85");
+    background-size: cover;
+    background-position: center;
+}
+
+.diagnosis-box {
+    position: absolute;
+    left: 25px;
+    right: 25px;
+    bottom: 25px;
+    padding: 17px;
+    background: rgba(10, 10, 10, 0.91);
+    border: 1px solid #516600;
+    border-radius: 8px;
+}
+
+.diagnosis-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    font-size: 13px;
+}
+
+.diagnosis-top strong {
+    color: #c7ff00;
+    font-size: 12px;
+}
+
+.confidence-bar {
+    height: 5px;
+    margin: 12px 0 9px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #252525;
+}
+
+.confidence-bar span {
+    display: block;
+    width: 96%;
+    height: 100%;
+    background: #c7ff00;
+}
+
+.diagnosis-box p {
+    margin: 0;
+    color: #777;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   DIGITAL JOB CARD
+========================================================= */
+
+.job-card-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 65px;
+    padding: 110px 50px;
+    align-items: center;
+}
+
+.job-card-image {
     width: 100%;
-    height: 145px;
+    aspect-ratio: 1.25 / 1;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #111;
+}
+
+.garage-image {
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient( rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.27)), url("https://images.unsplash.com/photo-1632823471565-1ecdf5c1e31b?auto=format&fit=crop&w=1500&q=85");
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.5s ease;
+}
+
+.job-card-image:hover .garage-image {
+    transform: scale(1.03);
+}
+
+.job-card-content {
+    padding-right: 15px;
+}
+
+.job-card-content .section-title {
+    font-size: clamp(50px, 4.7vw, 72px);
+}
+
+.job-flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 27px;
+}
+
+.flow-item {
+    padding: 7px 10px;
+    border: 1px solid #526600;
+    border-radius: 4px;
+    color: #c7ff00;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.job-flow>span {
+    color: #3e3e3e;
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   CUSTOMER RETENTION
+========================================================= */
+
+.retention-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 65px;
+    padding: 105px 50px 110px;
+    align-items: center;
+}
+
+.retention-image {
+    width: 100%;
+    aspect-ratio: 1.2 / 1;
+    overflow: hidden;
+    border-radius: 8px;
+    order: 2;
+}
+
+.mechanic-image {
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient( rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.45)), url("https://images.unsplash.com/photo-1486006920555-c77dcf18193c?auto=format&fit=crop&w=1500&q=85");
+    background-size: cover;
+    background-position: center;
+}
+
+.retention-content {
+    order: 1;
+}
+
+.retention-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.retention-card {
+    min-height: 82px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: #050505;
-    border-top: 1px solid #151515;
-    border-bottom: 1px solid #151515;
+    background: #111;
+    border: 1px solid #242424;
+    border-radius: 4px;
 }
 
-.landing-featured-title {
-    margin-bottom: 35px;
-    color: #363b3d;
+.retention-card strong {
+    color: #c7ff00;
     font-family: "Barlow Condensed", sans-serif;
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 3px;
+    font-size: 25px;
+    font-weight: 800;
 }
 
-.landing-featured-logos {
-    width: 100%;
-    display: flex;
+.retention-card span {
+    margin-top: 5px;
+    color: #777;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   FEATURED
+========================================================= */
+
+.featured-section {
+    border-top: 1px solid #171717;
+    border-bottom: 1px solid #171717;
+    padding: 32px 50px 37px;
+}
+
+.featured-title {
+    margin-bottom: 24px;
+    text-align: center;
+    color: #3e3e3e;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 12px;
+    letter-spacing: 4px;
+}
+
+.featured-logos {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
     align-items: center;
-    justify-content: space-around;
-    padding: 0 170px;
+    gap: 25px;
 }
 
-.landing-featured-logos span {
-    color: #282d30;
+.featured-logos span {
+    text-align: center;
+    color: #363636;
     font-family: "Barlow Condensed", sans-serif;
     font-size: 13px;
     font-weight: 800;
-    letter-spacing: 0.3px;
 }
 
 
@@ -642,345 +758,389 @@ input {
    ACCESS SECTION
 ========================================================= */
 
-.landing-access-section {
-    width: 100%;
-    min-height: 520px;
+.access-section {
     display: grid;
-    grid-template-columns: 50% 50%;
-    background: #050505;
+    grid-template-columns: 1fr 1fr;
+    gap: 65px;
+    align-items: center;
+    padding: 115px 50px;
 }
 
-
-/* LEFT */
-
-.landing-access-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-left: 160px;
+.access-content {
+    padding-right: 30px;
 }
 
-.landing-access-content h2 {
-    margin: 0;
-    color: #eeeeee;
-    font-family: "Barlow Condensed", Impact, sans-serif;
-    font-size: 58px;
-    font-weight: 900;
-    line-height: 0.88;
-    letter-spacing: -0.5px;
-    text-transform: uppercase;
+.access-form-wrapper {
+    width: 100%;
 }
 
-.landing-access-content p {
-    max-width: 560px;
-    margin: 24px 0 0;
-    color: #687078;
-    font-size: 14px;
-    line-height: 1.6;
-}
-
-
-/* =========================================================
-   ACCESS CARD
-========================================================= */
-
-.landing-access-card {
-    width: 630px;
-    align-self: center;
-    padding: 35px;
-    background: #111111;
-    border: 1px solid #272727;
+.access-form {
+    padding: 32px;
+    background: #111;
+    border: 1px solid #242424;
     border-radius: 8px;
 }
 
-.landing-access-card h3 {
+.access-form h3 {
     margin: 0 0 27px;
-    color: #eeeeee;
     font-family: "Barlow Condensed", sans-serif;
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 800;
-    line-height: 1;
 }
 
-
-/* FORM */
-
-.landing-access-card form {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-
-/* NAME */
-
-.landing-name-row {
+.form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 11px;
 }
 
-
-/* INPUTS */
-
-.landing-access-card input {
+.access-form input,
+.access-form textarea {
     width: 100%;
-    height: 43px;
-    padding: 0 12px;
-    color: #eeeeee;
+    margin-bottom: 11px;
+    padding: 0 13px;
+    color: #e9e9e9;
     background: #151515;
-    border: 1px solid #292929;
-    border-radius: 4px;
+    border: 1px solid #2a2a2a;
+    border-radius: 5px;
     outline: none;
     font-size: 14px;
 }
 
-.landing-access-card input::placeholder {
-    color: #72787c;
+.access-form input {
+    height: 44px;
 }
 
-.landing-access-card input:focus {
-    border-color: #536500;
+.access-form textarea {
+    height: 65px;
+    padding-top: 13px;
+    resize: vertical;
 }
 
-
-/* WORKSHOP INPUT */
-
-.landing-access-card input[type="text"]:last-of-type {
-    height: 64px;
+.access-form input::placeholder,
+.access-form textarea::placeholder {
+    color: #777;
 }
 
+.access-form input:focus,
+.access-form textarea:focus {
+    border-color: #647f00;
+}
 
-/* SUBMIT */
-
-.landing-submit {
+.submit-button {
     width: 100%;
-    height: 46px;
-    margin-top: 10px;
+    height: 47px;
+    margin-top: 9px;
+    border: none;
+    border-radius: 5px;
+    background: #c7ff00;
+    color: #070707;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.submit-button:hover {
+    background: #d9ff50;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.footer {
+    border-top: 1px solid #171717;
+    padding: 65px 50px 25px;
+}
+
+.footer-main {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1.5fr repeat(4, 1fr);
+    gap: 55px;
+}
+
+.footer-brand-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.footer-icon {
+    width: 31px;
+    height: 31px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #050505;
-    background: var(--lime);
+    background: #c7ff00;
+    color: #080808;
     border-radius: 4px;
+    font-size: 13px;
+}
+
+.footer-brand p {
+    max-width: 230px;
+    margin-top: 18px;
+    color: #4e4e4e;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.footer-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.footer-column h4 {
+    margin: 0 0 10px;
     font-family: "Barlow Condensed", sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 800;
-    letter-spacing: 0.5px;
 }
 
-.landing-submit:hover {
-    background: #ddff42;
+.footer-column a {
+    color: #484848;
+    font-size: 13px;
+    transition: color 0.2s ease;
 }
 
+.footer-column a:hover {
+    color: #c7ff00;
+}
 
-/* =========================================================
-   TABLET
-========================================================= */
+.footer-bottom {
+    max-width: 1240px;
+    margin: 50px auto 0;
+    padding-top: 25px;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    border-top: 1px solid #171717;
+    color: #444;
+    font-size: 12px;
+}
 
-@media (max-width: 1400px) {
-    .landing-navbar {
-        padding: 0 35px;
-    }
-    .landing-logo {
-        width: 220px;
-    }
-    .landing-nav {
-        gap: 25px;
-    }
-    .landing-nav-buttons {
-        width: 205px;
-    }
-    .landing-hero-content {
-        padding-left: 50px;
-    }
-    .landing-hero-title {
-        font-size: 78px;
-    }
-    .landing-feature-image {
-        padding-left: 100px;
-    }
-    .landing-retention-content {
-        padding-left: 100px;
-    }
-    .landing-retention-image {
-        padding-right: 100px;
-    }
-    .landing-access-content {
-        padding-left: 100px;
-    }
-    .landing-access-card {
-        width: calc(100% - 70px);
-    }
+.footer-legal {
+    display: flex;
+    gap: 25px;
+}
+
+.footer-legal a:hover {
+    color: #c7ff00;
 }
 
 
 /* =========================================================
-   TABLET
+   RESPONSIVE — TABLET
 ========================================================= */
 
 @media (max-width: 1000px) {
-    .landing-navbar {
-        height: 68px;
+    .navbar-inner {
         padding: 0 25px;
     }
-    .landing-logo {
-        width: 170px;
+    .desktop-nav {
+        gap: 18px;
     }
-    .landing-nav {
-        gap: 17px;
+    .brand {
+        min-width: auto;
     }
-    .landing-nav a {
-        font-size: 11px;
+    .navbar-actions {
+        min-width: auto;
     }
-    .landing-nav-buttons {
-        width: 170px;
+    .hero-content {
+        padding-left: 30px;
+        padding-right: 30px;
     }
-    .landing-signin,
-    .landing-access {
-        height: 35px;
-        padding: 0 12px;
-        font-size: 11px;
+    .modules-section,
+    .ai-section,
+    .job-card-section,
+    .retention-section,
+    .access-section {
+        padding-left: 30px;
+        padding-right: 30px;
     }
-    .landing-hero {
-        height: 620px;
-        min-height: 620px;
+    .modules-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
-    .landing-hero-content {
-        padding-left: 40px;
+    .footer {
+        padding-left: 30px;
+        padding-right: 30px;
     }
-    .landing-hero-title {
-        font-size: 65px;
+    .footer-main {
+        grid-template-columns: repeat(3, 1fr);
     }
-    .landing-feature-section,
-    .landing-retention-section {
-        grid-template-columns: 1fr;
-    }
-    .landing-feature-image,
-    .landing-retention-image {
-        padding: 40px;
-        height: 450px;
-        justify-content: center;
-    }
-    .landing-feature-content,
-    .landing-retention-content {
-        padding: 50px 60px;
-    }
-    .landing-retention-image {
-        order: 2;
-    }
-    .landing-featured-logos {
-        padding: 0 40px;
-    }
-    .landing-access-section {
-        grid-template-columns: 1fr;
-    }
-    .landing-access-content {
-        padding: 70px 60px 30px;
-    }
-    .landing-access-card {
-        width: calc(100% - 120px);
-        margin: 30px 60px 70px;
+    .footer-brand {
+        grid-column: span 3;
     }
 }
 
 
 /* =========================================================
-   MOBILE
+   RESPONSIVE — MOBILE
 ========================================================= */
 
-@media (max-width: 700px) {
+@media (max-width: 720px) {
     .landing-navbar {
         height: auto;
-        min-height: 65px;
-        padding: 12px 16px;
+        position: relative;
+    }
+    .navbar-inner {
+        min-height: 70px;
+        padding: 13px 18px;
         flex-wrap: wrap;
+        gap: 13px;
     }
-    .landing-logo {
-        width: auto;
+    .brand {
+        flex: 1;
     }
-    .landing-nav-buttons {
-        width: auto;
-        margin-left: auto;
-    }
-    .landing-nav {
-        order: 3;
+    .desktop-nav {
         width: 100%;
-        justify-content: flex-start;
+        order: 3;
+        justify-content: space-between;
+        gap: 8px;
         overflow-x: auto;
-        gap: 20px;
-        padding: 10px 0 4px;
+        padding-bottom: 4px;
     }
-    .landing-nav a {
+    .desktop-nav button {
+        font-size: 12px;
         white-space: nowrap;
     }
-    .landing-hero {
-        height: 720px;
-        min-height: 720px;
+    .navbar-actions {
+        min-width: auto;
     }
-    .landing-hero-content {
-        height: 720px;
-        padding: 160px 25px 50px;
-        justify-content: center;
-    }
-    .landing-hero-title {
-        font-size: 55px;
-    }
-    .landing-hero-description {
+    .btn-signin,
+    .btn-access {
+        height: 36px;
+        padding: 0 11px;
         font-size: 12px;
     }
-    .landing-hero-description br {
-        display: none;
+    .hero-section {
+        min-height: 650px;
     }
-    .landing-feature-image,
-    .landing-retention-image {
-        height: 350px;
-        padding: 20px;
+    .hero-content {
+        padding: 75px 20px;
     }
-    .landing-feature-image img,
-    .landing-retention-image img {
-        width: 100%;
-        height: 310px;
+    .hero-title {
+        font-size: clamp(60px, 17vw, 90px);
+        letter-spacing: -1px;
     }
-    .landing-feature-content,
-    .landing-retention-content {
-        padding: 50px 25px;
+    .hero-description {
+        font-size: 14px;
     }
-    .landing-feature-content h1,
-    .landing-retention-content h2 {
-        font-size: 44px;
+    .hero-buttons {
+        flex-direction: column;
+        align-items: flex-start;
     }
-    .landing-process {
-        flex-wrap: wrap;
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
-    .landing-stats {
-        flex-wrap: wrap;
+    .stat-item {
+        min-height: 120px;
+        border-bottom: 1px solid #181818;
     }
-    .landing-stat {
-        width: 150px;
+    .stat-item:nth-child(2) {
+        border-right: none;
     }
-    .landing-featured-section {
-        height: auto;
-        padding: 35px 20px;
+    .stat-number {
+        font-size: 40px;
     }
-    .landing-featured-logos {
-        padding: 0;
-        gap: 25px;
-        justify-content: center;
+    .modules-section,
+    .ai-section,
+    .job-card-section,
+    .retention-section,
+    .access-section {
+        padding: 75px 20px;
     }
-    .landing-access-content {
-        padding: 60px 25px 20px;
-    }
-    .landing-access-content h2 {
-        font-size: 48px;
-    }
-    .landing-access-card {
-        width: calc(100% - 50px);
-        margin: 30px 25px 60px;
-        padding: 25px;
-    }
-    .landing-name-row {
+    .section-heading-row {
         grid-template-columns: 1fr;
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+    .section-title {
+        font-size: 55px;
+    }
+    .modules-grid {
+        grid-template-columns: 1fr;
+    }
+    .module-card {
+        min-height: 220px;
+    }
+    .ai-section,
+    .job-card-section,
+    .retention-section,
+    .access-section {
+        grid-template-columns: 1fr;
+        gap: 45px;
+    }
+    .ai-visual {
+        min-height: 380px;
+    }
+    .job-card-section {
+        display: flex;
+        flex-direction: column;
+    }
+    .job-card-image {
+        order: 1;
+    }
+    .job-card-content {
+        order: 2;
+    }
+    .job-flow {
+        gap: 7px;
+    }
+    .flow-item {
+        font-size: 11px;
+    }
+    .retention-image {
+        order: 1;
+    }
+    .retention-content {
+        order: 2;
+    }
+    .retention-stats {
+        grid-template-columns: 1fr;
+    }
+    .featured-section {
+        padding: 30px 20px;
+    }
+    .featured-logos {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    .access-content {
+        padding-right: 0;
+    }
+    .access-form {
+        padding: 22px;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .footer {
+        padding: 50px 20px 20px;
+    }
+    .footer-main {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 35px 25px;
+    }
+    .footer-brand {
+        grid-column: span 2;
+    }
+    .footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-top: 40px;
+    }
+    .footer-legal {
+        flex-wrap: wrap;
+        gap: 15px;
     }
 }
 
@@ -989,32 +1149,39 @@ input {
    SMALL MOBILE
 ========================================================= */
 
-@media (max-width: 480px) {
-    .landing-logo-title {
-        font-size: 11px;
+@media (max-width: 450px) {
+    .brand-name {
+        font-size: 14px;
     }
-    .landing-logo-icon {
-        width: 29px;
-        height: 29px;
-    }
-    .landing-signin {
+    .brand-badge {
         display: none;
     }
-    .landing-hero-title {
+    .navbar-actions {
+        gap: 5px;
+    }
+    .btn-signin {
+        display: none;
+    }
+    .hero-title {
+        font-size: 57px;
+    }
+    .hero-description {
+        font-size: 13px;
+    }
+    .primary-button,
+    .secondary-button {
+        width: 100%;
+    }
+    .ai-feature-grid {
+        grid-template-columns: 1fr;
+    }
+    .section-title {
         font-size: 48px;
     }
-    .landing-hero-label {
-        font-size: 9px;
+    .job-card-content .section-title {
+        font-size: 48px;
     }
-    .landing-hero-buttons {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .landing-feature-content h1,
-    .landing-retention-content h2 {
-        font-size: 40px;
-    }
-    .landing-access-content h2 {
-        font-size: 42px;
+    .desktop-break {
+        display: none;
     }
 }

@@ -1,10 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "./JobCardListPage.css";
+import "./GarageOwnerJobCards.css";
 
-function JobCardListPage() {
-  const navigate = useNavigate();
-
+function GarageOwnerJobCards() {
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [showModal, setShowModal] = useState(false);
 
@@ -149,267 +146,261 @@ function JobCardListPage() {
     resetForm();
   };
 
-  const handleDetails = (job) => {
-    navigate(`/job-cards/${job.id}`);
-  };
-
   return (
-    <div className="jobcards-page">
+    <div className="garage-jobcards-content">
 
       {/* =====================================================
-          CONTENT
+          PAGE HEADING
       ===================================================== */}
 
-      <div className="jobcards-content">
+      <div className="jobcards-heading-row">
 
-        {/* =================================================
-            HEADING
-        ================================================= */}
+        <h1>JOB CARDS</h1>
 
-        <div className="jobcards-heading-row">
+        <button
+          className="new-jobcard-button"
+          onClick={() => setShowModal(true)}
+        >
+          + NEW JOB CARD
+        </button>
 
-          <h1>
-            JOB CARDS
-          </h1>
+      </div>
+
+
+      {/* =====================================================
+          STAT CARDS
+      ===================================================== */}
+
+      <section className="jobcard-stats">
+
+        <div className="jobcard-stat-card">
+          <div className="jobcard-stat-label">
+            TOTAL TODAY
+          </div>
+
+          <div className="jobcard-stat-value">
+            14
+          </div>
+        </div>
+
+
+        <div className="jobcard-stat-card">
+          <div className="jobcard-stat-label">
+            IN REPAIR
+          </div>
+
+          <div className="jobcard-stat-value lime">
+            4
+          </div>
+        </div>
+
+
+        <div className="jobcard-stat-card">
+          <div className="jobcard-stat-label">
+            QC
+          </div>
+
+          <div className="jobcard-stat-value">
+            2
+          </div>
+        </div>
+
+
+        <div className="jobcard-stat-card">
+          <div className="jobcard-stat-label">
+            DELIVERED
+          </div>
+
+          <div className="jobcard-stat-value">
+            6
+          </div>
+        </div>
+
+
+        <div className="jobcard-stat-card">
+          <div className="jobcard-stat-label">
+            OVERDUE
+          </div>
+
+          <div className="jobcard-stat-value">
+            1
+          </div>
+        </div>
+
+      </section>
+
+
+      {/* =====================================================
+          FILTERS
+      ===================================================== */}
+
+      <div className="jobcard-filters">
+
+        {[
+          "ALL",
+          "RECEIVED",
+          "INSPECTION",
+          "REPAIR",
+          "QC",
+          "DELIVERED",
+        ].map((filter) => (
 
           <button
-            type="button"
-            className="new-jobcard-button"
-            onClick={() => setShowModal(true)}
+            key={filter}
+            className={
+              activeFilter === filter
+                ? "jobcard-filter active"
+                : "jobcard-filter"
+            }
+            onClick={() => setActiveFilter(filter)}
           >
-            + NEW JOB CARD
+            {filter}
           </button>
 
-        </div>
+        ))}
+
+      </div>
 
 
-        {/* =================================================
-            STAT CARDS
-        ================================================= */}
+      {/* =====================================================
+          JOB CARDS LIST
+      ===================================================== */}
 
-        <section className="jobcard-stats">
+      <div className="jobcards-list">
 
-          <div className="jobcard-stat-card">
-            <div className="jobcard-stat-label">
-              TOTAL TODAY
-            </div>
+        {filteredJobs.map((job) => (
 
-            <div className="jobcard-stat-value">
-              14
-            </div>
-          </div>
+          <div
+            className="jobcard-item"
+            key={job.id}
+          >
 
+            {/* TOP SECTION */}
 
-          <div className="jobcard-stat-card">
-            <div className="jobcard-stat-label">
-              IN REPAIR
-            </div>
+            <div className="jobcard-top">
 
-            <div className="jobcard-stat-value lime">
-              4
-            </div>
-          </div>
+              {/* LEFT */}
 
+              <div className="jobcard-left">
 
-          <div className="jobcard-stat-card">
-            <div className="jobcard-stat-label">
-              QC
-            </div>
-
-            <div className="jobcard-stat-value">
-              2
-            </div>
-          </div>
-
-
-          <div className="jobcard-stat-card">
-            <div className="jobcard-stat-label">
-              DELIVERED
-            </div>
-
-            <div className="jobcard-stat-value">
-              6
-            </div>
-          </div>
-
-
-          <div className="jobcard-stat-card">
-            <div className="jobcard-stat-label">
-              OVERDUE
-            </div>
-
-            <div className="jobcard-stat-value">
-              1
-            </div>
-          </div>
-
-        </section>
-
-
-        {/* =================================================
-            FILTERS
-        ================================================= */}
-
-        <div className="jobcard-filters">
-
-          {[
-            "ALL",
-            "RECEIVED",
-            "INSPECTION",
-            "REPAIR",
-            "QC",
-            "DELIVERED",
-          ].map((filter) => (
-            <button
-              type="button"
-              key={filter}
-              className={
-                activeFilter === filter
-                  ? "jobcard-filter active"
-                  : "jobcard-filter"
-              }
-              onClick={() => setActiveFilter(filter)}
-            >
-              {filter}
-            </button>
-          ))}
-
-        </div>
-
-
-        {/* =================================================
-            JOB CARDS
-        ================================================= */}
-
-        <div className="jobcards-list">
-
-          {filteredJobs.map((job) => (
-
-            <div
-              className="jobcard-item"
-              key={job.id}
-            >
-
-              {/* TOP */}
-
-              <div className="jobcard-top">
-
-                {/* LEFT */}
-
-                <div className="jobcard-left">
-
-                  <div className="jobcard-id">
-                    {job.id}
-                  </div>
-
-                  <div className="jobcard-customer">
-                    {job.customer}
-                  </div>
-
-                  <div className="jobcard-vehicle">
-                    {job.vehicle}
-                  </div>
-
+                <div className="jobcard-id">
+                  {job.id}
                 </div>
 
-
-                {/* SERVICE */}
-
-                <div className="jobcard-service">
-
-                  <span>
-                    SERVICE
-                  </span>
-
-                  <strong>
-                    {job.service}
-                  </strong>
-
-                  <small>
-                    Mechanic: {job.mechanic}
-                  </small>
-
+                <div className="jobcard-customer">
+                  {job.customer}
                 </div>
 
-
-                {/* RIGHT */}
-
-                <div className="jobcard-right">
-
-                  <span
-                    className={`jobcard-status ${job.statusClass}`}
-                  >
-                    {job.status}
-                  </span>
-
-                  <div className="jobcard-eta">
-                    {job.eta}
-                  </div>
-
-                  <div className="jobcard-amount">
-                    {job.amount}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="jobcard-details"
-                    onClick={() => handleDetails(job)}
-                  >
-                    Details
-                  </button>
-
+                <div className="jobcard-vehicle">
+                  {job.vehicle}
                 </div>
 
               </div>
 
 
-              {/* PROGRESS */}
+              {/* SERVICE */}
 
-              <div className="jobcard-progress">
+              <div className="jobcard-service">
 
-                <div className="progress-track">
+                <span>
+                  Service
+                </span>
 
-                  <div
-                    className="progress-fill"
-                    style={{
-                      width: `${job.progress}%`,
-                    }}
-                  />
+                <strong>
+                  {job.service}
+                </strong>
 
+                <small>
+                  Mechanic: {job.mechanic}
+                </small>
+
+              </div>
+
+
+              {/* RIGHT */}
+
+              <div className="jobcard-right">
+
+                <span
+                  className={`jobcard-status ${job.statusClass}`}
+                >
+                  {job.status}
+                </span>
+
+                <div className="jobcard-eta">
+                  {job.eta}
                 </div>
 
-
-                <div className="progress-labels">
-
-                  <span>
-                    Received
-                  </span>
-
-                  <span>
-                    Inspection
-                  </span>
-
-                  <span>
-                    In Repair
-                  </span>
-
-                  <span>
-                    QC
-                  </span>
-
-                  <span>
-                    Delivered
-                  </span>
-
+                <div className="jobcard-amount">
+                  {job.amount}
                 </div>
+
+                <button
+                  className="jobcard-details"
+                  onClick={() =>
+                    alert(`Details for ${job.id}`)
+                  }
+                >
+                  Details
+                </button>
 
               </div>
 
             </div>
 
-          ))}
 
-        </div>
+            {/* PROGRESS */}
+
+            <div className="jobcard-progress">
+
+              <div className="progress-track">
+
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${job.progress}%`,
+                  }}
+                ></div>
+
+              </div>
+
+
+              <div className="progress-labels">
+
+                <span>
+                  Received
+                </span>
+
+                <span>
+                  Inspection
+                </span>
+
+                <span>
+                  In Repair
+                </span>
+
+                <span>
+                  QC
+                </span>
+
+                <span>
+                  Delivered
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        ))}
+
+
+        {filteredJobs.length === 0 && (
+          <div className="no-jobcards">
+            No job cards found.
+          </div>
+        )}
 
       </div>
 
@@ -431,7 +422,7 @@ function JobCardListPage() {
 
           <div className="jobcard-modal">
 
-            {/* HEADER */}
+            {/* MODAL HEADER */}
 
             <div className="jobcard-modal-header">
 
@@ -457,6 +448,8 @@ function JobCardListPage() {
               onSubmit={handleCreateJobCard}
             >
 
+              {/* APPOINTMENT */}
+
               <div className="jobcard-form-group">
 
                 <label>
@@ -468,6 +461,7 @@ function JobCardListPage() {
                   value={formData.appointment}
                   onChange={handleChange}
                 >
+
                   <option>
                     Create without appointment
                   </option>
@@ -483,10 +477,13 @@ function JobCardListPage() {
                   <option>
                     APT-0883 — Karan Malhotra
                   </option>
+
                 </select>
 
               </div>
 
+
+              {/* CUSTOMER */}
 
               <div className="jobcard-form-group">
 
@@ -500,6 +497,7 @@ function JobCardListPage() {
                   onChange={handleChange}
                   required
                 >
+
                   <option value="">
                     Select customer...
                   </option>
@@ -527,10 +525,13 @@ function JobCardListPage() {
                   <option>
                     Kavita Rao
                   </option>
+
                 </select>
 
               </div>
 
+
+              {/* VEHICLE */}
 
               <div className="jobcard-form-group">
 
@@ -544,6 +545,7 @@ function JobCardListPage() {
                   onChange={handleChange}
                   required
                 >
+
                   <option value="">
                     Select vehicle...
                   </option>
@@ -571,10 +573,13 @@ function JobCardListPage() {
                   <option>
                     KA-03-MN-5567 | Baleno
                   </option>
+
                 </select>
 
               </div>
 
+
+              {/* ODOMETER */}
 
               <div className="jobcard-form-group">
 
@@ -592,6 +597,8 @@ function JobCardListPage() {
               </div>
 
 
+              {/* SERVICE */}
+
               <div className="jobcard-form-group">
 
                 <label>
@@ -603,6 +610,7 @@ function JobCardListPage() {
                   value={formData.serviceType}
                   onChange={handleChange}
                 >
+
                   <option>
                     Basic Service
                   </option>
@@ -630,10 +638,13 @@ function JobCardListPage() {
                   <option>
                     Suspension & Tyres
                   </option>
+
                 </select>
 
               </div>
 
+
+              {/* MECHANIC */}
 
               <div className="jobcard-form-group">
 
@@ -646,6 +657,7 @@ function JobCardListPage() {
                   value={formData.mechanic}
                   onChange={handleChange}
                 >
+
                   <option>
                     Auto-assign via AI
                   </option>
@@ -669,10 +681,13 @@ function JobCardListPage() {
                   <option>
                     Kiran Joshi
                   </option>
+
                 </select>
 
               </div>
 
+
+              {/* CUSTOMER COMPLAINT */}
 
               <div className="jobcard-form-group">
 
@@ -686,10 +701,12 @@ function JobCardListPage() {
                   onChange={handleChange}
                   placeholder="Describe the customer's complaint in detail..."
                   rows="3"
-                />
+                ></textarea>
 
               </div>
 
+
+              {/* DELIVERY */}
 
               <div className="jobcard-form-group">
 
@@ -707,6 +724,8 @@ function JobCardListPage() {
               </div>
 
 
+              {/* COST */}
+
               <div className="jobcard-form-group">
 
                 <label>
@@ -723,6 +742,8 @@ function JobCardListPage() {
               </div>
 
 
+              {/* NOTES */}
+
               <div className="jobcard-form-group">
 
                 <label>
@@ -735,10 +756,12 @@ function JobCardListPage() {
                   onChange={handleChange}
                   placeholder="Initial technician observations..."
                   rows="3"
-                />
+                ></textarea>
 
               </div>
 
+
+              {/* FOOTER */}
 
               <div className="jobcard-modal-footer">
 
@@ -771,4 +794,4 @@ function JobCardListPage() {
   );
 }
 
-export default JobCardListPage;
+export default GarageOwnerJobCards;

@@ -1,14 +1,11 @@
 /* =========================================================
-   SMARTGARAGE - MECHANIC DASHBOARD
+   GARAGE OWNER DASHBOARD
+   Figma-style dashboard
 ========================================================= */
-
-* {
-    box-sizing: border-box;
-}
 
 .garage-dashboard-page {
     width: 100%;
-    min-height: calc(100vh - 60px);
+    min-height: calc(100vh - 59px);
     background: #080909;
     color: #f4f4f4;
     padding: 26px 24px 35px;
@@ -256,7 +253,6 @@
     font-size: 13px !important;
     font-weight: 800;
     white-space: nowrap;
-    text-align: right;
 }
 
 
@@ -477,6 +473,10 @@
 .garage-dashboard-chart-area::after {
     top: 70px;
 }
+
+
+/* Figma screenshot currently shows the chart grid
+   without a visible line, so keep it hidden. */
 
 .garage-dashboard-chart-line {
     display: none;

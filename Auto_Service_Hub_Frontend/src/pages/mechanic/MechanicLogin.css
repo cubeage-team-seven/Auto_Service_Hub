@@ -49,7 +49,7 @@ body {
     flex-direction: column;
     justify-content: space-between;
     padding: 38px 38px 38px 40px;
-    background-image: linear-gradient( to bottom, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.76)), url("../../assets/mechanic-bg.jpg");
+    background-image: linear-gradient( to bottom, rgba(0, 0, 0, 0.32), rgba(0, 0, 0, 0.76)), url("../../assets/landing/mechanic-bg.jpg");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

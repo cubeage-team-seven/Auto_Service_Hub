@@ -1,7 +1,7 @@
 import React from "react";
-import "./DashboardPage.css";
+import "./GarageOwnerDashboard.css";
 
-function DashboardPage() {
+function GarageOwnerDashboard() {
   const jobs = [
     {
       id: "JC-2408",
@@ -99,15 +99,11 @@ function DashboardPage() {
       {/* ================= PAGE HEADING ================= */}
 
       <section className="garage-dashboard-heading">
-
         <div className="garage-dashboard-date">
           — TODAY, 17 AUGUST 2026
         </div>
 
-        <h1>
-          OPERATIONS OVERVIEW
-        </h1>
-
+        <h1>OPERATIONS OVERVIEW</h1>
       </section>
 
 
@@ -116,7 +112,6 @@ function DashboardPage() {
       <section className="garage-dashboard-stats">
 
         <div className="garage-dashboard-stat-card">
-
           <div className="garage-dashboard-stat-label">
             TODAY'S JOBS
           </div>
@@ -128,12 +123,10 @@ function DashboardPage() {
           <div className="garage-dashboard-stat-description">
             8 active · 6 delivered
           </div>
-
         </div>
 
 
         <div className="garage-dashboard-stat-card">
-
           <div className="garage-dashboard-stat-label">
             REVENUE TODAY
           </div>
@@ -145,12 +138,10 @@ function DashboardPage() {
           <div className="garage-dashboard-stat-description">
             +12% vs yesterday
           </div>
-
         </div>
 
 
         <div className="garage-dashboard-stat-card">
-
           <div className="garage-dashboard-stat-label">
             PENDING INVOICES
           </div>
@@ -162,12 +153,10 @@ function DashboardPage() {
           <div className="garage-dashboard-stat-description">
             ₹48,294 outstanding
           </div>
-
         </div>
 
 
         <div className="garage-dashboard-stat-card">
-
           <div className="garage-dashboard-stat-label">
             LOW STOCK ALERTS
           </div>
@@ -179,7 +168,6 @@ function DashboardPage() {
           <div className="garage-dashboard-stat-description">
             ACF, OIF, TYR
           </div>
-
         </div>
 
       </section>
@@ -503,4 +491,4 @@ function DashboardPage() {
   );
 }
 
-export default DashboardPage;
+export default GarageOwnerDashboard;

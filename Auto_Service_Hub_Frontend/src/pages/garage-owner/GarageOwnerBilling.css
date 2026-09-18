@@ -1,0 +1,770 @@
+/* =========================================================
+   GARAGE OWNER — BILLING & PAYMENTS
+   ========================================================= */
+
+.billing-page {
+    width: 100%;
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding: 32px 26px 60px;
+    background: #050505;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================================
+   PAGE TOP
+   ========================================================= */
+
+.billing-page-top {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.billing-page-top h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 28px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -1px;
+}
+
+.billing-estimate-button {
+    min-width: 107px;
+    height: 38px;
+    padding: 0 15px;
+    border: none;
+    border-radius: 4px;
+    background: #c9ff20;
+    color: #050505;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.1px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.billing-estimate-button:hover {
+    background: #d8ff55;
+}
+
+.billing-estimate-button:active {
+    transform: translateY(1px);
+}
+
+
+/* =========================================================
+   STATISTICS
+   ========================================================= */
+
+.billing-stats {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 13px;
+    margin-bottom: 21px;
+}
+
+.billing-stat {
+    min-height: 100px;
+    box-sizing: border-box;
+    padding: 19px 18px;
+    border: 1px solid #292929;
+    border-radius: 6px;
+    background: #141414;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.billing-stat span {
+    margin-bottom: 8px;
+    color: #737373;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.billing-stat strong {
+    margin-bottom: 3px;
+    color: #ffffff;
+    font-size: 27px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -1px;
+}
+
+.billing-stat strong.lime {
+    color: #c9ff20;
+}
+
+
+/* =========================================================
+   BILLING TABLE CARD
+   ========================================================= */
+
+.billing-table-card {
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid #292929;
+    border-radius: 6px;
+    background: #111111;
+}
+
+.billing-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.billing-table {
+    width: 100%;
+    min-width: 1050px;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+   ========================================================= */
+
+.billing-table thead {
+    background: #141414;
+}
+
+.billing-table th {
+    height: 44px;
+    box-sizing: border-box;
+    padding: 0 16px;
+    border-bottom: 1px solid #292929;
+    color: #777777;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.25px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.billing-table th:first-child,
+.billing-table td:first-child {
+    padding-left: 16px;
+}
+
+
+/* =========================================================
+   TABLE BODY
+   ========================================================= */
+
+.billing-table tbody tr {
+    height: 56px;
+    border-bottom: 1px solid #252525;
+    background: #111111;
+}
+
+.billing-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.billing-table tbody tr:hover {
+    background: #151515;
+}
+
+.billing-table td {
+    padding: 0 16px;
+    color: #777777;
+    font-size: 12px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+
+/* =========================================================
+   SPECIAL TABLE CELLS
+   ========================================================= */
+
+.billing-invoice {
+    color: #c9ff20 !important;
+    font-weight: 800;
+    font-size: 11px !important;
+}
+
+.billing-customer {
+    color: #ffffff !important;
+    font-weight: 700;
+}
+
+.billing-amount {
+    color: #ffffff !important;
+    font-weight: 800;
+}
+
+.billing-total {
+    color: #ffffff !important;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   STATUS BADGES
+   ========================================================= */
+
+.billing-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 25px;
+    box-sizing: border-box;
+    padding: 0 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.billing-status.paid {
+    border: 1px solid #0c6335;
+    background: rgba(0, 100, 50, 0.12);
+    color: #00d66b;
+}
+
+.billing-status.pending {
+    border: 1px solid #8a6500;
+    background: rgba(160, 120, 0, 0.10);
+    color: #e6b800;
+}
+
+.billing-status.overdue {
+    border: 1px solid #8d1d2c;
+    background: rgba(150, 20, 35, 0.10);
+    color: #ff4050;
+}
+
+
+/* =========================================================
+   VIEW BUTTON
+   ========================================================= */
+
+.billing-view {
+    height: 29px;
+    padding: 0 11px;
+    border: 1px solid #303030;
+    border-radius: 5px;
+    background: #111111;
+    color: #858585;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.billing-view:hover {
+    border-color: #505050;
+    color: #ffffff;
+    background: #171717;
+}
+
+
+/* =========================================================
+   MODAL OVERLAY
+   ========================================================= */
+
+.billing-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.billing-estimate-modal {
+    position: relative;
+    width: 530px;
+    max-width: calc(100vw - 40px);
+    max-height: calc(100vh - 40px);
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid #292929;
+    border-radius: 10px;
+    background: #101010;
+    color: #ffffff;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.015);
+}
+
+
+/* =========================================================
+   MODAL SCROLLBAR
+   ========================================================= */
+
+.billing-estimate-modal::-webkit-scrollbar {
+    width: 5px;
+}
+
+.billing-estimate-modal::-webkit-scrollbar-track {
+    background: #101010;
+}
+
+.billing-estimate-modal::-webkit-scrollbar-thumb {
+    background: #3b3b3b;
+    border-radius: 10px;
+}
+
+.billing-estimate-modal::-webkit-scrollbar-thumb:hover {
+    background: #555555;
+}
+
+
+/* =========================================================
+   MODAL HEADER
+   ========================================================= */
+
+.billing-modal-header {
+    width: 100%;
+    min-height: 62px;
+    box-sizing: border-box;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #292929;
+}
+
+.billing-modal-eyebrow {
+    color: #ffffff;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -0.1px;
+}
+
+.billing-modal-close {
+    width: 28px;
+    height: 28px;
+    margin-left: auto;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #666666;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.billing-modal-close:hover {
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   MODAL FORM
+   ========================================================= */
+
+.billing-estimate-form {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 21px 25px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 17px;
+}
+
+
+/* =========================================================
+   ESTIMATE / INVOICE TYPE
+   ========================================================= */
+
+.billing-type-selector {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.billing-type-option {
+    height: 40px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 1px solid #292929;
+    border-radius: 6px;
+    background: #101010;
+    color: #707070;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.billing-type-option:hover {
+    border-color: #3c3c3c;
+    color: #a0a0a0;
+}
+
+.billing-type-option.selected {
+    color: #a0a0a0;
+}
+
+.billing-type-option input {
+    display: none;
+}
+
+.billing-radio-circle {
+    position: relative;
+    width: 15px;
+    height: 15px;
+    flex: 0 0 15px;
+    box-sizing: border-box;
+    border: 1px solid #777777;
+    border-radius: 50%;
+}
+
+.billing-type-option.selected .billing-radio-circle {
+    border-color: #c9ff20;
+}
+
+.billing-type-option.selected .billing-radio-circle::after {
+    content: "";
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    left: 2px;
+    top: 2px;
+    border-radius: 50%;
+    background: #c9ff20;
+}
+
+
+/* =========================================================
+   FORM FIELD
+   ========================================================= */
+
+.billing-form-field {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.billing-form-field label {
+    color: #777777;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 1.25px;
+}
+
+
+/* =========================================================
+   INPUTS + SELECTS
+   ========================================================= */
+
+.billing-form-field input,
+.billing-form-field select {
+    width: 100%;
+    height: 42px;
+    box-sizing: border-box;
+    padding: 0 13px;
+    border: 1px solid #292929;
+    border-radius: 6px;
+    outline: none;
+    background: #151515;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+}
+
+.billing-form-field input::placeholder {
+    color: #737373;
+}
+
+.billing-form-field input:focus,
+.billing-form-field select:focus {
+    border-color: #484848;
+}
+
+.billing-form-field select {
+    cursor: pointer;
+}
+
+.billing-form-field select option {
+    background: #151515;
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   FORM GRID
+   ========================================================= */
+
+.billing-form-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+
+/* =========================================================
+   LINE ITEMS
+   ========================================================= */
+
+.billing-line-items {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.billing-section-label {
+    margin-bottom: 1px;
+    color: #777777;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: 1.25px;
+}
+
+.billing-line-item {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px 112px 70px;
+    gap: 8px;
+    align-items: center;
+}
+
+.billing-line-item input {
+    width: 100%;
+    height: 43px;
+    box-sizing: border-box;
+    padding: 0 12px;
+    border: 1px solid #292929;
+    border-radius: 6px;
+    outline: none;
+    background: #151515;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+}
+
+.billing-line-item input::placeholder {
+    color: #707070;
+}
+
+.billing-line-item input:focus {
+    border-color: #484848;
+}
+
+.billing-line-total {
+    color: #777777;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   ADD LINE ITEM
+   ========================================================= */
+
+.billing-add-line {
+    width: fit-content;
+    margin-top: 2px;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #c9ff20;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.billing-add-line:hover {
+    color: #ddff68;
+}
+
+
+/* =========================================================
+   NOTES
+   ========================================================= */
+
+.billing-notes {
+    width: 100%;
+    min-height: 64px;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    resize: vertical;
+    border: 1px solid #292929;
+    border-radius: 6px;
+    outline: none;
+    background: #151515;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.billing-notes::placeholder {
+    color: #707070;
+}
+
+.billing-notes:focus {
+    border-color: #484848;
+}
+
+
+/* =========================================================
+   MODAL ACTIONS
+   ========================================================= */
+
+.billing-modal-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 92px;
+    gap: 12px;
+    padding-top: 16px;
+    margin-top: 1px;
+    border-top: 1px solid #292929;
+}
+
+.billing-modal-create {
+    width: 100%;
+    height: 44px;
+    border: none;
+    border-radius: 6px;
+    background: #c9ff20;
+    color: #050505;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.billing-modal-create:hover {
+    background: #d8ff4b;
+}
+
+.billing-modal-create:active {
+    transform: translateY(1px);
+}
+
+.billing-modal-cancel {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #292929;
+    border-radius: 6px;
+    background: #111111;
+    color: #777777;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.billing-modal-cancel:hover {
+    border-color: #444444;
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   RESPONSIVE — TABLET
+   ========================================================= */
+
+@media (max-width: 1000px) {
+    .billing-page {
+        padding: 28px 20px 50px;
+    }
+    .billing-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+   ========================================================= */
+
+@media (max-width: 650px) {
+    .billing-page {
+        padding: 22px 14px 40px;
+    }
+    .billing-page-top {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .billing-page-top h1 {
+        font-size: 24px;
+    }
+    .billing-estimate-button {
+        align-self: flex-start;
+    }
+    .billing-stats {
+        grid-template-columns: 1fr;
+    }
+    .billing-form-grid {
+        grid-template-columns: 1fr;
+        gap: 17px;
+    }
+    .billing-estimate-modal {
+        width: calc(100vw - 24px);
+        max-width: none;
+        max-height: calc(100vh - 24px);
+        border-radius: 8px;
+    }
+    .billing-modal-header {
+        padding: 0 18px;
+    }
+    .billing-estimate-form {
+        padding: 18px;
+    }
+    .billing-line-item {
+        grid-template-columns: minmax(0, 1fr) 70px;
+    }
+    .billing-line-item input:nth-child(3) {
+        grid-column: 1;
+    }
+    .billing-line-total {
+        grid-column: 2;
+        grid-row: 2;
+    }
+    .billing-modal-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL SCREEN
+   ========================================================= */
+
+@media (max-width: 420px) {
+    .billing-type-selector {
+        grid-template-columns: 1fr;
+    }
+    .billing-modal-header {
+        min-height: 56px;
+    }
+    .billing-estimate-form {
+        padding: 16px;
+    }
+}

@@ -1,15 +1,35 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-
 import "./InventoryPage.css";
 
 function InventoryPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All Categories");
   const [stock, setStock] = useState("All Stock");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  /* =====================================================
+     ADD PART MODAL
+  ===================================================== */
 
-  const inventory = [
+  const [showAddPartModal, setShowAddPartModal] = useState(false);
+
+  const [partForm, setPartForm] = useState({
+    partName: "",
+    sku: "",
+    category: "Lubricants",
+    unit: "Piece",
+    openingStock: "",
+    minimumQty: "",
+    unitPrice: "",
+    sellingPrice: "",
+    supplier: "",
+    storageLocation: "",
+    hsnCode: "",
+  });
+
+  /* =====================================================
+     INVENTORY DATA
+  ===================================================== */
+
+  const [inventory, setInventory] = useState([
     {
       sku: "ENO-7742",
       name: "Engine Oil 5W-30 (1L)",
@@ -98,7 +118,11 @@ function InventoryPage() {
       supplier: "Mann Filters",
       status: "Low Stock",
     },
-  ];
+  ]);
+
+  /* =====================================================
+     FILTERED INVENTORY
+  ===================================================== */
 
   const filteredInventory = inventory.filter((item) => {
     const searchMatch =
@@ -119,112 +143,221 @@ function InventoryPage() {
     return searchMatch && categoryMatch && stockMatch;
   });
 
+  /* =====================================================
+     FORM CHANGE
+  ===================================================== */
+
+  const handlePartFormChange = (e) => {
+    const { name, value } = e.target;
+
+    setPartForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  };
+
+  /* =====================================================
+     OPEN MODAL
+  ===================================================== */
+
+  const openAddPartModal = () => {
+    setPartForm({
+      partName: "",
+      sku: "",
+      category: "Lubricants",
+      unit: "Piece",
+      openingStock: "",
+      minimumQty: "",
+      unitPrice: "",
+      sellingPrice: "",
+      supplier: "",
+      storageLocation: "",
+      hsnCode: "",
+    });
+
+    setShowAddPartModal(true);
+  };
+
+  /* =====================================================
+     CLOSE MODAL
+  ===================================================== */
+
+  const closeAddPartModal = () => {
+    setShowAddPartModal(false);
+  };
+
+  /* =====================================================
+     ADD PART
+  ===================================================== */
+
+  const handleAddPart = (e) => {
+    e.preventDefault();
+
+    if (!partForm.partName.trim()) {
+      alert("Please enter part name.");
+      return;
+    }
+
+    if (!partForm.sku.trim()) {
+      alert("Please enter SKU / Part Number.");
+      return;
+    }
+
+    if (partForm.openingStock === "") {
+      alert("Please enter opening stock quantity.");
+      return;
+    }
+
+    if (partForm.minimumQty === "") {
+      alert("Please enter minimum quantity.");
+      return;
+    }
+
+    if (partForm.unitPrice === "") {
+      alert("Please enter unit price.");
+      return;
+    }
+
+    if (partForm.sellingPrice === "") {
+      alert("Please enter selling price.");
+      return;
+    }
+
+    if (!partForm.supplier) {
+      alert("Please select a supplier.");
+      return;
+    }
+
+    if (!partForm.storageLocation.trim()) {
+      alert("Please enter storage location.");
+      return;
+    }
+
+    if (!partForm.hsnCode.trim()) {
+      alert("Please enter HSN code.");
+      return;
+    }
+
+    const openingStock = Number(
+      partForm.openingStock
+    ) || 0;
+
+    const minimumQty = Number(
+      partForm.minimumQty
+    ) || 0;
+
+    const unitPrice = Number(
+      partForm.unitPrice
+    ) || 0;
+
+    const duplicateSKU = inventory.some(
+      (item) =>
+        item.sku.toLowerCase() ===
+        partForm.sku.trim().toLowerCase()
+    );
+
+    if (duplicateSKU) {
+      alert("This SKU already exists.");
+      return;
+    }
+
+    const newPart = {
+      sku: partForm.sku.trim().toUpperCase(),
+
+      name: partForm.partName.trim(),
+
+      category: partForm.category,
+
+      location:
+        partForm.storageLocation.trim(),
+
+      stock: openingStock,
+
+      min: minimumQty,
+
+      price:
+        `₹${unitPrice.toLocaleString("en-IN")}`,
+
+      supplier: partForm.supplier,
+
+      status:
+        openingStock === 0
+          ? "Out of Stock"
+          : openingStock <= minimumQty
+          ? "Low Stock"
+          : "OK",
+    };
+
+    setInventory((previous) => [
+      ...previous,
+      newPart,
+    ]);
+
+    setShowAddPartModal(false);
+
+    setPartForm({
+      partName: "",
+      sku: "",
+      category: "Lubricants",
+      unit: "Piece",
+      openingStock: "",
+      minimumQty: "",
+      unitPrice: "",
+      sellingPrice: "",
+      supplier: "",
+      storageLocation: "",
+      hsnCode: "",
+    });
+
+    alert("Spare part added successfully.");
+  };
+
+  /* =====================================================
+     STATISTICS
+  ===================================================== */
+
+  const totalSKUs = inventory.length;
+
+  const lowStockCount = inventory.filter(
+    (item) =>
+      item.stock > 0 &&
+      item.stock <= item.min
+  ).length;
+
+  const outOfStockCount = inventory.filter(
+    (item) => item.stock === 0
+  ).length;
+
+  const inventoryValue = inventory.reduce(
+    (total, item) => {
+      const numericPrice =
+        Number(
+          String(item.price)
+            .replace("₹", "")
+            .replace(/,/g, "")
+        ) || 0;
+
+      return (
+        total +
+        numericPrice * item.stock
+      );
+    },
+    0
+  );
+
+  const formattedInventoryValue =
+    inventoryValue >= 100000
+      ? `₹${(
+          inventoryValue / 100000
+        ).toFixed(1)}L`
+      : `₹${inventoryValue.toLocaleString(
+          "en-IN"
+        )}`;
+
   return (
-    <div className={`inventory-page ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+    <>
+      <section className="inventory-content">
 
-      {/* =====================================================
-          SIDEBAR
-      ===================================================== */}
-
-      <aside className="inventory-sidebar">
-
-        <div className="inventory-sidebar-logo">
-
-          <div className="inventory-sidebar-logo-icon">
-            ▰
-          </div>
-
-          <span>
-           Auto_Service_Hub
-          </span>
-
-        </div>
-
-
-        <nav className="inventory-sidebar-nav">
-
-          <Link
-            to="/inventory-dashboard"
-            className="inventory-sidebar-nav-item"
-          >
-            <span>▦</span>
-            Dashboard
-          </Link>
-
-          <Link
-            to="/inventory"
-            className="inventory-sidebar-nav-item active"
-          >
-            <span>◈</span>
-            Inventory
-          </Link>
-
-        </nav>
-
-        <button
-          className="inventory-sidebar-toggle"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
-        >
-          {sidebarOpen ? "‹" : "›"}
-        </button>
-
-      </aside>
-
-
-      {/* =====================================================
-          MAIN
-      ===================================================== */}
-
-      <main className="inventory-main">
-
-        {/* =================================================
-            TOP BAR
-        ================================================= */}
-
-        <header className="inventory-topbar">
-
-          <div className="inventory-breadcrumb">
-
-            <span>
-              Auto_Service_Hub
-            </span>
-
-            <b>
-              /
-            </b>
-
-            <strong>
-              Inventory
-            </strong>
-
-          </div>
-
-
-          <div className="inventory-top-actions">
-
-            <span className="inventory-role-badge">
-              INVENTORY MANAGER
-            </span>
-
-            <Link
-              to="/"
-              className="inventory-dashboard-button"
-              title="Home"
-            >
-              ⌂
-            </Link>
-
-          </div>
-
-        </header>
-
-
-        {/* =================================================
-            CONTENT
-        ================================================= */}
-
-        <section className="inventory-content">
 
           <div className="inventory-heading">
 
@@ -248,6 +381,7 @@ function InventoryPage() {
             <button
               type="button"
               className="inventory-add-button"
+              onClick={openAddPartModal}
             >
               + ADD PART
             </button>
@@ -263,26 +397,30 @@ function InventoryPage() {
 
             <StatCard
               title="TOTAL SKUS"
-              value="124"
+              value={totalSKUs}
               text="Active inventory items"
             />
 
             <StatCard
               title="LOW STOCK"
-              value="3"
+              value={lowStockCount}
               text="Items need attention"
               green
             />
 
             <StatCard
               title="OUT OF STOCK"
-              value="0"
-              text="No unavailable parts"
+              value={outOfStockCount}
+              text={
+                outOfStockCount === 0
+                  ? "No unavailable parts"
+                  : "Unavailable parts"
+              }
             />
 
             <StatCard
               title="INVENTORY VALUE"
-              value="₹3.2L"
+              value={formattedInventoryValue}
               text="Current stock value"
             />
 
@@ -304,7 +442,9 @@ function InventoryPage() {
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) =>
+                  setSearch(e.target.value)
+                }
                 placeholder="Search by SKU, name, category..."
               />
 
@@ -313,26 +453,65 @@ function InventoryPage() {
 
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) =>
+                setCategory(e.target.value)
+              }
             >
-              <option>All Categories</option>
-              <option>Lubricants</option>
-              <option>Brakes</option>
-              <option>Filters</option>
-              <option>Electrical</option>
-              <option>Ignition</option>
-              <option>Tyres</option>
+
+              <option>
+                All Categories
+              </option>
+
+              <option>
+                Lubricants
+              </option>
+
+              <option>
+                Brakes
+              </option>
+
+              <option>
+                Filters
+              </option>
+
+              <option>
+                Electrical
+              </option>
+
+              <option>
+                Ignition
+              </option>
+
+              <option>
+                Tyres
+              </option>
+
             </select>
 
 
             <select
               value={stock}
-              onChange={(e) => setStock(e.target.value)}
+              onChange={(e) =>
+                setStock(e.target.value)
+              }
             >
-              <option>All Stock</option>
-              <option>In Stock</option>
-              <option>Low Stock</option>
-              <option>Out of Stock</option>
+
+              <option>
+                All Stock
+              </option>
+
+              <option>
+                In Stock
+              </option>
+
+              <option>
+                Low Stock
+              </option>
+
+              <option>
+                Out of Stock
+              </option>
+
             </select>
 
           </div>
@@ -364,15 +543,25 @@ function InventoryPage() {
                 <thead>
 
                   <tr>
+
                     <th>SKU</th>
+
                     <th>PART NAME</th>
+
                     <th>CATEGORY</th>
+
                     <th>LOCATION</th>
+
                     <th>STOCK</th>
+
                     <th>MIN QTY</th>
+
                     <th>UNIT PRICE</th>
+
                     <th>SUPPLIER</th>
+
                     <th>STATUS</th>
+
                   </tr>
 
                 </thead>
@@ -380,17 +569,18 @@ function InventoryPage() {
 
                 <tbody>
 
-                  {filteredInventory.map((item) => (
+                  {filteredInventory.map(
+                    (item) => (
+                      <InventoryRow
+                        key={item.sku}
+                        {...item}
+                      />
+                    )
+                  )}
 
-                    <InventoryRow
-                      key={item.sku}
-                      {...item}
-                    />
 
-                  ))}
-
-
-                  {filteredInventory.length === 0 && (
+                  {filteredInventory.length ===
+                    0 && (
 
                     <tr>
 
@@ -415,9 +605,404 @@ function InventoryPage() {
 
         </section>
 
-      </main>
 
-    </div>
+      {/* =====================================================
+          ADD SPARE PART MODAL
+      ===================================================== */}
+
+      {showAddPartModal && (
+
+        <div
+          className="inventory-modal-overlay"
+          onMouseDown={(e) => {
+
+            if (
+              e.target ===
+              e.currentTarget
+            ) {
+              closeAddPartModal();
+            }
+
+          }}
+        >
+
+          <div className="inventory-add-modal">
+
+            {/* =================================================
+                MODAL HEADER
+            ================================================= */}
+
+            <div className="inventory-modal-header">
+
+              <h2>
+                ADD SPARE PART
+              </h2>
+
+              <button
+                type="button"
+                className="inventory-modal-close"
+                onClick={closeAddPartModal}
+              >
+                ×
+              </button>
+
+            </div>
+
+
+            {/* =================================================
+                MODAL FORM
+            ================================================= */}
+
+            <form
+              className="inventory-add-form"
+              onSubmit={handleAddPart}
+            >
+
+              {/* PART NAME */}
+
+              <div className="inventory-form-field full">
+
+                <label>
+                  PART NAME
+                </label>
+
+                <input
+                  type="text"
+                  name="partName"
+                  value={partForm.partName}
+                  onChange={handlePartFormChange}
+                  placeholder="Engine Oil 5W-30 (1L)"
+                />
+
+              </div>
+
+
+              {/* SKU */}
+
+              <div className="inventory-form-field full">
+
+                <label>
+                  SKU / PART NUMBER
+                </label>
+
+                <input
+                  type="text"
+                  name="sku"
+                  value={partForm.sku}
+                  onChange={handlePartFormChange}
+                  placeholder="ENO-0001"
+                />
+
+              </div>
+
+
+              {/* CATEGORY + UNIT */}
+
+              <div className="inventory-form-two">
+
+                <div className="inventory-form-field">
+
+                  <label>
+                    CATEGORY
+                  </label>
+
+                  <select
+                    name="category"
+                    value={partForm.category}
+                    onChange={handlePartFormChange}
+                  >
+
+                    <option>
+                      Lubricants
+                    </option>
+
+                    <option>
+                      Brakes
+                    </option>
+
+                    <option>
+                      Filters
+                    </option>
+
+                    <option>
+                      Electrical
+                    </option>
+
+                    <option>
+                      Ignition
+                    </option>
+
+                    <option>
+                      Tyres
+                    </option>
+
+                    <option>
+                      Engine Parts
+                    </option>
+
+                    <option>
+                      Transmission
+                    </option>
+
+                  </select>
+
+                </div>
+
+
+                <div className="inventory-form-field">
+
+                  <label>
+                    UNIT
+                  </label>
+
+                  <select
+                    name="unit"
+                    value={partForm.unit}
+                    onChange={handlePartFormChange}
+                  >
+
+                    <option>
+                      Piece
+                    </option>
+
+                    <option>
+                      Set
+                    </option>
+
+                    <option>
+                      Pair
+                    </option>
+
+                    <option>
+                      Litre
+                    </option>
+
+                    <option>
+                      Kg
+                    </option>
+
+                    <option>
+                      Box
+                    </option>
+
+                  </select>
+
+                </div>
+
+              </div>
+
+
+              {/* OPENING STOCK + MINIMUM */}
+
+              <div className="inventory-form-two">
+
+                <div className="inventory-form-field">
+
+                  <label>
+                    OPENING STOCK QTY
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    name="openingStock"
+                    value={partForm.openingStock}
+                    onChange={handlePartFormChange}
+                    placeholder="10"
+                  />
+
+                </div>
+
+
+                <div className="inventory-form-field">
+
+                  <label>
+                    MINIMUM QTY ALERT
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    name="minimumQty"
+                    value={partForm.minimumQty}
+                    onChange={handlePartFormChange}
+                    placeholder="5"
+                  />
+
+                </div>
+
+              </div>
+
+
+              {/* UNIT PRICE + SELLING PRICE */}
+
+              <div className="inventory-form-two">
+
+                <div className="inventory-form-field">
+
+                  <label>
+                    UNIT PRICE (₹)
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    name="unitPrice"
+                    value={partForm.unitPrice}
+                    onChange={handlePartFormChange}
+                    placeholder="320"
+                  />
+
+                </div>
+
+
+                <div className="inventory-form-field">
+
+                  <label>
+                    SELLING PRICE (₹)
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    name="sellingPrice"
+                    value={partForm.sellingPrice}
+                    onChange={handlePartFormChange}
+                    placeholder="380"
+                  />
+
+                </div>
+
+              </div>
+
+
+              {/* SUPPLIER */}
+
+              <div className="inventory-form-field full">
+
+                <label>
+                  SUPPLIER
+                </label>
+
+                <select
+                  name="supplier"
+                  value={partForm.supplier}
+                  onChange={handlePartFormChange}
+                >
+
+                  <option value="">
+                    Select supplier...
+                  </option>
+
+                  <option>
+                    Castrol India
+                  </option>
+
+                  <option>
+                    Bosch India
+                  </option>
+
+                  <option>
+                    Mahle Filters
+                  </option>
+
+                  <option>
+                    Shell India
+                  </option>
+
+                  <option>
+                    NGK India
+                  </option>
+
+                  <option>
+                    MRF Ltd
+                  </option>
+
+                  <option>
+                    Amaron India
+                  </option>
+
+                  <option>
+                    Mann Filters
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              {/* STORAGE LOCATION */}
+
+              <div className="inventory-form-field full">
+
+                <label>
+                  STORAGE LOCATION
+                </label>
+
+                <input
+                  type="text"
+                  name="storageLocation"
+                  value={
+                    partForm.storageLocation
+                  }
+                  onChange={
+                    handlePartFormChange
+                  }
+                  placeholder="Rack A1, Shelf 2"
+                />
+
+              </div>
+
+
+              {/* HSN CODE */}
+
+              <div className="inventory-form-field full">
+
+                <label>
+                  HSN CODE (FOR GST)
+                </label>
+
+                <input
+                  type="text"
+                  name="hsnCode"
+                  value={partForm.hsnCode}
+                  onChange={handlePartFormChange}
+                  placeholder="27101990"
+                />
+
+              </div>
+
+
+              {/* DIVIDER + BUTTONS */}
+
+              <div className="inventory-modal-actions">
+
+                <button
+                  type="submit"
+                  className="inventory-save-button"
+                >
+                  ADD PART
+                </button>
+
+                <button
+                  type="button"
+                  className="inventory-cancel-button"
+                  onClick={closeAddPartModal}
+                >
+                  Cancel
+                </button>
+
+              </div>
+
+            </form>
+
+          </div>
+
+        </div>
+
+      )}
+
+    </>
   );
 }
 
@@ -471,7 +1056,11 @@ function InventoryRow({
   supplier,
   status,
 }) {
-  const lowStock = status === "Low Stock";
+  const lowStock =
+    status === "Low Stock";
+
+  const outOfStock =
+    status === "Out of Stock";
 
   return (
     <tr>
@@ -494,7 +1083,7 @@ function InventoryRow({
 
       <td
         className={
-          lowStock
+          lowStock || outOfStock
             ? "inventory-stock low"
             : "inventory-stock"
         }
@@ -518,7 +1107,9 @@ function InventoryRow({
 
         <span
           className={`inventory-status ${
-            lowStock ? "low" : "ok"
+            lowStock || outOfStock
+              ? "low"
+              : "ok"
           }`}
         >
           {status}

@@ -1,0 +1,286 @@
+/* =========================================================
+   SMARTGARAGE AI HUB
+   FIGMA MATCH
+========================================================= */
+
+.garage-ai-page {
+    width: 100%;
+    min-height: calc(100vh - 60px);
+    background: #050505;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.garage-ai-page-header {
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+.garage-ai-heading {
+    width: 100%;
+}
+
+.garage-ai-eyebrow {
+    color: #c9ff20;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    line-height: 1;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.garage-ai-heading h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 31px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -1px;
+}
+
+.garage-ai-heading p {
+    margin: 9px 0 0;
+    color: #666666;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   AI GRID
+========================================================= */
+
+.garage-ai-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+
+/* =========================================================
+   AI CARD
+========================================================= */
+
+.garage-ai-card {
+    position: relative;
+    min-height: 139px;
+    padding: 20px 18px 19px 19px;
+    background: #151515;
+    border: 1px solid #292929;
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   CARD MAIN
+========================================================= */
+
+.garage-ai-card-main {
+    width: 100%;
+    min-height: 48px;
+    display: flex;
+    align-items: flex-start;
+}
+
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.garage-ai-icon {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    margin-top: 1px;
+    margin-right: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 21px;
+    line-height: 1;
+}
+
+
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.garage-ai-card-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.garage-ai-card-content h2 {
+    margin: 1px 0 0;
+    color: #ffffff;
+    font-size: 16px;
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+.garage-ai-card-content p {
+    margin: 9px 0 0;
+    color: #676767;
+    font-size: 12px;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   CONFIDENCE
+========================================================= */
+
+.garage-ai-confidence {
+    width: 112px;
+    min-width: 112px;
+    margin-left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 9px;
+}
+
+.garage-ai-confidence-bar {
+    width: 61px;
+    height: 6px;
+    background: #292929;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.garage-ai-confidence-bar span {
+    display: block;
+    height: 100%;
+    background: #c9ff20;
+    border-radius: 10px;
+}
+
+.garage-ai-confidence strong {
+    color: #c9ff20;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.garage-ai-actions {
+    margin-left: 49px;
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+/* =========================================================
+   PRIMARY BUTTON
+========================================================= */
+
+.garage-ai-primary-button {
+    height: 32px;
+    padding: 0 13px;
+    border: none;
+    border-radius: 4px;
+    background: #c9ff20;
+    color: #050505;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.garage-ai-primary-button:hover {
+    background: #d6ff4b;
+}
+
+
+/* =========================================================
+   DISMISS BUTTON
+========================================================= */
+
+.garage-ai-dismiss-button {
+    height: 32px;
+    padding: 0 13px;
+    border: 1px solid #292929;
+    border-radius: 4px;
+    background: #181818;
+    color: #666666;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+.garage-ai-dismiss-button:hover {
+    color: #ffffff;
+    border-color: #3a3a3a;
+}
+
+
+/* =========================================================
+   CARD POSITIONING
+========================================================= */
+
+.garage-ai-card:nth-child(5) {
+    grid-column: 1;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+    .garage-ai-grid {
+        grid-template-columns: 1fr;
+    }
+    .garage-ai-card {
+        grid-column: auto !important;
+    }
+}
+
+@media (max-width: 700px) {
+    .garage-ai-heading h1 {
+        font-size: 27px;
+    }
+    .garage-ai-heading p {
+        font-size: 12px;
+    }
+    .garage-ai-card {
+        padding: 17px;
+    }
+    .garage-ai-card-main {
+        flex-wrap: wrap;
+    }
+    .garage-ai-confidence {
+        width: auto;
+        min-width: auto;
+        margin-left: auto;
+    }
+    .garage-ai-card-content {
+        flex: 1;
+        min-width: 180px;
+    }
+    .garage-ai-card-content p {
+        white-space: normal;
+    }
+    .garage-ai-actions {
+        margin-left: 47px;
+    }
+}
