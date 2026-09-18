@@ -1,0 +1,395 @@
+/* =========================================
+   GARAGE OWNER COMMON LAYOUT
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+.garage-owner-layout {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    background: #050505;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================
+   SIDEBAR
+========================================= */
+
+.garage-owner-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    background: #0c0c0c;
+    border-right: 1px solid #242424;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    transition: width 0.25s ease;
+}
+
+
+/* =========================================
+   BRAND
+========================================= */
+
+.garage-owner-brand {
+    height: 100px;
+    display: flex;
+    align-items: center;
+    padding: 0 22px;
+    border-bottom: 1px solid #242424;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.garage-owner-brand-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    background: #c9ff20;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+}
+
+.garage-owner-brand-icon span {
+    width: 16px;
+    height: 12px;
+    background: #090909;
+    display: block;
+    border-radius: 1px;
+}
+
+.garage-owner-brand-name {
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: -0.4px;
+    color: #ffffff;
+    transition: opacity 0.2s ease;
+}
+
+
+/* =========================================
+   NAVIGATION
+========================================= */
+
+.garage-owner-nav {
+    flex: 1;
+    padding-top: 18px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.garage-owner-nav-item {
+    position: relative;
+    height: 42px;
+    margin: 2px 0;
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    color: #777777;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    transition: color 0.15s ease, background 0.15s ease, padding 0.25s ease;
+    white-space: nowrap;
+    border: none;
+    background: transparent;
+    width: 100%;
+    cursor: pointer;
+}
+
+.garage-owner-nav-item:hover {
+    color: #ffffff;
+    background: #121212;
+}
+
+.garage-owner-nav-item.active {
+    color: #c9ff20;
+    background: rgba(201, 255, 32, 0.08);
+}
+
+.garage-owner-nav-item.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: #c9ff20;
+}
+
+.garage-owner-nav-icon {
+    width: 17px;
+    min-width: 17px;
+    text-align: center;
+    font-size: 16px;
+    color: inherit;
+}
+
+.garage-owner-nav-label {
+    transition: opacity 0.2s ease;
+}
+
+
+/* =========================================
+   COLLAPSE BUTTON
+========================================= */
+
+.garage-owner-sidebar-collapse {
+    position: absolute;
+    right: -15px;
+    bottom: 15px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #0d0d0d;
+    border: 1px solid #303030;
+    color: #777777;
+    font-size: 23px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 110;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.garage-owner-sidebar-collapse:hover {
+    background: #191919;
+    color: #ffffff;
+}
+
+
+/* =========================================
+   MAIN
+========================================= */
+
+.garage-owner-main {
+    margin-left: 260px;
+    width: calc(100% - 260px);
+    min-height: 100vh;
+    background: #050505;
+    transition: margin-left 0.25s ease, width 0.25s ease;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.garage-owner-header {
+    height: 60px;
+    border-bottom: 1px solid #242424;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+}
+
+.garage-owner-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.garage-owner-breadcrumb span {
+    color: #676767;
+}
+
+.garage-owner-breadcrumb b {
+    color: #444444;
+    font-weight: 400;
+}
+
+.garage-owner-breadcrumb strong {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.garage-owner-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.garage-owner-role {
+    border: 1px solid #687c00;
+    color: #c9ff20;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.garage-owner-alerts {
+    height: 30px;
+    padding: 0 12px;
+    border: 1px solid #242424;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #737373;
+    font-size: 12px;
+}
+
+.garage-owner-alert-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #19d77a;
+}
+
+.garage-owner-settings {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 50%;
+    background: #c9ff20;
+    color: #050505;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: 900;
+}
+
+
+/* =========================================
+   CONTENT
+========================================= */
+
+.garage-owner-content {
+    width: 100%;
+    padding: 30px 24px 60px;
+}
+
+
+/* =========================================
+   SIDEBAR CLOSED
+========================================= */
+
+.garage-owner-layout.sidebar-closed .garage-owner-sidebar {
+    width: 70px;
+}
+
+.garage-owner-layout.sidebar-closed .garage-owner-main {
+    margin-left: 70px;
+    width: calc(100% - 70px);
+}
+
+.garage-owner-layout.sidebar-closed .garage-owner-brand {
+    justify-content: center;
+    padding: 0;
+}
+
+.garage-owner-layout.sidebar-closed .garage-owner-brand-icon {
+    margin-right: 0;
+}
+
+.garage-owner-layout.sidebar-closed .garage-owner-brand-name {
+    display: none;
+}
+
+.garage-owner-layout.sidebar-closed .garage-owner-nav-item {
+    justify-content: center;
+    padding: 0;
+}
+
+.garage-owner-layout.sidebar-closed .garage-owner-nav-label {
+    display: none;
+}
+
+.garage-owner-layout.sidebar-closed .garage-owner-nav-icon {
+    width: 20px;
+    min-width: 20px;
+}
+
+.garage-owner-layout.sidebar-closed .garage-owner-sidebar-collapse {
+    right: -15px;
+}
+
+
+/* =========================================
+   PLACEHOLDER
+========================================= */
+
+.garage-owner-placeholder {
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #c9ff20;
+    font-size: 32px;
+    font-weight: 900;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+    .garage-owner-sidebar {
+        width: 220px;
+    }
+    .garage-owner-main {
+        margin-left: 220px;
+        width: calc(100% - 220px);
+    }
+    .garage-owner-content {
+        padding: 25px 18px;
+    }
+}
+
+@media (max-width: 700px) {
+    .garage-owner-sidebar {
+        width: 70px;
+    }
+    .garage-owner-brand {
+        justify-content: center;
+        padding: 0;
+    }
+    .garage-owner-brand-name {
+        display: none;
+    }
+    .garage-owner-brand-icon {
+        margin: 0;
+    }
+    .garage-owner-nav-item {
+        justify-content: center;
+        padding: 0;
+    }
+    .garage-owner-nav-label {
+        display: none;
+    }
+    .garage-owner-main {
+        margin-left: 70px;
+        width: calc(100% - 70px);
+    }
+    .garage-owner-header {
+        padding: 0 15px;
+    }
+    .garage-owner-breadcrumb {
+        font-size: 12px;
+    }
+    .garage-owner-role {
+        display: none;
+    }
+    .garage-owner-alerts {
+        display: none;
+    }
+}

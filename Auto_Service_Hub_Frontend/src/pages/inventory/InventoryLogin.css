@@ -1,154 +1,558 @@
+/* =========================================================
+   INVENTORY LOGIN
+   AUTO SERVICE HUB
+   FIGMA STYLE
+========================================================= */
+
 * {
     box-sizing: border-box;
 }
 
-html,
-body,
-#root {
+.inventory-login-page {
+    width: 100%;
+    height: 100vh;
+    min-height: 650px;
+    display: flex;
     margin: 0;
     padding: 0;
-    width: 100%;
-    min-height: 100%;
-}
-
-body {
+    overflow: hidden;
     background: #050505;
     color: #ffffff;
     font-family: Arial, Helvetica, sans-serif;
 }
 
 
-/* =====================================================
-   MAIN PAGE
-===================================================== */
-
-.inventory-login-page {
-    width: 100%;
-    height: 100vh;
-    display: grid;
-    grid-template-columns: 50% 50%;
-    background: #050505;
-    overflow: hidden;
-}
-
-
-/* =====================================================
+/* =========================================================
    LEFT SIDE
-===================================================== */
+========================================================= */
 
 .inventory-login-left {
     position: relative;
-    width: 100%;
+    width: 50%;
     height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 35px 40px;
-    background-image: linear-gradient( to bottom, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.72)), url("../../assets/mechanic-bg.jpg");
+    overflow: hidden;
+    background-color: #050505;
+    /*
+    Background image
+    Uses the image already present in public/assets/landing
+  */
+    background-image: url("/assets/landing/mechanic-bg.jpg");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    overflow: hidden;
 }
 
 
-/* =====================================================
+/* =========================================================
    IMAGE OVERLAY
-===================================================== */
+========================================================= */
 
 .inventory-image-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient( 90deg, rgba(0, 0, 0, 0.10), rgba(0, 0, 0, 0.50)), linear-gradient( to bottom, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.55));
-    pointer-events: none;
+    background: linear-gradient( to bottom, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.72));
     z-index: 1;
 }
 
 
-/* =====================================================
+/* =========================================================
    BACK TO SITE
-===================================================== */
+========================================================= */
 
 .inventory-back {
-    position: relative;
+    position: absolute;
+    top: 36px;
+    left: 42px;
     z-index: 5;
-    width: fit-content;
-    color: rgba(255, 255, 255, 0.62);
+    color: #ffffff;
     text-decoration: none;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
-    transition: 0.2s ease;
+    line-height: 1;
+    transition: color 0.2s ease;
 }
 
 .inventory-back:hover {
-    color: #d7ff36;
+    color: #c9ff20;
 }
 
 
-/* =====================================================
+/* =========================================================
    LEFT CONTENT
-===================================================== */
+========================================================= */
 
 .inventory-left-content {
-    position: relative;
+    position: absolute;
+    left: 42px;
+    bottom: 55px;
     z-index: 5;
-    width: 100%;
-    max-width: 430px;
-    margin-bottom: 5px;
+    width: 520px;
+    max-width: calc(100% - 84px);
 }
 
+
+/* =========================================================
+   AI LABEL
+========================================================= */
+
 .inventory-ai-label {
-    margin-bottom: 17px;
-    color: #d7ff36;
-    font-size: 9px;
+    margin-bottom: 20px;
+    color: #c9ff20;
+    font-size: 10px;
     font-weight: 800;
-    letter-spacing: 0.20em;
+    line-height: 1.2;
+    letter-spacing: 2px;
+    text-transform: uppercase;
 }
+
+
+/* =========================================================
+   MAIN LEFT HEADING
+========================================================= */
 
 .inventory-left-content h1 {
     margin: 0;
+    padding: 0;
     color: #ffffff;
-    font-size: clamp(48px, 5vw, 62px);
-    line-height: 0.90;
+    font-size: clamp(54px, 5vw, 76px);
+    line-height: 0.88;
     font-weight: 900;
-    letter-spacing: -0.055em;
+    letter-spacing: -3px;
+    text-transform: uppercase;
 }
 
 .inventory-left-content h1 span {
-    color: #d7ff36;
+    color: #c9ff20;
 }
+
+
+/* =========================================================
+   LEFT DESCRIPTION
+========================================================= */
 
 .inventory-left-content p {
-    margin: 23px 0 0;
-    max-width: 390px;
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 11px;
-    line-height: 1.55;
+    width: 470px;
+    max-width: 100%;
+    margin: 25px 0 0 0;
+    padding: 0;
+    color: #9a9a9a;
+    font-size: 13px;
+    line-height: 1.6;
 }
 
 
-/* =====================================================
+/* =========================================================
    RIGHT SIDE
-===================================================== */
+========================================================= */
 
 .inventory-login-right {
-    width: 100%;
+    width: 50%;
     height: 100vh;
     display: flex;
+    align-items: flex-start;
     justify-content: center;
-    background: #050505;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: #292929 #050505;
+    background: #050505;
 }
+
+
+/* =========================================================
+   LOGIN CONTAINER
+========================================================= */
+
+.inventory-login-container {
+    width: 100%;
+    max-width: 520px;
+    padding: 55px 55px 60px 55px;
+}
+
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.inventory-login-brand {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin: 0 0 34px 0;
+}
+
+
+/* =========================================================
+   BRAND ICON
+========================================================= */
+
+.inventory-brand-icon {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: #c9ff20;
+    color: #111111;
+    font-size: 17px;
+    line-height: 1;
+}
+
+
+/* =========================================================
+   BRAND TEXT
+========================================================= */
+
+.inventory-brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.inventory-brand-text h3 {
+    margin: 0;
+    padding: 0;
+    color: #ffffff;
+    font-size: 14px;
+    line-height: 1.1;
+    font-weight: 800;
+}
+
+.inventory-brand-text p {
+    margin: 0;
+    padding: 0;
+    color: #666666;
+    font-size: 9px;
+    line-height: 1.2;
+}
+
+
+/* =========================================================
+   CHANGE ROLE
+========================================================= */
+
+.inventory-change-role {
+    display: inline-block;
+    margin: 0 0 18px 0;
+    color: #8a8a8a;
+    text-decoration: none;
+    font-size: 11px;
+    line-height: 1.2;
+}
+
+.inventory-change-role:hover {
+    color: #c9ff20;
+}
+
+
+/* =========================================================
+   ROLE CARD
+========================================================= */
+
+.inventory-role-card {
+    width: 100%;
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin: 0 0 30px 0;
+    padding: 12px 14px;
+    background: #101010;
+    border: 1px solid #292929;
+    border-radius: 6px;
+}
+
+
+/* =========================================================
+   ROLE ICON
+========================================================= */
+
+.inventory-role-icon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: #191919;
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   ROLE DETAILS
+========================================================= */
+
+.inventory-role-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.inventory-role-details h3 {
+    margin: 0;
+    padding: 0;
+    color: #ffffff;
+    font-size: 13px;
+    line-height: 1.1;
+    font-weight: 800;
+}
+
+.inventory-role-details p {
+    margin: 0;
+    padding: 0;
+    color: #c9ff20;
+    font-size: 9px;
+    line-height: 1.1;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   SIGN IN HEADING
+========================================================= */
+
+.inventory-signin-heading {
+    margin: 0 0 30px 0;
+}
+
+.inventory-signin-heading h1 {
+    margin: 0;
+    padding: 0;
+    color: #ffffff;
+    font-size: 32px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -1.3px;
+    text-transform: uppercase;
+}
+
+.inventory-signin-heading p {
+    max-width: 420px;
+    margin: 10px 0 0 0;
+    padding: 0;
+    color: #707070;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   LOGIN FORM
+========================================================= */
+
+.inventory-login-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* =========================================================
+   FORM LABELS
+========================================================= */
+
+.inventory-login-form>label,
+.inventory-login-form label[for] {
+    display: block;
+    margin: 0 0 8px 0;
+    color: #777777;
+    font-size: 9px;
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   EMAIL INPUT
+========================================================= */
+
+.inventory-login-form>input[type="email"] {
+    width: 100%;
+    height: 42px;
+    margin: 0 0 20px 0;
+    padding: 0 13px;
+    outline: none;
+    background: #111111;
+    border: 1px solid #2b2b2b;
+    border-radius: 5px;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+}
+
+.inventory-login-form>input[type="email"]:focus {
+    border-color: #c9ff20;
+}
+
+.inventory-login-form input::placeholder {
+    color: #555555;
+}
+
+
+/* =========================================================
+   PASSWORD WRAPPER
+========================================================= */
+
+.inventory-password-wrapper {
+    position: relative;
+    width: 100%;
+    margin: 0 0 18px 0;
+}
+
+
+/* =========================================================
+   PASSWORD INPUT
+========================================================= */
+
+.inventory-password-wrapper input {
+    width: 100%;
+    height: 42px;
+    margin: 0;
+    padding: 0 60px 0 13px;
+    outline: none;
+    background: #111111;
+    border: 1px solid #2b2b2b;
+    border-radius: 5px;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+}
+
+.inventory-password-wrapper input:focus {
+    border-color: #c9ff20;
+}
+
+
+/* =========================================================
+   SHOW PASSWORD
+========================================================= */
+
+.inventory-show-password {
+    position: absolute;
+    top: 50%;
+    right: 11px;
+    transform: translateY(-50%);
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #c9ff20;
+    font-size: 9px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.inventory-show-password:hover {
+    color: #e0ff75;
+}
+
+
+/* =========================================================
+   FORM OPTIONS
+========================================================= */
+
+.inventory-form-options {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 20px 0;
+}
+
+
+/* =========================================================
+   REMEMBER ME
+========================================================= */
+
+.inventory-remember {
+    display: flex !important;
+    align-items: center;
+    gap: 7px;
+    margin: 0 !important;
+    color: #666666;
+    font-size: 9px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    cursor: pointer;
+}
+
+.inventory-remember input {
+    width: 12px;
+    height: 12px;
+    margin: 0;
+    accent-color: #c9ff20;
+    cursor: pointer;
+}
+
+.inventory-remember span {
+    color: #686868;
+    font-size: 9px;
+    line-height: 1.2;
+}
+
+
+/* =========================================================
+   FORGOT PASSWORD
+========================================================= */
+
+.inventory-forgot {
+    color: #666666;
+    font-size: 9px;
+    text-decoration: none;
+}
+
+.inventory-forgot:hover {
+    color: #c9ff20;
+}
+
+
+/* =========================================================
+   LOGIN BUTTON
+========================================================= */
+
+.inventory-login-button {
+    width: 100%;
+    height: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: #c9ff20;
+    color: #080808;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.inventory-login-button:hover {
+    background: #d8ff55;
+}
+
+.inventory-login-button:active {
+    transform: scale(0.99);
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
 
 .inventory-login-right::-webkit-scrollbar {
     width: 5px;
 }
 
 .inventory-login-right::-webkit-scrollbar-track {
-    background: #050505;
+    background: #080808;
 }
 
 .inventory-login-right::-webkit-scrollbar-thumb {
@@ -156,401 +560,146 @@ body {
     border-radius: 10px;
 }
 
-
-/* =====================================================
-   CONTAINER
-===================================================== */
-
-.inventory-login-container {
-    width: 100%;
-    max-width: 510px;
-    padding: 46px 38px 50px;
+.inventory-login-right::-webkit-scrollbar-thumb:hover {
+    background: #444444;
 }
 
 
-/* =====================================================
-   BRAND
-===================================================== */
+/* =========================================================
+   LARGE DESKTOP
+========================================================= */
 
-.inventory-login-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 31px;
-}
-
-.inventory-brand-icon {
-    width: 34px;
-    height: 34px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #d7ff36;
-    color: #050505;
-    border-radius: 4px;
-    font-size: 15px;
-    font-weight: 900;
-}
-
-.inventory-brand-text h3 {
-    margin: 0;
-    color: #ffffff;
-    font-size: 12px;
-    font-weight: 900;
-}
-
-.inventory-brand-text p {
-    margin: 3px 0 0;
-    color: rgba(255, 255, 255, 0.36);
-    font-size: 9px;
+@media (min-width: 1400px) {
+    .inventory-login-container {
+        max-width: 560px;
+        padding: 60px 70px 70px 70px;
+    }
+    .inventory-left-content {
+        left: 50px;
+        bottom: 65px;
+    }
+    .inventory-back {
+        top: 40px;
+        left: 50px;
+    }
 }
 
 
-/* =====================================================
-   CHANGE ROLE
-===================================================== */
-
-.inventory-change-role {
-    display: inline-block;
-    margin-bottom: 17px;
-    color: rgba(255, 255, 255, 0.45);
-    text-decoration: none;
-    font-size: 10px;
-    transition: 0.2s ease;
-}
-
-.inventory-change-role:hover {
-    color: #d7ff36;
-}
-
-
-/* =====================================================
-   ROLE CARD
-===================================================== */
-
-.inventory-role-card {
-    width: 100%;
-    min-height: 58px;
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    padding: 12px;
-    margin-bottom: 27px;
-    background: #0d0d0d;
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 5px;
-}
-
-.inventory-role-icon {
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #171717;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-.inventory-role-details h3 {
-    margin: 0 0 3px;
-    color: #ffffff;
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.inventory-role-details p {
-    margin: 0;
-    color: #d7ff36;
-    font-size: 8px;
-    font-weight: 600;
-}
-
-
-/* =====================================================
-   SIGN IN HEADING
-===================================================== */
-
-.inventory-signin-heading {
-    margin-bottom: 21px;
-}
-
-.inventory-signin-heading h1 {
-    margin: 0 0 7px;
-    color: #ffffff;
-    font-size: 27px;
-    line-height: 1;
-    font-weight: 900;
-    letter-spacing: -0.045em;
-}
-
-.inventory-signin-heading p {
-    margin: 0;
-    max-width: 390px;
-    color: rgba(255, 255, 255, 0.36);
-    font-size: 9px;
-    line-height: 1.55;
-}
-
-
-/* =====================================================
-   FORM
-===================================================== */
-
-.inventory-login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-}
-
-.inventory-login-form>label {
-    margin-top: 8px;
-    color: rgba(255, 255, 255, 0.43);
-    font-size: 8px;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-}
-
-
-/* =====================================================
-   EMAIL
-===================================================== */
-
-.inventory-login-form>input[type="email"] {
-    width: 100%;
-    height: 38px;
-    padding: 0 12px;
-    margin-bottom: 4px;
-    background: #0d0d0d;
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 4px;
-    outline: none;
-    color: #ffffff;
-    font-family: inherit;
-    font-size: 9px;
-    transition: 0.2s ease;
-}
-
-.inventory-login-form>input[type="email"]:focus {
-    border-color: rgba(215, 255, 54, 0.55);
-    box-shadow: 0 0 0 2px rgba(215, 255, 54, 0.05);
-}
-
-
-/* =====================================================
-   PASSWORD
-===================================================== */
-
-.inventory-password-wrapper {
-    position: relative;
-    width: 100%;
-    margin-bottom: 3px;
-}
-
-.inventory-password-wrapper input {
-    width: 100%;
-    height: 38px;
-    padding: 0 55px 0 12px;
-    background: #0d0d0d;
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 4px;
-    outline: none;
-    color: #ffffff;
-    font-family: inherit;
-    font-size: 9px;
-    transition: 0.2s ease;
-}
-
-.inventory-password-wrapper input:focus {
-    border-color: rgba(215, 255, 54, 0.55);
-    box-shadow: 0 0 0 2px rgba(215, 255, 54, 0.05);
-}
-
-.inventory-password-wrapper input::placeholder,
-.inventory-login-form>input::placeholder {
-    color: #4d4d4d;
-}
-
-
-/* =====================================================
-   SHOW PASSWORD
-===================================================== */
-
-.inventory-show-password {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: #d7ff36;
-    font-family: inherit;
-    font-size: 8px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.inventory-show-password:hover {
-    color: #e3ff72;
-}
-
-
-/* =====================================================
-   OPTIONS
-===================================================== */
-
-.inventory-form-options {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin: 7px 0 10px;
-}
-
-.inventory-remember {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: rgba(255, 255, 255, 0.40);
-    font-size: 8px;
-    cursor: pointer;
-}
-
-.inventory-remember input {
-    width: 11px;
-    height: 11px;
-    margin: 0;
-    accent-color: #d7ff36;
-    cursor: pointer;
-}
-
-.inventory-forgot {
-    color: rgba(255, 255, 255, 0.40);
-    text-decoration: none;
-    font-size: 8px;
-}
-
-.inventory-forgot:hover {
-    color: #d7ff36;
-}
-
-
-/* =====================================================
-   ACCESS PLATFORM
-===================================================== */
-
-.inventory-login-button {
-    width: 100%;
-    height: 39px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: none;
-    border-radius: 4px;
-    background: #d7ff36;
-    color: #050505;
-    font-family: inherit;
-    font-size: 8px;
-    font-weight: 900;
-    letter-spacing: 0.06em;
-    text-decoration: none;
-    cursor: pointer;
-    transition: 0.2s ease;
-}
-
-.inventory-login-button:hover {
-    background: #e1ff61;
-    box-shadow: 0 0 22px rgba(215, 255, 54, 0.14);
-    transform: translateY(-1px);
-}
-
-.inventory-login-button:active {
-    transform: translateY(0);
-}
-
-
-/* =====================================================
+/* =========================================================
    TABLET
-===================================================== */
+========================================================= */
 
-@media (max-width: 1000px) {
-    .inventory-login-page {
-        grid-template-columns: 45% 55%;
-    }
+@media (max-width: 900px) {
     .inventory-login-left {
-        padding-left: 30px;
-        padding-right: 30px;
+        width: 42%;
     }
-    .inventory-left-content h1 {
-        font-size: 48px;
+    .inventory-login-right {
+        width: 58%;
     }
     .inventory-login-container {
-        padding-left: 28px;
-        padding-right: 28px;
+        padding: 45px 35px 55px 35px;
+    }
+    .inventory-left-content {
+        left: 30px;
+        bottom: 40px;
+    }
+    .inventory-back {
+        left: 30px;
+        top: 30px;
+    }
+    .inventory-left-content h1 {
+        font-size: 52px;
     }
 }
 
 
-/* =====================================================
+/* =========================================================
    MOBILE
-===================================================== */
+========================================================= */
 
-@media (max-width: 800px) {
+@media (max-width: 700px) {
     .inventory-login-page {
         height: auto;
         min-height: 100vh;
-        grid-template-columns: 1fr;
-        overflow: visible;
+        display: block;
+        overflow-y: auto;
     }
     .inventory-login-left {
         width: 100%;
-        height: 380px;
-        min-height: 380px;
+        height: 300px;
+        min-height: 300px;
     }
     .inventory-login-right {
         width: 100%;
         height: auto;
-        min-height: 650px;
+        min-height: calc(100vh - 300px);
         overflow: visible;
     }
     .inventory-login-container {
-        max-width: 620px;
-        margin: 0 auto;
-        padding: 42px 30px 50px;
+        max-width: none;
+        padding: 35px 25px 50px;
+    }
+    .inventory-left-content {
+        left: 25px;
+        bottom: 30px;
+        width: calc(100% - 50px);
+        max-width: none;
+    }
+    .inventory-back {
+        top: 25px;
+        left: 25px;
+    }
+    .inventory-left-content h1 {
+        font-size: 48px;
+        letter-spacing: -2px;
+    }
+    .inventory-left-content p {
+        display: none;
+    }
+    .inventory-ai-label {
+        margin-bottom: 13px;
+        font-size: 9px;
+    }
+    .inventory-login-brand {
+        margin-bottom: 28px;
+    }
+    .inventory-role-card {
+        margin-bottom: 28px;
+    }
+    .inventory-signin-heading h1 {
+        font-size: 30px;
     }
 }
 
 
-/* =====================================================
+/* =========================================================
    SMALL MOBILE
-===================================================== */
+========================================================= */
 
-@media (max-width: 550px) {
+@media (max-width: 420px) {
     .inventory-login-left {
-        height: 330px;
-        min-height: 330px;
-        padding: 24px;
+        height: 270px;
+        min-height: 270px;
     }
-    .inventory-back {
-        top: 23px;
-        left: 24px;
-    }
-    .inventory-left-content h1 {
-        font-size: 43px;
-        letter-spacing: -0.045em;
-    }
-    .inventory-left-content p {
-        max-width: 330px;
-        font-size: 10px;
+    .inventory-login-right {
+        min-height: calc(100vh - 270px);
     }
     .inventory-login-container {
-        padding: 34px 20px 45px;
+        padding: 30px 20px 40px;
     }
-    .inventory-signin-heading h1 {
-        font-size: 25px;
+    .inventory-left-content {
+        left: 20px;
+        bottom: 25px;
+        width: calc(100% - 40px);
+    }
+    .inventory-back {
+        top: 22px;
+        left: 20px;
+    }
+    .inventory-left-content h1 {
+        font-size: 42px;
+    }
+    .inventory-form-options {
+        align-items: flex-start;
     }
 }

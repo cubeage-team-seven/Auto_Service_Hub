@@ -1,0 +1,710 @@
+/* =========================================================
+   GARAGE OWNER - CUSTOMERS PAGE
+========================================================= */
+
+.garage-customers-page {
+    width: 100%;
+    min-height: 100%;
+    box-sizing: border-box;
+    padding: 30px 24px 50px;
+    background: #050505;
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   PAGE HEADING
+========================================================= */
+
+.garage-customers-heading-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.garage-customers-title {
+    margin: 0;
+    color: #ffffff;
+    font-family: "Arial Narrow", "Roboto Condensed", Arial, Helvetica, sans-serif;
+    font-size: 24px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+}
+
+
+/* =========================================================
+   NEW CUSTOMER BUTTON
+========================================================= */
+
+.garage-customers-new-button {
+    height: 36px;
+    padding: 0 17px;
+    border: none;
+    border-radius: 4px;
+    background: #c4ff18;
+    color: #050505;
+    font-family: "Arial Narrow", Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.garage-customers-new-button:hover {
+    background: #d0ff3d;
+}
+
+.garage-customers-new-button:active {
+    transform: translateY(1px);
+}
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+.garage-customers-search-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.garage-customers-search-box {
+    width: 395px;
+    height: 44px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    border: 1px solid #292929;
+    border-radius: 7px;
+    background: #151515;
+    overflow: hidden;
+}
+
+.garage-customers-search-icon {
+    width: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #777777;
+    font-size: 18px;
+}
+
+.garage-customers-search-box input {
+    flex: 1;
+    height: 100%;
+    padding: 0 12px 0 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+.garage-customers-search-box input::placeholder {
+    color: #777777;
+    opacity: 1;
+}
+
+.garage-customers-search-box:focus-within {
+    border-color: #444444;
+}
+
+
+/* =========================================================
+   CUSTOMER TABLE CONTAINER
+========================================================= */
+
+.garage-customers-table-container {
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+    border: 1px solid #292929;
+    border-radius: 8px;
+    background: #111111;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.garage-customers-table {
+    width: 100%;
+    min-width: 1080px;
+    border-collapse: collapse;
+    border-spacing: 0;
+    table-layout: fixed;
+}
+
+
+/* =========================================================
+   COLUMN WIDTHS
+========================================================= */
+
+.garage-customers-table th:nth-child(1),
+.garage-customers-table td:nth-child(1) {
+    width: 7%;
+}
+
+.garage-customers-table th:nth-child(2),
+.garage-customers-table td:nth-child(2) {
+    width: 14%;
+}
+
+.garage-customers-table th:nth-child(3),
+.garage-customers-table td:nth-child(3) {
+    width: 14%;
+}
+
+.garage-customers-table th:nth-child(4),
+.garage-customers-table td:nth-child(4) {
+    width: 21%;
+}
+
+.garage-customers-table th:nth-child(5),
+.garage-customers-table td:nth-child(5) {
+    width: 8%;
+}
+
+.garage-customers-table th:nth-child(6),
+.garage-customers-table td:nth-child(6) {
+    width: 7%;
+}
+
+.garage-customers-table th:nth-child(7),
+.garage-customers-table td:nth-child(7) {
+    width: 11%;
+}
+
+.garage-customers-table th:nth-child(8),
+.garage-customers-table td:nth-child(8) {
+    width: 9%;
+}
+
+.garage-customers-table th:nth-child(9),
+.garage-customers-table td:nth-child(9) {
+    width: 9%;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.garage-customers-table thead {
+    background: #101010;
+}
+
+.garage-customers-table th {
+    height: 42px;
+    padding: 0 14px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #292929;
+    color: #777777;
+    font-family: "Arial Narrow", "Roboto Condensed", Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   TABLE BODY
+========================================================= */
+
+.garage-customers-table tbody tr {
+    height: 48px;
+    background: #151515;
+    transition: background 0.15s ease;
+}
+
+.garage-customers-table tbody tr:nth-child(even) {
+    background: #141414;
+}
+
+.garage-customers-table tbody tr:hover {
+    background: #1a1a1a;
+}
+
+.garage-customers-table td {
+    height: 48px;
+    padding: 0 14px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #292929;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.garage-customers-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* =========================================================
+   CUSTOMER DATA
+========================================================= */
+
+.customer-id {
+    color: #c4ff18;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: "Arial Narrow", Arial, sans-serif;
+}
+
+.customer-name {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.customer-phone {
+    color: #eeeeee;
+    font-size: 13px;
+}
+
+.customer-email {
+    color: #777777;
+    font-size: 12px;
+}
+
+.customer-number {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.customer-date {
+    color: #777777;
+    font-size: 12px;
+}
+
+.customer-balance {
+    color: #777777;
+    font-size: 13px;
+}
+
+.customer-balance.due {
+    color: #ff3b4b;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   LOYALTY BADGES
+========================================================= */
+
+.loyalty-badge {
+    display: inline-flex;
+    min-width: 45px;
+    height: 24px;
+    padding: 0 8px;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+
+/* GOLD */
+
+.loyalty-badge.gold {
+    color: #ffc400;
+    background: rgba(255, 196, 0, 0.12);
+    border: 1px solid #8c6900;
+}
+
+
+/* SILVER */
+
+.loyalty-badge.silver {
+    color: #b9c9e5;
+    background: rgba(110, 140, 180, 0.15);
+    border: 1px solid #526887;
+}
+
+
+/* PLATINUM */
+
+.loyalty-badge.platinum {
+    color: #00a9ff;
+    background: rgba(0, 169, 255, 0.12);
+    border: 1px solid #006f9f;
+}
+
+
+/* BRONZE */
+
+.loyalty-badge.bronze {
+    color: #ff7300;
+    background: rgba(255, 115, 0, 0.13);
+    border: 1px solid #9a4700;
+}
+
+
+/* =========================================================
+   NO CUSTOMERS
+========================================================= */
+
+.no-customers {
+    width: 100%;
+    padding: 40px 20px;
+    box-sizing: border-box;
+    text-align: center;
+    color: #777777;
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   NEW CUSTOMER MODAL OVERLAY
+========================================================= */
+
+.garage-customer-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+
+/* =========================================================
+   NEW CUSTOMER MODAL
+========================================================= */
+
+.garage-customer-modal {
+    width: 530px;
+    max-width: calc(100vw - 48px);
+    max-height: calc(100vh - 48px);
+    box-sizing: border-box;
+    background: #101010;
+    border: 1px solid #292929;
+    border-radius: 12px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.75);
+    overflow-y: auto;
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   MODAL SCROLLBAR
+========================================================= */
+
+.garage-customer-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.garage-customer-modal::-webkit-scrollbar-track {
+    background: #101010;
+}
+
+.garage-customer-modal::-webkit-scrollbar-thumb {
+    background: #3a3a3a;
+    border-radius: 10px;
+}
+
+.garage-customer-modal::-webkit-scrollbar-thumb:hover {
+    background: #555555;
+}
+
+
+/* =========================================================
+   MODAL HEADER
+========================================================= */
+
+.garage-customer-modal-header {
+    height: 62px;
+    box-sizing: border-box;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #292929;
+    position: sticky;
+    top: 0;
+    background: #101010;
+    z-index: 2;
+}
+
+.garage-customer-modal-header h2 {
+    margin: 0;
+    color: #ffffff;
+    font-family: "Arial Narrow", "Roboto Condensed", Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+}
+
+
+/* =========================================================
+   MODAL CLOSE BUTTON
+========================================================= */
+
+.garage-customer-modal-close {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #777777;
+    font-size: 22px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.garage-customer-modal-close:hover {
+    color: #c4ff18;
+}
+
+
+/* =========================================================
+   MODAL FORM
+========================================================= */
+
+.garage-customer-modal-form {
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   TWO COLUMN FORM ROW
+========================================================= */
+
+.garage-customer-form-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+
+/* =========================================================
+   FORM GROUP
+========================================================= */
+
+.garage-customer-form-group {
+    width: 100%;
+    margin-bottom: 17px;
+}
+
+.garage-customer-form-group label {
+    display: block;
+    margin-bottom: 7px;
+    color: #777777;
+    font-family: "Arial Narrow", "Roboto Condensed", Arial, Helvetica, sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+
+/* =========================================================
+   FORM INPUTS
+========================================================= */
+
+.garage-customer-form-group input,
+.garage-customer-form-group textarea,
+.garage-customer-form-group select {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #292929;
+    border-radius: 7px;
+    outline: none;
+    background: #151515;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+
+/* INPUT */
+
+.garage-customer-form-group input {
+    height: 44px;
+    padding: 0 13px;
+}
+
+
+/* TEXTAREA */
+
+.garage-customer-form-group textarea {
+    min-height: 64px;
+    padding: 11px 13px;
+    resize: vertical;
+    line-height: 1.45;
+}
+
+
+/* SELECT */
+
+.garage-customer-form-group select {
+    height: 44px;
+    padding: 0 13px;
+    cursor: pointer;
+    appearance: auto;
+}
+
+
+/* PLACEHOLDER */
+
+.garage-customer-form-group input::placeholder,
+.garage-customer-form-group textarea::placeholder {
+    color: #777777;
+    opacity: 1;
+}
+
+
+/* FOCUS */
+
+.garage-customer-form-group input:focus,
+.garage-customer-form-group textarea:focus,
+.garage-customer-form-group select:focus {
+    border-color: #8db800;
+}
+
+
+/* =========================================================
+   MODAL DIVIDER
+========================================================= */
+
+.garage-customer-modal-divider {
+    width: 100%;
+    height: 1px;
+    margin: 2px 0 16px;
+    background: #292929;
+}
+
+
+/* =========================================================
+   MODAL ACTION BUTTONS
+========================================================= */
+
+.garage-customer-modal-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 92px;
+    gap: 12px;
+}
+
+
+/* =========================================================
+   CREATE CUSTOMER
+========================================================= */
+
+.garage-customer-create-button {
+    height: 44px;
+    border: none;
+    border-radius: 7px;
+    background: #c4ff18;
+    color: #050505;
+    font-family: "Arial Narrow", "Roboto Condensed", Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.garage-customer-create-button:hover {
+    background: #d1ff43;
+}
+
+.garage-customer-create-button:active {
+    transform: translateY(1px);
+}
+
+
+/* =========================================================
+   CANCEL
+========================================================= */
+
+.garage-customer-cancel-button {
+    height: 44px;
+    border: 1px solid #292929;
+    border-radius: 7px;
+    background: #151515;
+    color: #777777;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.garage-customer-cancel-button:hover {
+    border-color: #444444;
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+    .garage-customers-page {
+        padding: 24px 18px 40px;
+    }
+    .garage-customers-search-box {
+        width: 100%;
+        max-width: 395px;
+    }
+}
+
+@media (max-width: 600px) {
+    .garage-customers-page {
+        padding: 20px 14px 35px;
+    }
+    .garage-customers-heading-row {
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .garage-customers-title {
+        font-size: 22px;
+    }
+    .garage-customers-new-button {
+        flex-shrink: 0;
+    }
+    .garage-customer-modal-overlay {
+        padding: 12px;
+    }
+    .garage-customer-modal {
+        width: 100%;
+        max-width: 100%;
+        max-height: calc(100vh - 24px);
+    }
+    .garage-customer-form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .garage-customer-modal-actions {
+        grid-template-columns: 1fr;
+    }
+}

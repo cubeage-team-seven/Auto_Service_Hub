@@ -88,7 +88,7 @@ function LandingPage() {
   const [submitted, setSubmitted] = useState(false);
 
   const goToModule = () => {
-    navigate("/modules");
+    navigate("/module");
   };
 
   const scrollToSection = (id) => {
@@ -152,37 +152,25 @@ function LandingPage() {
           </div>
 
           <nav className="desktop-nav">
-
-            <button
-              onClick={() => scrollToSection("modules")}
-            >
+            <button onClick={() => scrollToSection("modules")}>
               Features
             </button>
 
-            <button
-              onClick={() => scrollToSection("modules")}
-            >
+            <button onClick={() => scrollToSection("modules")}>
               Modules
             </button>
 
-            <button
-              onClick={() => scrollToSection("ai-engine")}
-            >
+            <button onClick={() => scrollToSection("ai-engine")}>
               AI Engine
             </button>
 
-            <button
-              onClick={() => scrollToSection("pricing")}
-            >
+            <button onClick={() => scrollToSection("pricing")}>
               Pricing
             </button>
 
-            <button
-              onClick={() => scrollToSection("about")}
-            >
+            <button onClick={() => scrollToSection("about")}>
               About
             </button>
-
           </nav>
 
           <div className="navbar-actions">
@@ -216,18 +204,8 @@ function LandingPage() {
       >
 
         <div className="hero-background">
-
-          {/* HERO IMAGE */}
-          <div
-            className="hero-image"
-            style={{
-              backgroundImage:
-                "url('/assets/landing/hero-bg.jpg')",
-            }}
-          />
-
+          <div className="hero-image" />
           <div className="hero-overlay" />
-
         </div>
 
         <div className="hero-content">
@@ -239,9 +217,7 @@ function LandingPage() {
           <h1 className="hero-title">
             <span>INTELLIGENT.</span>
             <span>PRECISE.</span>
-            <span className="lime-text">
-              CONNECTED.
-            </span>
+            <span className="lime-text">CONNECTED.</span>
           </h1>
 
           <p className="hero-description">
@@ -260,14 +236,9 @@ function LandingPage() {
 
             <button
               className="secondary-button"
-              onClick={() =>
-                scrollToSection("ai-engine")
-              }
+              onClick={() => scrollToSection("ai-engine")}
             >
-              <span className="play-icon">
-                ▶
-              </span>
-
+              <span className="play-icon">▶</span>
               WATCH DEMO
             </button>
 
@@ -293,7 +264,6 @@ function LandingPage() {
         <div className="stats-grid">
 
           <div className="stat-item">
-
             <div className="stat-number">
               2,400+
             </div>
@@ -301,12 +271,9 @@ function LandingPage() {
             <div className="stat-label">
               CUSTOMERS MANAGED
             </div>
-
           </div>
 
-
           <div className="stat-item">
-
             <div className="stat-number">
               18,000
             </div>
@@ -314,12 +281,9 @@ function LandingPage() {
             <div className="stat-label">
               JOBS COMPLETED
             </div>
-
           </div>
 
-
           <div className="stat-item">
-
             <div className="stat-number">
               6
             </div>
@@ -327,12 +291,9 @@ function LandingPage() {
             <div className="stat-label">
               AI CAPABILITIES
             </div>
-
           </div>
 
-
           <div className="stat-item">
-
             <div className="stat-number">
               99.2%
             </div>
@@ -340,7 +301,6 @@ function LandingPage() {
             <div className="stat-label">
               UPTIME SLA
             </div>
-
           </div>
 
         </div>
@@ -387,7 +347,6 @@ function LandingPage() {
         <div className="modules-grid">
 
           {modules.map((module) => (
-
             <div
               className="module-card"
               key={module.number}
@@ -408,7 +367,6 @@ function LandingPage() {
               <div className="module-line" />
 
             </div>
-
           ))}
 
         </div>
@@ -450,7 +408,6 @@ function LandingPage() {
           <div className="ai-feature-grid">
 
             {aiFeatures.map((feature) => (
-
               <div
                 className="ai-feature-card"
                 key={feature.title}
@@ -461,7 +418,6 @@ function LandingPage() {
                 </div>
 
                 <div className="ai-feature-content">
-
                   <strong>
                     {feature.title}
                   </strong>
@@ -469,11 +425,9 @@ function LandingPage() {
                   <span>
                     {feature.value}
                   </span>
-
                 </div>
 
               </div>
-
             ))}
 
           </div>
@@ -489,16 +443,9 @@ function LandingPage() {
         </div>
 
 
-        {/* AI IMAGE */}
         <div className="ai-visual">
 
-          <div
-            className="ai-image"
-            style={{
-              backgroundImage:
-                "url('/assets/landing/ai-engine.png')",
-            }}
-          />
+          <div className="ai-image" />
 
           <div className="diagnosis-box">
 
@@ -535,19 +482,9 @@ function LandingPage() {
       ====================================================== */}
       <section className="job-card-section section">
 
-        {/* JOB CARD IMAGE */}
         <div className="job-card-image">
-
-          <div
-            className="garage-image"
-            style={{
-              backgroundImage:
-                "url('/assets/landing/job-card.png')",
-            }}
-          />
-
+          <div className="garage-image" />
         </div>
-
 
         <div className="job-card-content">
 
@@ -643,7 +580,6 @@ function LandingPage() {
 
             </div>
 
-
             <div className="retention-card">
 
               <strong>
@@ -655,7 +591,6 @@ function LandingPage() {
               </span>
 
             </div>
-
 
             <div className="retention-card">
 
@@ -674,17 +609,8 @@ function LandingPage() {
         </div>
 
 
-        {/* RETENTION IMAGE */}
         <div className="retention-image">
-
-          <div
-            className="mechanic-image"
-            style={{
-              backgroundImage:
-                "url('/assets/landing/retention.png')",
-            }}
-          />
-
+          <div className="mechanic-image" />
         </div>
 
       </section>
@@ -768,7 +694,6 @@ function LandingPage() {
             <h3>
               REQUEST PLATFORM ACCESS
             </h3>
-
 
             <div className="form-row">
 

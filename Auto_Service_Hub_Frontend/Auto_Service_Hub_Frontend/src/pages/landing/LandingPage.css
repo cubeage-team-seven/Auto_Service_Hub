@@ -194,11 +194,9 @@ a {
 
 .hero-section {
     position: relative;
-    width: 100%;
-    height: 650px;
     min-height: 650px;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     overflow: hidden;
     border-bottom: 1px solid #171717;
 }
@@ -233,9 +231,9 @@ a {
     position: relative;
     z-index: 2;
     width: 100%;
-    max-width: none;
-    margin: 0;
-    padding: 34px 50px 60px;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 90px 50px 85px;
 }
 
 .hero-eyebrow,
@@ -249,13 +247,13 @@ a {
 }
 
 .hero-title {
-    margin: 34px 0 26px;
-    max-width: 650px;
+    margin: 30px 0 25px;
+    max-width: 700px;
     font-family: "Barlow Condensed", sans-serif;
-    font-size: 92px;
-    line-height: 0.90;
+    font-size: clamp(76px, 7vw, 116px);
+    line-height: 0.86;
     font-weight: 900;
-    letter-spacing: -1.5px;
+    letter-spacing: -2px;
     text-transform: uppercase;
 }
 
@@ -267,7 +265,7 @@ a {
     max-width: 590px;
     margin: 0 0 32px;
     color: #929292;
-    font-size: 16px;
+    font-size: 17px;
     line-height: 1.65;
 }
 
@@ -395,7 +393,7 @@ a {
 .section-title {
     margin: 27px 0 0;
     font-family: "Barlow Condensed", sans-serif;
-    font-size: 64px;
+    font-size: clamp(55px, 5.5vw, 80px);
     line-height: 0.9;
     font-weight: 900;
     letter-spacing: -1px;
@@ -425,8 +423,8 @@ a {
 
 .module-card {
     position: relative;
-    min-height: 245px;
-    padding: 34px 33px 28px;
+    min-height: 260px;
+    padding: 35px 33px 30px;
     border-right: 1px solid #1b1b1b;
     border-bottom: 1px solid #1b1b1b;
 }
@@ -441,7 +439,7 @@ a {
 .module-card h3 {
     margin: 0 0 17px;
     font-family: "Barlow Condensed", sans-serif;
-    font-size: 20px;
+    font-size: 21px;
     font-weight: 800;
     letter-spacing: 0.3px;
 }
@@ -450,8 +448,8 @@ a {
     max-width: 350px;
     margin: 0;
     color: #707070;
-    font-size: 15px;
-    line-height: 1.65;
+    font-size: 14px;
+    line-height: 1.7;
 }
 
 .module-line {
@@ -472,12 +470,12 @@ a {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 65px;
-    padding: 100px 50px;
+    padding: 110px 50px;
     align-items: center;
 }
 
 .ai-title {
-    font-size: 64px;
+    font-size: clamp(55px, 5vw, 78px);
 }
 
 .section-description {
@@ -609,7 +607,7 @@ a {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 65px;
-    padding: 100px 50px;
+    padding: 110px 50px;
     align-items: center;
 }
 
@@ -645,7 +643,7 @@ a {
 }
 
 .job-card-content .section-title {
-    font-size: 58px;
+    font-size: clamp(50px, 4.7vw, 72px);
 }
 
 .job-flow {
@@ -681,7 +679,7 @@ a {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 65px;
-    padding: 100px 50px 105px;
+    padding: 105px 50px 110px;
     align-items: center;
 }
 
@@ -1048,14 +1046,12 @@ a {
     }
     .hero-section {
         min-height: 650px;
-        height: auto;
     }
     .hero-content {
-        padding: 55px 20px 65px;
+        padding: 75px 20px;
     }
     .hero-title {
         font-size: clamp(60px, 17vw, 90px);
-        line-height: 0.90;
         letter-spacing: -1px;
     }
     .hero-description {
@@ -1211,568 +1207,5 @@ a {
     }
     .desktop-break {
         display: none;
-    }
-}
-
-
-/* =========================================================
-   FIGMA MATCH — FINAL DESKTOP OVERRIDES
-========================================================= */
-
-@media (min-width: 1001px) {
-    .hero-section {
-        height: 650px;
-        min-height: 650px;
-        align-items: flex-start;
-    }
-    .hero-content {
-        width: 100%;
-        max-width: none;
-        margin: 0;
-        padding: 34px 50px 60px;
-    }
-    .hero-eyebrow {
-        font-size: 13px;
-        line-height: 1;
-    }
-    .hero-title {
-        margin: 34px 0 26px;
-        max-width: 650px;
-        font-size: 92px;
-        line-height: 0.90;
-        letter-spacing: -1.5px;
-    }
-    .hero-description {
-        max-width: 590px;
-        margin-bottom: 32px;
-        font-size: 16px;
-        line-height: 1.65;
-    }
-    .hero-buttons {
-        gap: 13px;
-    }
-    .primary-button,
-    .secondary-button {
-        min-height: 48px;
-        font-size: 15px;
-    }
-    .hero-slider {
-        margin-top: 48px;
-    }
-    .section-title {
-        font-size: 64px;
-        line-height: 0.90;
-    }
-    .ai-title {
-        font-size: 64px;
-    }
-    .job-card-content .section-title {
-        font-size: 58px;
-    }
-}
-
-
-/* =========================================================
-   FINAL FIGMA MATCH — AI ENGINE + CUSTOMER RETENTION
-   These overrides match the existing LandingPage.jsx classes.
-========================================================= */
-
-@media (min-width: 1001px) {
-    /* =========================
-       AI ENGINE
-    ========================= */
-    .ai-section {
-        width: 1240px !important;
-        max-width: 1240px !important;
-        margin: 0 auto !important;
-        padding: 52px 0 90px !important;
-        display: grid !important;
-        grid-template-columns: 580px 580px !important;
-        column-gap: 65px !important;
-        align-items: start !important;
-        box-sizing: border-box !important;
-    }
-    .ai-content {
-        width: 580px !important;
-        min-width: 580px !important;
-        box-sizing: border-box !important;
-    }
-    .ai-section .section-title.ai-title {
-        display: block !important;
-        width: 580px !important;
-        max-width: 580px !important;
-        margin: 28px 0 25px !important;
-        padding: 0 !important;
-        font-family: "Barlow Condensed", sans-serif !important;
-        font-size: 64px !important;
-        line-height: 0.97 !important;
-        font-weight: 900 !important;
-        letter-spacing: -1px !important;
-        text-transform: uppercase !important;
-    }
-    .ai-section .section-description {
-        width: 560px !important;
-        max-width: 560px !important;
-        margin: 0 0 30px !important;
-        color: #777 !important;
-        font-size: 15px !important;
-        line-height: 1.65 !important;
-    }
-    .ai-feature-grid {
-        width: 580px !important;
-        max-width: 580px !important;
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 12px !important;
-        margin: 0 !important;
-    }
-    .ai-feature-card {
-        width: 100% !important;
-        height: 61px !important;
-        min-height: 61px !important;
-        box-sizing: border-box !important;
-        padding: 10px 14px !important;
-    }
-    .ai-feature-icon {
-        width: 27px !important;
-        min-width: 27px !important;
-        font-size: 17px !important;
-    }
-    .ai-feature-content strong {
-        font-size: 13px !important;
-        line-height: 1.2 !important;
-    }
-    .ai-feature-content span {
-        font-size: 12px !important;
-        line-height: 1.2 !important;
-    }
-    .ai-button {
-        width: 147px !important;
-        height: 46px !important;
-        min-height: 46px !important;
-        margin-top: 32px !important;
-        padding: 0 !important;
-    }
-    .ai-visual {
-        position: relative !important;
-        width: 580px !important;
-        height: 567px !important;
-        min-height: 567px !important;
-        max-height: 567px !important;
-        border-radius: 9px !important;
-        overflow: hidden !important;
-        box-sizing: border-box !important;
-    }
-    .ai-image {
-        position: absolute !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        background-size: cover !important;
-        background-position: center center !important;
-        background-repeat: no-repeat !important;
-        filter: brightness(.72) !important;
-    }
-    .diagnosis-box {
-        left: 25px !important;
-        right: 25px !important;
-        bottom: 25px !important;
-        padding: 17px !important;
-        box-sizing: border-box !important;
-        z-index: 5 !important;
-    }
-    .diagnosis-top {
-        font-size: 13px !important;
-    }
-    .diagnosis-top strong {
-        font-size: 12px !important;
-    }
-    .confidence-bar {
-        height: 5px !important;
-        margin: 12px 0 9px !important;
-    }
-    .diagnosis-box p {
-        font-size: 12px !important;
-    }
-    /* =========================
-       CUSTOMER RETENTION
-    ========================= */
-    .retention-section {
-        width: 1240px !important;
-        max-width: 1240px !important;
-        margin: 0 auto !important;
-        padding: 70px 0 90px !important;
-        display: grid !important;
-        grid-template-columns: 580px 580px !important;
-        column-gap: 65px !important;
-        align-items: center !important;
-        box-sizing: border-box !important;
-    }
-    .retention-content {
-        width: 580px !important;
-        min-width: 580px !important;
-        order: 1 !important;
-        box-sizing: border-box !important;
-    }
-    .retention-section .section-eyebrow {
-        margin-bottom: 0 !important;
-    }
-    .retention-section .section-title {
-        display: block !important;
-        width: 580px !important;
-        max-width: 580px !important;
-        margin: 27px 0 25px !important;
-        padding: 0 !important;
-        font-family: "Barlow Condensed", sans-serif !important;
-        font-size: 58px !important;
-        line-height: 0.93 !important;
-        font-weight: 900 !important;
-        letter-spacing: -1px !important;
-        text-transform: uppercase !important;
-    }
-    .retention-section .section-description {
-        width: 560px !important;
-        max-width: 560px !important;
-        margin: 0 !important;
-        color: #777 !important;
-        font-size: 15px !important;
-        line-height: 1.65 !important;
-    }
-    .retention-stats {
-        width: 580px !important;
-        max-width: 580px !important;
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 12px !important;
-        margin-top: 28px !important;
-    }
-    .retention-card {
-        width: 100% !important;
-        min-height: 82px !important;
-        height: 82px !important;
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        box-sizing: border-box !important;
-        background: #111 !important;
-        border: 1px solid #242424 !important;
-        border-radius: 4px !important;
-    }
-    .retention-card strong {
-        color: #c7ff00 !important;
-        font-family: "Barlow Condensed", sans-serif !important;
-        font-size: 25px !important;
-        line-height: 1 !important;
-        font-weight: 800 !important;
-    }
-    .retention-card span {
-        margin-top: 5px !important;
-        color: #777 !important;
-        font-size: 12px !important;
-        line-height: 1.2 !important;
-    }
-    .retention-image {
-        position: relative !important;
-        width: 580px !important;
-        height: 500px !important;
-        min-height: 500px !important;
-        max-height: 500px !important;
-        aspect-ratio: auto !important;
-        order: 2 !important;
-        overflow: hidden !important;
-        border-radius: 8px !important;
-        box-sizing: border-box !important;
-    }
-    .retention-image .mechanic-image {
-        position: absolute !important;
-        inset: 0 !important;
-        width: 100% !important;
-        height: 100% !important;
-        background-size: cover !important;
-        background-position: center center !important;
-        background-repeat: no-repeat !important;
-        filter: brightness(.72) !important;
-    }
-}
-
-
-/* =========================================================
-   MOBILE SAFETY
-========================================================= */
-
-@media (max-width: 1000px) {
-    .ai-section,
-    .retention-section {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-    }
-    .ai-content,
-    .retention-content,
-    .ai-feature-grid,
-    .retention-stats,
-    .ai-section .section-description,
-    .retention-section .section-description,
-    .ai-section .section-title.ai-title,
-    .retention-section .section-title {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-    }
-    .ai-visual,
-    .retention-image {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-}
-
-
-/* =========================================================
-   FINAL FIGMA MATCH — MODULES
-   Keep all existing design/styles unchanged.
-   Only correct the desktop scale/position of the
-   Modules heading and grid.
-========================================================= */
-
-@media (min-width: 1001px) {
-    .modules-section {
-        width: 1240px !important;
-        max-width: 1240px !important;
-        margin: 0 auto !important;
-        padding: 100px 0 110px !important;
-        box-sizing: border-box !important;
-    }
-    .modules-section .section-heading-row {
-        width: 1240px !important;
-        max-width: 1240px !important;
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        column-gap: 100px !important;
-        margin: 0 0 65px !important;
-        box-sizing: border-box !important;
-    }
-    .modules-section .section-heading-left {
-        width: 100% !important;
-        min-width: 0 !important;
-    }
-    .modules-section .section-eyebrow {
-        display: block !important;
-        margin: 0 !important;
-        font-family: "Barlow Condensed", sans-serif !important;
-        font-size: 13px !important;
-        line-height: 1 !important;
-        font-weight: 600 !important;
-        letter-spacing: 3px !important;
-        text-transform: uppercase !important;
-    }
-    /* THIS IS THE MAIN FIX:
-       Figma = large "BUILT TO / MANAGE." heading */
-    .modules-section h2.section-title {
-        display: block !important;
-        width: 100% !important;
-        max-width: 650px !important;
-        margin: 27px 0 0 !important;
-        padding: 0 !important;
-        color: #f5f5f5 !important;
-        font-family: "Barlow Condensed", sans-serif !important;
-        font-size: 64px !important;
-        line-height: 0.90 !important;
-        font-weight: 900 !important;
-        letter-spacing: -1px !important;
-        text-transform: uppercase !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    .modules-section .section-heading-right {
-        width: 100% !important;
-        display: flex !important;
-        align-items: flex-end !important;
-        padding: 0 0 7px !important;
-        box-sizing: border-box !important;
-    }
-    .modules-section .section-heading-right p {
-        width: 540px !important;
-        max-width: 540px !important;
-        margin: 0 !important;
-        color: #777 !important;
-        font-family: "Inter", sans-serif !important;
-        font-size: 15px !important;
-        line-height: 1.7 !important;
-    }
-    /* Figma module grid has clean separators, not boxed cards */
-    .modules-section .modules-grid {
-        width: 1240px !important;
-        max-width: 1240px !important;
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        border: none !important;
-        box-sizing: border-box !important;
-    }
-    .modules-section .module-card {
-        position: relative !important;
-        min-height: 245px !important;
-        padding: 34px 33px 28px !important;
-        background: transparent !important;
-        border: none !important;
-        border-right: 1px solid #1b1b1b !important;
-        border-bottom: 1px solid #1b1b1b !important;
-        border-radius: 0 !important;
-        box-sizing: border-box !important;
-    }
-    .modules-section .module-card:nth-child(3n) {
-        border-right: none !important;
-    }
-    .modules-section .module-card:nth-child(n+4) {
-        border-bottom: none !important;
-    }
-    .modules-section .module-number {
-        margin-bottom: 24px !important;
-        color: #6b8a00 !important;
-        font-family: "Barlow Condensed", sans-serif !important;
-        font-size: 13px !important;
-        line-height: 1 !important;
-    }
-    .modules-section .module-card h3 {
-        margin: 0 0 17px !important;
-        color: #f5f5f5 !important;
-        font-family: "Barlow Condensed", sans-serif !important;
-        font-size: 20px !important;
-        line-height: 1.05 !important;
-        font-weight: 800 !important;
-        letter-spacing: 0.3px !important;
-        text-transform: uppercase !important;
-    }
-    .modules-section .module-card p {
-        width: 100% !important;
-        max-width: 350px !important;
-        margin: 0 !important;
-        color: #707070 !important;
-        font-family: "Inter", sans-serif !important;
-        font-size: 15px !important;
-        line-height: 1.65 !important;
-    }
-    .modules-section .module-line {
-        position: absolute !important;
-        left: 33px !important;
-        right: 33px !important;
-        bottom: 0 !important;
-        width: auto !important;
-        height: 1px !important;
-        background: linear-gradient( 90deg, #c7ff00, rgba(199, 255, 0, 0)) !important;
-    }
-}
-
-
-/* =========================================================
-   FINAL FIGMA MATCH — ACCESS
-   Preserve existing form/functionality; correct only
-   desktop scale and alignment.
-========================================================= */
-
-@media (min-width: 1001px) {
-    .access-section {
-        width: 1240px !important;
-        max-width: 1240px !important;
-        margin: 0 auto !important;
-        padding: 100px 0 !important;
-        display: grid !important;
-        grid-template-columns: 580px 580px !important;
-        column-gap: 65px !important;
-        align-items: center !important;
-        box-sizing: border-box !important;
-    }
-    .access-content {
-        width: 580px !important;
-        max-width: 580px !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-    }
-    .access-content .section-eyebrow {
-        margin: 0 !important;
-    }
-    .access-content .section-title {
-        display: block !important;
-        width: 580px !important;
-        max-width: 580px !important;
-        margin: 27px 0 25px !important;
-        padding: 0 !important;
-        color: #f5f5f5 !important;
-        font-family: "Barlow Condensed", sans-serif !important;
-        font-size: 64px !important;
-        line-height: 0.90 !important;
-        font-weight: 900 !important;
-        letter-spacing: -1px !important;
-        text-transform: uppercase !important;
-    }
-    .access-content .section-description {
-        width: 560px !important;
-        max-width: 560px !important;
-        margin: 0 !important;
-        color: #777 !important;
-        font-size: 15px !important;
-        line-height: 1.7 !important;
-    }
-    .access-form-wrapper {
-        width: 580px !important;
-        max-width: 580px !important;
-        box-sizing: border-box !important;
-    }
-    .access-form {
-        width: 580px !important;
-        min-height: 421px !important;
-        padding: 32px !important;
-        box-sizing: border-box !important;
-        background: #111 !important;
-        border: 1px solid #242424 !important;
-        border-radius: 8px !important;
-    }
-    .access-form h3 {
-        margin: 0 0 27px !important;
-        font-family: "Barlow Condensed", sans-serif !important;
-        font-size: 19px !important;
-        line-height: 1.1 !important;
-        font-weight: 800 !important;
-    }
-    .access-form .form-row {
-        width: 100% !important;
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 11px !important;
-    }
-    .access-form input,
-    .access-form textarea {
-        width: 100% !important;
-        box-sizing: border-box !important;
-        margin-bottom: 11px !important;
-        padding: 0 13px !important;
-        font-size: 14px !important;
-    }
-    .access-form input {
-        height: 44px !important;
-    }
-    .access-form textarea {
-        height: 65px !important;
-        padding-top: 13px !important;
-    }
-    .access-form .submit-button {
-        width: 100% !important;
-        height: 47px !important;
-        margin-top: 9px !important;
-    }
-}
-
-
-/* =========================================================
-   DESKTOP ONLY — stop generic title rules from shrinking
-   the Figma headings in these sections.
-========================================================= */
-
-@media (min-width: 1001px) {
-    .modules-section h2.section-title,
-    .access-section h2.section-title {
-        font-size: 64px !important;
-        font-weight: 900 !important;
-        line-height: 0.90 !important;
     }
 }

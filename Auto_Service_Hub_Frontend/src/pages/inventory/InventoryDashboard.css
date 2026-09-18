@@ -1,461 +1,100 @@
 /* =========================================================
    INVENTORY DASHBOARD
-   Auto_Service_Hub
-   FIGMA MATCHED STYLING
+   FIGMA MATCH
 ========================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
-
-/* =========================================================
-   RESET
-========================================================= */
-
-* {
-    box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-    margin: 0;
-    padding: 0;
+.inventory-dashboard {
     width: 100%;
-    min-height: 100%;
-}
-
-body {
-    background: #090909;
+    min-height: calc(100vh - 58px);
+    padding: 28px 23px 24px;
+    /* Main Figma background */
+    background: #080909;
     color: #ffffff;
-    font-family: "Inter", Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 
 /* =========================================================
-   PAGE
+   HEADING
 ========================================================= */
 
-.inventory-dashboard-page {
-    width: 100%;
-    min-height: 100vh;
-    background: #090909;
-    color: #ffffff;
+.inventory-dashboard-heading {
+    margin-bottom: 24px;
 }
-
-
-/* =========================================================
-   SIDEBAR
-========================================================= */
-
-.inventory-dashboard-sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 230px;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #0c0c0c;
-    border-right: 1px solid #252525;
-    z-index: 100;
-    transition: width 0.25s ease, transform 0.25s ease;
-}
-
-
-/* =========================================================
-   COLLAPSED SIDEBAR
-   Figma = approximately 58px
-========================================================= */
-
-.inventory-dashboard-page.sidebar-closed .inventory-dashboard-sidebar {
-    width: 58px;
-}
-
-
-/* =========================================================
-   LOGO
-========================================================= */
-
-.inventory-dashboard-logo {
-    height: 68px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 14px;
-    border-bottom: 1px solid #252525;
-    flex-shrink: 0;
-}
-
-.inventory-dashboard-logo-icon {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    background: #d7ff36;
-    color: #050505;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 900;
-}
-
-.inventory-dashboard-logo span {
-    color: #ffffff;
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
-}
-
-
-/* =========================================================
-   NAVIGATION
-========================================================= */
-
-.inventory-dashboard-nav {
-    padding-top: 13px;
-}
-
-.inventory-dashboard-nav-item {
-    width: 100%;
-    height: 43px;
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    padding: 0 18px;
-    color: #666666;
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 500;
-    border-left: 2px solid transparent;
-    transition: background 0.2s ease, color 0.2s ease;
-}
-
-.inventory-dashboard-nav-item:hover {
-    color: #ffffff;
-    background: #141414;
-}
-
-.inventory-dashboard-nav-item.active {
-    color: #d7ff36;
-    background: rgba(215, 255, 54, 0.07);
-    border-left-color: #d7ff36;
-}
-
-.inventory-dashboard-nav-icon {
-    width: 17px;
-    flex-shrink: 0;
-    text-align: center;
-    font-size: 14px;
-}
-
-
-/* =========================================================
-   COLLAPSED NAVIGATION
-========================================================= */
-
-.inventory-dashboard-page.sidebar-closed .inventory-dashboard-nav-item {
-    justify-content: center;
-    padding: 0;
-    border-left: 2px solid transparent;
-}
-
-.inventory-dashboard-page.sidebar-closed .inventory-dashboard-nav-item.active {
-    border-left-color: #d7ff36;
-}
-
-
-/* =========================================================
-   SIDEBAR TOGGLE
-========================================================= */
-
-.inventory-dashboard-sidebar-toggle {
-    position: absolute;
-    left: 50%;
-    bottom: 18px;
-    transform: translateX(-50%);
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    background: #111111;
-    color: #777777;
-    border: 1px solid #292929;
-    border-radius: 50%;
-    font-size: 18px;
-    line-height: 1;
-    cursor: pointer;
-}
-
-.inventory-dashboard-sidebar-toggle:hover {
-    color: #d7ff36;
-    background: #151515;
-    border-color: #d7ff36;
-}
-
-
-/* =========================================================
-   MAIN
-========================================================= */
-
-.inventory-dashboard-main {
-    width: calc(100% - 230px);
-    margin-left: 230px;
-    min-height: 100vh;
-    background: #090909;
-    transition: width 0.25s ease, margin-left 0.25s ease;
-}
-
-
-/* =========================================================
-   MAIN — COLLAPSED SIDEBAR
-========================================================= */
-
-.inventory-dashboard-page.sidebar-closed .inventory-dashboard-main {
-    width: calc(100% - 58px);
-    margin-left: 58px;
-}
-
-
-/* =========================================================
-   TOP BAR
-========================================================= */
-
-.inventory-dashboard-topbar {
-    width: 100%;
-    height: 54px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 22px;
-    background: #0b0b0b;
-    border-bottom: 1px solid #252525;
-}
-
-
-/* =========================================================
-   BREADCRUMB
-========================================================= */
-
-.inventory-dashboard-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    font-size: 11px;
-}
-
-.inventory-dashboard-breadcrumb span {
-    color: #696969;
-}
-
-.inventory-dashboard-breadcrumb b {
-    color: #3d3d3d;
-    font-weight: 400;
-}
-
-.inventory-dashboard-breadcrumb strong {
-    color: #eeeeee;
-    font-weight: 700;
-}
-
-
-/* =========================================================
-   TOP ACTIONS
-========================================================= */
-
-.inventory-dashboard-top-actions {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-}
-
-
-/* =========================================================
-   ROLE BADGE
-========================================================= */
-
-.inventory-dashboard-role-badge {
-    padding: 5px 9px;
-    border: 1px solid rgba(215, 255, 54, 0.40);
-    border-radius: 4px;
-    color: #d7ff36;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-}
-
-
-/* =========================================================
-   AI ALERT
-========================================================= */
-
-.inventory-dashboard-ai-alert {
-    height: 29px;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 0 10px;
-    border: 1px solid #292929;
-    border-radius: 5px;
-    color: #777777;
-    font-size: 10px;
-}
-
-.inventory-dashboard-status-dot {
-    width: 6px;
-    height: 6px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    background: #19d96b;
-    box-shadow: 0 0 7px rgba(25, 217, 107, 0.35);
-}
-
-
-/* =========================================================
-   ROUND BUTTON
-========================================================= */
-
-.inventory-dashboard-round-button {
-    width: 31px;
-    height: 31px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: #d7ff36;
-    color: #050505;
-    font-size: 12px;
-    font-weight: 900;
-    cursor: pointer;
-}
-
-
-/* =========================================================
-   CONTENT
-========================================================= */
-
-.inventory-dashboard-content {
-    width: 100%;
-    padding: 25px 22px 40px;
-}
-
-
-/* =========================================================
-   DATE
-========================================================= */
 
 .inventory-dashboard-date {
     margin-bottom: 8px;
-    color: #d7ff36;
-    font-family: "Barlow Condensed", sans-serif;
+    color: #b9ff00;
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.2px;
 }
 
-
-/* =========================================================
-   MAIN TITLE
-========================================================= */
-
-.inventory-dashboard-title {
-    margin: 0 0 21px;
-    color: #ffffff;
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 34px;
-    line-height: 0.95;
+.inventory-dashboard-heading h1 {
+    margin: 0;
+    color: #f1f1f1;
+    font-size: 31px;
+    line-height: 1;
     font-weight: 900;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.8px;
 }
 
 
 /* =========================================================
-   STAT GRID
+   STAT CARDS
 ========================================================= */
 
 .inventory-dashboard-stat-grid {
-    width: 100%;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
-    margin-bottom: 21px;
+    gap: 12px;
+    margin-bottom: 24px;
 }
-
-
-/* =========================================================
-   STAT CARD
-========================================================= */
 
 .inventory-dashboard-stat-card {
-    min-height: 103px;
-    padding: 15px;
-    background: #151515;
-    border: 1px solid #282828;
-    border-radius: 6px;
+    min-height: 113px;
+    padding: 17px 16px;
+    /* Dark card background */
+    background: #111313;
+    border: 1px solid #252728;
+    border-radius: 7px;
 }
 
-.inventory-dashboard-stat-card:hover {
-    background: #171717;
-    border-color: #383838;
-}
-
-
-/* =========================================================
-   STAT LABEL
-========================================================= */
-
-.stat-label {
-    margin-bottom: 8px;
-    color: #777777;
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 10px;
+.inventory-dashboard-stat-title {
+    color: #696e70;
+    font-size: 9px;
     font-weight: 500;
-    letter-spacing: 0.09em;
+    letter-spacing: 1px;
 }
 
-
-/* =========================================================
-   STAT VALUE
-========================================================= */
-
-.stat-value {
-    margin-bottom: 6px;
+.inventory-dashboard-stat-number {
+    margin-top: 12px;
     color: #eeeeee;
-    font-size: 27px;
+    font-size: 28px;
     line-height: 1;
-    font-weight: 800;
-    letter-spacing: -0.03em;
+    font-weight: 900;
 }
 
-.stat-value.green {
-    color: #d7ff36;
+.inventory-dashboard-stat-number.lime {
+    color: #b9ff00;
 }
 
-
-/* =========================================================
-   STAT SUBTITLE
-========================================================= */
-
-.stat-subtitle {
-    color: #626262;
-    font-size: 10px;
-    font-weight: 400;
+.inventory-dashboard-stat-description {
+    margin-top: 8px;
+    color: #606668;
+    font-size: 9px;
 }
 
 
 /* =========================================================
-   MAIN GRID
+   MIDDLE
 ========================================================= */
 
-.inventory-dashboard-main-grid {
-    width: 100%;
+.inventory-dashboard-middle {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(300px, 0.9fr);
-    gap: 10px;
+    grid-template-columns: minmax(0, 2.25fr) minmax(300px, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
 }
 
 
@@ -464,183 +103,221 @@ body {
 ========================================================= */
 
 .inventory-dashboard-panel {
-    background: #151515;
-    border: 1px solid #282828;
-    border-radius: 6px;
+    background: #111313;
+    border: 1px solid #252728;
+    border-radius: 7px;
     overflow: hidden;
 }
 
-.inventory-dashboard-panel-header {
-    height: 41px;
+.inventory-dashboard-panel-title {
+    height: 45px;
     display: flex;
     align-items: center;
-    padding: 0 15px;
-    border-bottom: 1px solid #292929;
-    color: #eeeeee;
-    font-family: "Barlow Condensed", sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.03em;
+    padding: 0 17px;
+    border-bottom: 1px solid #252728;
+    color: #7c8284;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.6px;
 }
 
 
 /* =========================================================
-   JOB TABLE HEADER
+   ACTIVE JOB CARDS
 ========================================================= */
 
-.inventory-dashboard-job-header {
-    min-height: 37px;
-    display: grid;
-    grid-template-columns: 0.9fr 1.5fr 2.0fr 1.35fr 1.05fr 1.25fr 0.9fr;
-    align-items: center;
-    padding: 0 15px;
-    border-bottom: 1px solid #292929;
-    color: #777777;
-    font-size: 10px;
+.jobs-panel {
+    min-width: 0;
+}
+
+.inventory-dashboard-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.inventory-dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.inventory-dashboard-table th {
+    height: 39px;
+    padding: 0 17px;
+    text-align: left;
+    background: #111313;
+    border-bottom: 1px solid #252728;
+    color: #73797b;
+    font-size: 8px;
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.8px;
+    white-space: nowrap;
 }
 
-
-/* =========================================================
-   JOB ROW
-========================================================= */
-
-.inventory-dashboard-job-row {
-    min-height: 47px;
-    display: grid;
-    grid-template-columns: 0.9fr 1.5fr 2.0fr 1.35fr 1.05fr 1.25fr 0.9fr;
-    align-items: center;
-    padding: 0 15px;
-    border-bottom: 1px solid #252525;
-    font-size: 11px;
-    transition: background 0.15s ease;
+.inventory-dashboard-table td {
+    height: 57px;
+    padding: 7px 17px;
+    border-bottom: 1px solid #252728;
+    vertical-align: middle;
+    font-size: 10px;
 }
 
-.inventory-dashboard-job-row:last-child {
+.inventory-dashboard-table tbody tr:last-child td {
     border-bottom: none;
 }
 
-.inventory-dashboard-job-row:hover {
-    background: #1a1a1a;
+
+/* =========================================================
+   COLUMN WIDTHS
+========================================================= */
+
+.inventory-dashboard-table th:nth-child(1),
+.inventory-dashboard-table td:nth-child(1) {
+    width: 11%;
+}
+
+.inventory-dashboard-table th:nth-child(2),
+.inventory-dashboard-table td:nth-child(2) {
+    width: 18%;
+}
+
+.inventory-dashboard-table th:nth-child(3),
+.inventory-dashboard-table td:nth-child(3) {
+    width: 24%;
+}
+
+.inventory-dashboard-table th:nth-child(4),
+.inventory-dashboard-table td:nth-child(4) {
+    width: 15%;
+}
+
+.inventory-dashboard-table th:nth-child(5),
+.inventory-dashboard-table td:nth-child(5) {
+    width: 14%;
+}
+
+.inventory-dashboard-table th:nth-child(6),
+.inventory-dashboard-table td:nth-child(6) {
+    width: 12%;
+}
+
+.inventory-dashboard-table th:nth-child(7),
+.inventory-dashboard-table td:nth-child(7) {
+    width: 10%;
 }
 
 
 /* =========================================================
-   JOB ID
+   TABLE TEXT
 ========================================================= */
 
-.inventory-dashboard-job-row .job-id {
-    color: #d7ff36;
-    font-size: 10px;
+.job-id {
+    color: #b9ff00;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+.customer-name {
+    color: #eeeeee;
+    font-size: 11px;
     font-weight: 700;
 }
 
-
-/* =========================================================
-   CUSTOMER
-========================================================= */
-
-.inventory-dashboard-job-row .job-customer {
-    color: #eeeeee;
-    font-size: 13px;
-    font-weight: 700;
+.vehicle-name {
+    color: #676d6f;
+    line-height: 1.35;
 }
 
-
-/* =========================================================
-   VEHICLE
-========================================================= */
-
-.inventory-dashboard-job-row .job-vehicle {
-    color: #777777;
+.mechanic-name {
+    color: #eeeeee;
     font-size: 10px;
-    white-space: nowrap;
 }
 
+.job-eta {
+    color: #676d6f;
+    line-height: 1.35;
+}
 
-/* =========================================================
-   MECHANIC
-========================================================= */
-
-.inventory-dashboard-job-row .job-mechanic {
+.job-amount {
     color: #eeeeee;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 800;
+    text-align: right;
+}
+
+.inventory-dashboard-table th:last-child {
+    text-align: right;
 }
 
 
 /* =========================================================
-   STATUS
+   STATUS BADGES
 ========================================================= */
 
 .job-status {
-    width: fit-content;
-    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 8px;
     border-radius: 4px;
     font-size: 9px;
-    font-weight: 600;
-    white-space: nowrap;
+    font-weight: 700;
+    line-height: 1.2;
 }
 
 
-/* GREEN */
+/* =========================================================
+   IN REPAIR
+========================================================= */
 
-.job-status.repair,
-.job-status.delivered {
-    color: #7dff52;
-    background: rgba(75, 190, 60, 0.10);
-    border: 1px solid rgba(110, 220, 70, 0.35);
+.job-status.repair {
+    color: #20dc72;
+    background: #0d2a1a;
+    border: 1px solid #176b3b;
 }
 
 
-/* PURPLE */
+/* =========================================================
+   QUALITY CHECK
+========================================================= */
 
 .job-status.quality {
     color: #c979ff;
-    background: rgba(150, 70, 210, 0.12);
-    border: 1px solid rgba(180, 80, 255, 0.35);
+    background: #29182f;
+    border: 1px solid #693a7d;
 }
 
 
-/* ORANGE */
+/* =========================================================
+   DELIVERED
+========================================================= */
+
+.job-status.delivered {
+    color: #b9ff00;
+    background: #202b0d;
+    border: 1px solid #557514;
+}
+
+
+/* =========================================================
+   INSPECTION
+========================================================= */
 
 .job-status.inspection {
-    color: #ffb000;
-    background: rgba(255, 160, 0, 0.10);
-    border: 1px solid rgba(255, 160, 0, 0.35);
+    color: #ff9f00;
+    background: #2c210b;
+    border: 1px solid #73520b;
 }
 
 
-/* BLUE */
+/* =========================================================
+   RECEIVED
+========================================================= */
 
 .job-status.received {
-    color: #28b9ff;
-    background: rgba(30, 170, 240, 0.10);
-    border: 1px solid rgba(30, 170, 240, 0.35);
-}
-
-
-/* =========================================================
-   ETA
-========================================================= */
-
-.inventory-dashboard-job-row .job-eta {
-    color: #777777;
-    font-size: 10px;
-    white-space: nowrap;
-}
-
-
-/* =========================================================
-   AMOUNT
-========================================================= */
-
-.inventory-dashboard-job-row .job-amount {
-    color: #eeeeee;
-    text-align: right;
-    font-size: 13px;
-    font-weight: 700;
+    color: #21bfff;
+    background: #0b2831;
+    border: 1px solid #155d71;
 }
 
 
@@ -648,56 +325,76 @@ body {
    RIGHT COLUMN
 ========================================================= */
 
-.inventory-dashboard-right-column {
+.inventory-dashboard-right {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+    min-width: 0;
 }
 
 
 /* =========================================================
-   WORKLOAD
+   MECHANIC WORKLOAD
 ========================================================= */
 
-.inventory-dashboard-workload {
-    width: 100%;
+.mechanic-panel {
+    flex: 1;
 }
 
-.inventory-dashboard-workload-row {
-    min-height: 36px;
+.mechanic-list {
+    padding: 10px 17px 13px;
+}
+
+.mechanic-row {
+    min-height: 34px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 15px;
-    border-bottom: 1px solid #252525;
-    font-size: 11px;
 }
 
-.inventory-dashboard-workload-row:last-child {
-    border-bottom: none;
-}
-
-.inventory-dashboard-workload-row>span:first-child {
+.mechanic-left {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.mechanic-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.mechanic-dot.active {
+    background: #ffd400;
+}
+
+.mechanic-dot.inactive {
+    background: #18dc85;
+}
+
+.mechanic-name-text {
     color: #eeeeee;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
 }
 
-.workload-dot {
-    color: #d7ff36;
-    font-size: 8px;
+.mechanic-jobs {
+    color: #777d7f;
+    font-size: 9px;
+    font-family: monospace;
 }
 
-.workload-dot.inactive {
-    color: #24d887;
-}
 
-.workload-count {
-    color: #686868;
-    font-size: 10px;
+/* =========================================================
+   AI ALERTS
+========================================================= */
+
+.ai-panel {
+    min-height: 164px;
+    /* Keep exactly the same dark panel family */
+    background: #111313;
+    border: 1px solid #252728;
 }
 
 
@@ -705,103 +402,178 @@ body {
    AI ALERT LIST
 ========================================================= */
 
-.inventory-dashboard-alert-list {
-    width: 100%;
+.ai-alert-list {
+    padding: 0 17px;
 }
 
-.inventory-dashboard-alert {
-    min-height: 62px;
+
+/* =========================================================
+   AI ALERT ROW
+========================================================= */
+
+.ai-alert-row {
+    min-height: 53px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 15px;
-    border-bottom: 1px solid #252525;
+    gap: 11px;
+    border-bottom: 1px solid #252728;
 }
 
-.inventory-dashboard-alert:last-child {
+.ai-alert-row:last-child {
     border-bottom: none;
 }
 
 
 /* =========================================================
-   ALERT ICON
+   AI ALERT ICON
 ========================================================= */
 
-.alert-icon {
-    width: 20px;
-    flex-shrink: 0;
-    font-size: 14px;
+.ai-alert-icon {
+    width: 25px;
+    height: 25px;
+    min-width: 25px;
+    flex: 0 0 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
     text-align: center;
 }
 
 
 /* =========================================================
-   ALERT CONTENT
+   BATTERY ALERT
 ========================================================= */
 
-.alert-content {
+.ai-alert-icon.battery-alert {
+    color: #63c7ff;
+    background: #182b3b;
+    text-shadow: 2px 1px 0 #b878ff;
+}
+
+
+/* =========================================================
+   TYRE ALERT
+========================================================= */
+
+.ai-alert-icon.tyre-alert {
+    color: #c5a9ff;
+    background: #252035;
+}
+
+
+/* =========================================================
+   STOCK ALERT
+========================================================= */
+
+.ai-alert-icon.stock-alert {
+    color: #e6bb87;
+    background: #33281f;
+}
+
+
+/* =========================================================
+   AI ALERT CONTENT
+========================================================= */
+
+.ai-alert-content {
     min-width: 0;
-}
-
-.alert-title {
-    margin-bottom: 3px;
-    color: #eeeeee;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.alert-confidence {
-    color: #666666;
-    font-size: 9px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 
 /* =========================================================
-   BOTTOM GRID
+   AI ALERT TITLE
 ========================================================= */
 
-.inventory-dashboard-bottom-grid {
-    width: 100%;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 10px;
-    margin-top: 10px;
+.ai-alert-title {
+    margin: 0;
+    color: #eeeeee;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 
 /* =========================================================
-   REVENUE PANEL
+   AI ALERT CONFIDENCE
+========================================================= */
+
+.ai-alert-confidence {
+    margin-top: 4px;
+    color: #666c6e;
+    font-size: 9px;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+
+/* =========================================================
+   BOTTOM
+========================================================= */
+
+.inventory-dashboard-bottom {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 24px;
+}
+
+
+/* =========================================================
+   REVENUE CHART
 ========================================================= */
 
 .revenue-panel {
-    min-height: 184px;
+    min-height: 204px;
 }
 
 .revenue-chart {
-    position: relative;
-    height: 142px;
-    padding: 0 15px 14px;
+    height: 158px;
+    padding: 12px 17px 0;
 }
 
-.revenue-chart-line {
+.revenue-chart-area {
+    position: relative;
+    height: 110px;
+    border-bottom: 1px solid #252728;
+}
+
+.revenue-line {
     position: absolute;
-    left: 15px;
-    right: 15px;
-    bottom: 48px;
+    left: 0;
+    right: 0;
     height: 1px;
-    background: #292929;
+    background: #252728;
+}
+
+.line-one {
+    top: 50%;
+}
+
+.line-two {
+    top: 25%;
 }
 
 .revenue-days {
-    position: absolute;
-    left: 15px;
-    right: 15px;
-    bottom: 15px;
+    height: 35px;
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+    align-items: end;
+    padding-bottom: 1px;
+}
+
+.revenue-days span {
     text-align: center;
-    color: #666666;
-    font-size: 10px;
+    color: #676d6f;
+    font-size: 9px;
 }
 
 
@@ -810,187 +582,124 @@ body {
 ========================================================= */
 
 .service-panel {
-    min-height: 184px;
+    min-height: 204px;
 }
 
-.service-distribution {
-    padding: 13px 15px;
+.service-list {
+    padding: 13px 17px 12px;
 }
 
-.service-item {
+.service-row {
     margin-bottom: 11px;
 }
 
-.service-item:last-child {
+.service-row:last-child {
     margin-bottom: 0;
 }
 
-.service-item-top {
+.service-label-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 5px;
 }
 
-.service-item-top strong {
+.service-name {
     color: #eeeeee;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
 }
 
-.service-item-top span {
-    color: #777777;
-    font-size: 10px;
+.service-value {
+    color: #73797b;
+    font-size: 9px;
 }
 
 .service-track {
     width: 100%;
-    height: 5px;
-    background: #252525;
-    border-radius: 3px;
+    height: 6px;
     overflow: hidden;
+    background: #1c1e1e;
+    border-radius: 3px;
 }
 
-.service-fill {
+.service-bar {
+    display: block;
     height: 100%;
     border-radius: 3px;
 }
 
 
-/* SERVICE COLORS */
+/* =========================================================
+   SERVICE COLORS
+========================================================= */
 
-.service-fill.full {
-    background: #d7ff36;
+.service-green {
+    background: #b9ff00;
 }
 
-.service-fill.engine {
-    background: #32b9ff;
+.service-blue {
+    background: #35bdf1;
 }
 
-.service-fill.ac {
-    background: #c16dff;
+.service-purple {
+    background: #bd6ee8;
 }
 
-.service-fill.tyres {
-    background: #2ed46f;
+.service-teal {
+    background: #19d875;
 }
 
 
 /* =========================================================
-   LARGE SCREEN
+   HOVER
 ========================================================= */
 
-@media (min-width: 1400px) {
-    .inventory-dashboard-content {
-        padding-left: 24px;
-        padding-right: 24px;
-    }
-    .inventory-dashboard-title {
-        font-size: 36px;
-    }
-    .inventory-dashboard-job-row {
-        min-height: 48px;
-    }
+.inventory-dashboard-table tbody tr:hover {
+    background: #151717;
 }
 
 
 /* =========================================================
-   MEDIUM
+   RESPONSIVE
 ========================================================= */
 
-@media (max-width: 1100px) {
-    .inventory-dashboard-sidebar {
-        width: 205px;
+@media (max-width: 1250px) {
+    .inventory-dashboard-middle {
+        grid-template-columns: minmax(0, 1.8fr) minmax(270px, 1fr);
     }
-    .inventory-dashboard-page.sidebar-closed .inventory-dashboard-sidebar {
-        width: 58px;
+    .inventory-dashboard-table {
+        min-width: 780px;
     }
-    .inventory-dashboard-main {
-        width: calc(100% - 205px);
-        margin-left: 205px;
-    }
-    .inventory-dashboard-page.sidebar-closed .inventory-dashboard-main {
-        width: calc(100% - 58px);
-        margin-left: 58px;
-    }
+}
+
+@media (max-width: 1000px) {
     .inventory-dashboard-stat-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .inventory-dashboard-main-grid {
+    .inventory-dashboard-middle {
         grid-template-columns: 1fr;
     }
-    .inventory-dashboard-bottom-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-
-/* =========================================================
-   TABLET
-========================================================= */
-
-@media (max-width: 750px) {
-    .inventory-dashboard-sidebar {
-        width: 230px;
-    }
-    .inventory-dashboard-main,
-    .inventory-dashboard-page.sidebar-closed .inventory-dashboard-main {
-        width: 100%;
-        margin-left: 0;
-    }
-    .inventory-dashboard-page.sidebar-closed .inventory-dashboard-sidebar {
-        transform: translateX(-100%);
-    }
-    .inventory-dashboard-topbar {
-        padding: 0 14px;
-    }
-    .inventory-dashboard-ai-alert {
-        display: none;
-    }
-    .inventory-dashboard-content {
-        padding: 20px 14px 30px;
-    }
-    .inventory-dashboard-title {
-        font-size: 30px;
-    }
-    .inventory-dashboard-stat-grid {
+    .inventory-dashboard-right {
+        display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .inventory-dashboard-job-header,
-    .inventory-dashboard-job-row {
-        min-width: 850px;
-    }
-    .inventory-dashboard-jobs-panel {
-        overflow-x: auto;
-    }
 }
 
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 500px) {
-    .inventory-dashboard-content {
-        padding: 18px 12px 25px;
-    }
-    .inventory-dashboard-title {
-        font-size: 27px;
-    }
-    .inventory-dashboard-role-badge {
-        display: none;
+@media (max-width: 700px) {
+    .inventory-dashboard {
+        padding: 22px 15px 35px;
     }
     .inventory-dashboard-stat-grid {
         grid-template-columns: 1fr;
     }
-    .inventory-dashboard-stat-card {
-        min-height: 90px;
-    }
-    .inventory-dashboard-job-header,
-    .inventory-dashboard-job-row {
-        min-width: 850px;
-    }
-    .inventory-dashboard-bottom-grid {
+    .inventory-dashboard-right {
         grid-template-columns: 1fr;
+    }
+    .inventory-dashboard-bottom {
+        grid-template-columns: 1fr;
+    }
+    .inventory-dashboard-heading h1 {
+        font-size: 26px;
     }
 }

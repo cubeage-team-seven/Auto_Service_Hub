@@ -1,15 +1,8 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-
+import React from "react";
 import "./InventoryDashboard.css";
 
 function InventoryDashboard() {
-  const navigate = useNavigate();
-
-  // Figma Inventory Dashboard uses collapsed sidebar
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const jobs = [
+  const jobCards = [
     {
       id: "JC-2408",
       customer: "Arjun Mehta",
@@ -75,519 +68,390 @@ function InventoryDashboard() {
   const mechanics = [
     {
       name: "Ravi Kumar",
-      count: "3 active",
+      jobs: "3 active",
       active: true,
     },
     {
       name: "Amit Patel",
-      count: "2 active",
+      jobs: "2 active",
       active: true,
     },
     {
       name: "Suresh Nair",
-      count: "0 active",
+      jobs: "0 active",
       active: false,
     },
     {
       name: "Deepak Verma",
-      count: "1 active",
+      jobs: "1 active",
       active: true,
     },
     {
       name: "Kiran Joshi",
-      count: "0 active",
+      jobs: "0 active",
       active: false,
     },
   ];
 
   const alerts = [
     {
-      icon: "🔍",
+      icon: "⌕",
       title: "Battery Problem Detected",
       confidence: "85% confidence",
+      iconClass: "battery-alert",
     },
     {
       icon: "▦",
       title: "Tyre Replacement Due",
       confidence: "78% confidence",
+      iconClass: "tyre-alert",
     },
     {
-      icon: "📦",
+      icon: "◆",
       title: "Low Stock: Oil Filter",
       confidence: "92% confidence",
+      iconClass: "stock-alert",
+    },
+  ];
+
+  const services = [
+    {
+      name: "Full Service",
+      value: 34,
+      width: "100%",
+      className: "service-green",
+    },
+    {
+      name: "Engine & Mechanical",
+      value: 18,
+      width: "53%",
+      className: "service-blue",
+    },
+    {
+      name: "AC & Electrical",
+      value: 12,
+      width: "35%",
+      className: "service-purple",
+    },
+    {
+      name: "Tyres & Brakes",
+      value: 28,
+      width: "82%",
+      className: "service-teal",
     },
   ];
 
   return (
-    <div
-      className={`inventory-dashboard-page ${
-        sidebarOpen ? "sidebar-open" : "sidebar-closed"
-      }`}
-    >
+    <div className="inventory-dashboard">
+
       {/* =====================================================
-          SIDEBAR
+          DATE + TITLE
       ===================================================== */}
 
-      <aside className="inventory-dashboard-sidebar">
+      <div className="inventory-dashboard-heading">
 
-        {/* LOGO */}
+        <div className="inventory-dashboard-date">
+          — TODAY, 17 AUGUST 2026
+        </div>
 
-        <div className="inventory-dashboard-logo">
+        <h1>
+          OPERATIONS OVERVIEW
+        </h1>
 
-          <div className="inventory-dashboard-logo-icon">
-            ▰
+      </div>
+
+
+      {/* =====================================================
+          STAT CARDS
+      ===================================================== */}
+
+      <div className="inventory-dashboard-stat-grid">
+
+        <div className="inventory-dashboard-stat-card">
+
+          <div className="inventory-dashboard-stat-title">
+            TODAY'S JOBS
           </div>
 
-          {sidebarOpen && (
-            <span>
-              Auto_Service_Hub
-            </span>
-          )}
+          <div className="inventory-dashboard-stat-number lime">
+            14
+          </div>
+
+          <div className="inventory-dashboard-stat-description">
+            8 active • 6 delivered
+          </div>
 
         </div>
 
 
-        {/* NAVIGATION */}
+        <div className="inventory-dashboard-stat-card">
 
-        <nav className="inventory-dashboard-nav">
+          <div className="inventory-dashboard-stat-title">
+            REVENUE TODAY
+          </div>
 
-          <Link
-            to="/inventory-dashboard"
-            className="inventory-dashboard-nav-item active"
-          >
-            <span className="inventory-dashboard-nav-icon">
-              ▦
-            </span>
+          <div className="inventory-dashboard-stat-number">
+            ₹42,500
+          </div>
 
-            {sidebarOpen && (
-              <span>
-                Dashboard
-              </span>
-            )}
-          </Link>
+          <div className="inventory-dashboard-stat-description">
+            +12% vs yesterday
+          </div>
+
+        </div>
 
 
-          <Link
-            to="/inventory"
-            className="inventory-dashboard-nav-item"
-          >
-            <span className="inventory-dashboard-nav-icon">
-              ◈
-            </span>
+        <div className="inventory-dashboard-stat-card">
 
-            {sidebarOpen && (
-              <span>
-                Inventory
-              </span>
-            )}
-          </Link>
+          <div className="inventory-dashboard-stat-title">
+            PENDING INVOICES
+          </div>
 
-        </nav>
+          <div className="inventory-dashboard-stat-number">
+            6
+          </div>
+
+          <div className="inventory-dashboard-stat-description">
+            ₹48,294 outstanding
+          </div>
+
+        </div>
 
 
-        {/* SIDEBAR TOGGLE */}
+        <div className="inventory-dashboard-stat-card">
 
-        <button
-          type="button"
-          className="inventory-dashboard-sidebar-toggle"
-          onClick={() => setSidebarOpen((prev) => !prev)}
-        >
-          {sidebarOpen ? "‹" : "›"}
-        </button>
+          <div className="inventory-dashboard-stat-title">
+            LOW STOCK ALERTS
+          </div>
 
-      </aside>
+          <div className="inventory-dashboard-stat-number">
+            3
+          </div>
+
+          <div className="inventory-dashboard-stat-description">
+            ACF, OIF, TYR
+          </div>
+
+        </div>
+
+      </div>
 
 
       {/* =====================================================
-          MAIN
+          MIDDLE SECTION
       ===================================================== */}
 
-      <main className="inventory-dashboard-main">
+      <div className="inventory-dashboard-middle">
 
-        {/* =================================================
-            TOP BAR
-        ================================================= */}
+        {/* ===================================================
+            ACTIVE JOB CARDS
+        =================================================== */}
 
-        <header className="inventory-dashboard-topbar">
+        <section className="inventory-dashboard-panel jobs-panel">
 
-          {/* BREADCRUMB */}
+          <div className="inventory-dashboard-panel-title">
+            ACTIVE JOB CARDS
+          </div>
 
-          <div className="inventory-dashboard-breadcrumb">
+          <div className="inventory-dashboard-table-wrapper">
 
-            <span>
-              Auto_Service_Hub
-            </span>
+            <table className="inventory-dashboard-table">
 
-            <b>
-              /
-            </b>
+              <thead>
+                <tr>
+                  <th>JOB ID</th>
+                  <th>CUSTOMER</th>
+                  <th>VEHICLE</th>
+                  <th>MECHANIC</th>
+                  <th>STATUS</th>
+                  <th>ETA</th>
+                  <th>AMOUNT</th>
+                </tr>
+              </thead>
 
-            <strong>
-              Dashboard
-            </strong>
+              <tbody>
+
+                {jobCards.map((job) => (
+                  <tr key={job.id}>
+
+                    <td className="job-id">
+                      {job.id}
+                    </td>
+
+                    <td className="customer-name">
+                      {job.customer}
+                    </td>
+
+                    <td className="vehicle-name">
+                      {job.vehicle}
+                    </td>
+
+                    <td className="mechanic-name">
+                      {job.mechanic}
+                    </td>
+
+                    <td>
+
+                      <span
+                        className={`job-status ${job.statusClass}`}
+                      >
+                        {job.status}
+                      </span>
+
+                    </td>
+
+                    <td className="job-eta">
+                      {job.eta}
+                    </td>
+
+                    <td className="job-amount">
+                      {job.amount}
+                    </td>
+
+                  </tr>
+                ))}
+
+              </tbody>
+
+            </table>
 
           </div>
 
-
-          {/* TOP RIGHT */}
-
-          <div className="inventory-dashboard-top-actions">
-
-            <span className="inventory-dashboard-role-badge">
-              INVENTORY MANAGER
-            </span>
+        </section>
 
 
-            <div className="inventory-dashboard-ai-alert">
+        {/* ===================================================
+            RIGHT COLUMN
+        =================================================== */}
 
-              <span className="inventory-dashboard-status-dot"></span>
+        <div className="inventory-dashboard-right">
 
-              3 AI alerts
+          {/* =================================================
+              MECHANIC WORKLOAD
+          ================================================= */}
 
+          <section className="inventory-dashboard-panel mechanic-panel">
+
+            <div className="inventory-dashboard-panel-title">
+              MECHANIC WORKLOAD
             </div>
 
+            <div className="mechanic-list">
 
-           <button
-              type="button"
-              className="inventory-dashboard-round-button"
-              onClick={() => navigate("/")}
-              title="Home"
-            >
-              ⌂
-          </button>
+              {mechanics.map((mechanic) => (
+                <div
+                  className="mechanic-row"
+                  key={mechanic.name}
+                >
 
-          </div>
+                  <div className="mechanic-left">
 
-        </header>
+                    <span
+                      className={`mechanic-dot ${
+                        mechanic.active
+                          ? "active"
+                          : "inactive"
+                      }`}
+                    />
 
-
-        {/* =================================================
-            CONTENT
-        ================================================= */}
-
-        <section className="inventory-dashboard-content">
-
-          {/* DATE */}
-
-          <div className="inventory-dashboard-date">
-            — TODAY, 17 AUGUST 2026
-          </div>
-
-
-          {/* TITLE */}
-
-          <h1 className="inventory-dashboard-title">
-            OPERATIONS OVERVIEW
-          </h1>
-
-
-          {/* =================================================
-              STAT CARDS
-          ================================================= */}
-
-          <div className="inventory-dashboard-stat-grid">
-
-            <StatCard
-              title="TODAY'S JOBS"
-              value="14"
-              subtitle="8 active · 6 delivered"
-              green
-            />
-
-            <StatCard
-              title="REVENUE TODAY"
-              value="₹42,500"
-              subtitle="+12% vs yesterday"
-            />
-
-            <StatCard
-              title="PENDING INVOICES"
-              value="6"
-              subtitle="₹48,294 outstanding"
-            />
-
-            <StatCard
-              title="LOW STOCK ALERTS"
-              value="3"
-              subtitle="ACE, OIE, TYR"
-            />
-
-          </div>
-
-
-          {/* =================================================
-              DASHBOARD GRID
-          ================================================= */}
-
-          <div className="inventory-dashboard-main-grid">
-
-            {/* =================================================
-                ACTIVE JOB CARDS
-            ================================================= */}
-
-            <div className="inventory-dashboard-panel inventory-dashboard-jobs-panel">
-
-              <div className="inventory-dashboard-panel-header">
-                ACTIVE JOB CARDS
-              </div>
-
-
-              {/* TABLE HEADER */}
-
-              <div className="inventory-dashboard-job-header">
-
-                <span>
-                  JOB ID
-                </span>
-
-                <span>
-                  CUSTOMER
-                </span>
-
-                <span>
-                  VEHICLE
-                </span>
-
-                <span>
-                  MECHANIC
-                </span>
-
-                <span>
-                  STATUS
-                </span>
-
-                <span>
-                  ETA
-                </span>
-
-                <span>
-                  AMOUNT
-                </span>
-
-              </div>
-
-
-              {/* JOB ROWS */}
-
-              <div className="inventory-dashboard-jobs">
-
-                {jobs.map((job) => (
-
-                  <div
-                    className="inventory-dashboard-job-row"
-                    key={job.id}
-                  >
-
-                    <span className="job-id">
-                      {job.id}
+                    <span className="mechanic-name-text">
+                      {mechanic.name}
                     </span>
-
-
-                    <strong className="job-customer">
-                      {job.customer}
-                    </strong>
-
-
-                    <span className="job-vehicle">
-                      {job.vehicle}
-                    </span>
-
-
-                    <strong className="job-mechanic">
-                      {job.mechanic}
-                    </strong>
-
-
-                    <span className={`job-status ${job.statusClass}`}>
-                      {job.status}
-                    </span>
-
-
-                    <span className="job-eta">
-                      {job.eta}
-                    </span>
-
-
-                    <strong className="job-amount">
-                      {job.amount}
-                    </strong>
 
                   </div>
 
-                ))}
+                  <span className="mechanic-jobs">
+                    {mechanic.jobs}
+                  </span>
 
-              </div>
+                </div>
+              ))}
 
             </div>
 
-
-            {/* =================================================
-                RIGHT COLUMN
-            ================================================= */}
-
-            <div className="inventory-dashboard-right-column">
-
-              {/* =================================================
-                  MECHANIC WORKLOAD
-              ================================================= */}
-
-              <div className="inventory-dashboard-panel">
-
-                <div className="inventory-dashboard-panel-header">
-                  MECHANIC WORKLOAD
-                </div>
-
-
-                <div className="inventory-dashboard-workload">
-
-                  {mechanics.map((mechanic) => (
-
-                    <div
-                      className="inventory-dashboard-workload-row"
-                      key={mechanic.name}
-                    >
-
-                      <span className="workload-name">
-
-                        <span
-                          className={`workload-dot ${
-                            mechanic.active ? "active" : "inactive"
-                          }`}
-                        >
-                          ●
-                        </span>
-
-                        {mechanic.name}
-
-                      </span>
-
-
-                      <span className="workload-count">
-                        {mechanic.count}
-                      </span>
-
-                    </div>
-
-                  ))}
-
-                </div>
-
-              </div>
-
-
-              {/* =================================================
-                  AI ALERTS
-              ================================================= */}
-
-              <div className="inventory-dashboard-panel">
-
-                <div className="inventory-dashboard-panel-header">
-                  AI ALERTS
-                </div>
-
-
-                <div className="inventory-dashboard-alert-list">
-
-                  {alerts.map((alert) => (
-
-                    <Alert
-                      key={alert.title}
-                      icon={alert.icon}
-                      title={alert.title}
-                      confidence={alert.confidence}
-                    />
-
-                  ))}
-
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
+          </section>
 
 
           {/* =================================================
-              BOTTOM SECTION
+              AI ALERTS
           ================================================= */}
 
-          <div className="inventory-dashboard-bottom-grid">
+          <section className="inventory-dashboard-panel ai-panel">
 
-            {/* =================================================
-                REVENUE THIS WEEK
-            ================================================= */}
+            <div className="inventory-dashboard-panel-title">
+              AI ALERTS
+            </div>
 
-            <div className="inventory-dashboard-panel revenue-panel">
+            <div className="ai-alert-list">
 
-              <div className="inventory-dashboard-panel-header">
-                REVENUE — THIS WEEK
-              </div>
+              {alerts.map((alert, index) => (
+                <div
+                  className="ai-alert-row"
+                  key={index}
+                >
 
+                  <div className={`ai-alert-icon ${alert.iconClass}`}>
+                    {alert.icon}
+                  </div>
 
-              <div className="revenue-chart">
+                  <div className="ai-alert-content">
 
-                <div className="revenue-chart-line"></div>
+                    <div className="ai-alert-title">
+                      {alert.title}
+                    </div>
 
-                <div className="revenue-days">
+                    <div className="ai-alert-confidence">
+                      {alert.confidence}
+                    </div>
 
-                  <span>M</span>
-                  <span>T</span>
-                  <span>W</span>
-                  <span>T</span>
-                  <span>F</span>
-                  <span>S</span>
-                  <span>S</span>
+                  </div>
 
                 </div>
-
-              </div>
+              ))}
 
             </div>
 
+          </section>
 
-            {/* =================================================
-                SERVICE DISTRIBUTION
-            ================================================= */}
+        </div>
 
-            <div className="inventory-dashboard-panel service-panel">
-
-              <div className="inventory-dashboard-panel-header">
-                SERVICE DISTRIBUTION
-              </div>
+      </div>
 
 
-              <div className="service-distribution">
+      {/* =====================================================
+          BOTTOM SECTION
+      ===================================================== */}
 
-                <ServiceBar
-                  title="Full Service"
-                  value="34"
-                  width="92%"
-                  type="full"
-                />
+      <div className="inventory-dashboard-bottom">
 
-                <ServiceBar
-                  title="Engine & Mechanical"
-                  value="18"
-                  width="52%"
-                  type="engine"
-                />
+        {/* ===================================================
+            REVENUE THIS WEEK
+        =================================================== */}
 
-                <ServiceBar
-                  title="AC & Electrical"
-                  value="12"
-                  width="38%"
-                  type="ac"
-                />
+        <section className="inventory-dashboard-panel revenue-panel">
 
-                <ServiceBar
-                  title="Tyres & Brakes"
-                  value="28"
-                  width="75%"
-                  type="tyres"
-                />
+          <div className="inventory-dashboard-panel-title">
+            REVENUE — THIS WEEK
+          </div>
 
-              </div>
+          <div className="revenue-chart">
+
+            <div className="revenue-chart-area">
+
+              <div className="revenue-line line-one" />
+              <div className="revenue-line line-two" />
+
+            </div>
+
+            <div className="revenue-days">
+
+              <span>M</span>
+              <span>T</span>
+              <span>W</span>
+              <span>T</span>
+              <span>F</span>
+              <span>S</span>
+              <span>S</span>
 
             </div>
 
@@ -595,119 +459,59 @@ function InventoryDashboard() {
 
         </section>
 
-      </main>
 
-    </div>
-  );
-}
+        {/* ===================================================
+            SERVICE DISTRIBUTION
+        =================================================== */}
 
+        <section className="inventory-dashboard-panel service-panel">
 
-/* =========================================================
-   STAT CARD
-========================================================= */
+          <div className="inventory-dashboard-panel-title">
+            SERVICE DISTRIBUTION
+          </div>
 
-function StatCard({
-  title,
-  value,
-  subtitle,
-  green = false,
-}) {
-  return (
-    <div className="inventory-dashboard-stat-card">
+          <div className="service-list">
 
-      <div className="stat-label">
-        {title}
-      </div>
+            {services.map((service) => (
+              <div
+                className="service-row"
+                key={service.name}
+              >
 
-      <div
-        className={`stat-value ${
-          green ? "green" : ""
-        }`}
-      >
-        {value}
-      </div>
+                <div className="service-label-row">
 
-      <div className="stat-subtitle">
-        {subtitle}
-      </div>
+                  <span className="service-name">
+                    {service.name}
+                  </span>
 
-    </div>
-  );
-}
+                  <span className="service-value">
+                    {service.value}
+                  </span>
 
+                </div>
 
-/* =========================================================
-   AI ALERT
-========================================================= */
+                <div className="service-track">
 
-function Alert({
-  icon,
-  title,
-  confidence,
-}) {
-  return (
-    <div className="inventory-dashboard-alert">
+                  <span
+                    className={`service-bar ${service.className}`}
+                    style={{
+                      width: service.width,
+                    }}
+                  />
 
-      <div className="alert-icon">
-        {icon}
-      </div>
+                </div>
 
-      <div className="alert-content">
+              </div>
+            ))}
 
-        <div className="alert-title">
-          {title}
-        </div>
+          </div>
 
-        <div className="alert-confidence">
-          {confidence}
-        </div>
+        </section>
 
       </div>
 
     </div>
   );
 }
-
-
-/* =========================================================
-   SERVICE BAR
-========================================================= */
-
-function ServiceBar({
-  title,
-  value,
-  width,
-  type,
-}) {
-  return (
-    <div className="service-item">
-
-      <div className="service-item-top">
-
-        <strong>
-          {title}
-        </strong>
-
-        <span>
-          {value}
-        </span>
-
-      </div>
-
-      <div className="service-track">
-
-        <div
-          className={`service-fill ${type}`}
-          style={{
-            width: width,
-          }}
-        ></div>
-
-      </div>
-
-    </div>
-  );
-}
-
 
 export default InventoryDashboard;

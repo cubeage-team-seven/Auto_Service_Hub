@@ -10,16 +10,7 @@ function ModulePage() {
           LEFT SIDE
       ===================================================== */}
 
-      <section
-        className="module-left"
-        style={{
-          backgroundImage:
-            "url('/assets/landing/mechanic-bg.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
+      <section className="module-left">
 
         <Link
           to="/"
@@ -45,8 +36,8 @@ function ModulePage() {
           </h1>
 
           <p>
-            Manage every aspect of your workshop —
-            customers, jobs, inventory, billing and AI insights.
+            Manage every aspect of your workshop — customers,
+            jobs, inventory, billing and AI insights.
           </p>
 
         </div>
@@ -114,15 +105,11 @@ function ModulePage() {
 
           <div className="module-list">
 
-
             {/* =================================================
                 GARAGE OWNER
             ================================================= */}
 
-            <Link
-              to="/garage-owner-login"
-              className="module-card module-card-link"
-            >
+            <div className="module-card">
 
               <div className="module-card-icon">
                 🏢
@@ -149,17 +136,14 @@ function ModulePage() {
                 →
               </span>
 
-            </Link>
+            </div>
 
 
             {/* =================================================
                 SERVICE ADVISOR
             ================================================= */}
 
-            <Link
-              to="/service-advisor-login"
-              className="module-card module-card-link"
-            >
+            <div className="module-card">
 
               <div className="module-card-icon">
                 📋
@@ -172,12 +156,12 @@ function ModulePage() {
                 </h3>
 
                 <span>
-                  Customer &amp; Job Management
+                  Customer & Job Management
                 </span>
 
                 <p>
-                  Handle customers, job cards, estimates
-                  and service updates.
+                  Handle customers, job cards,
+                  estimates and service updates.
                 </p>
 
               </div>
@@ -186,7 +170,7 @@ function ModulePage() {
                 →
               </span>
 
-            </Link>
+            </div>
 
 
             {/* =================================================
@@ -246,7 +230,7 @@ function ModulePage() {
                 </h3>
 
                 <span>
-                  Inventory &amp; Procurement
+                  Inventory & Procurement
                 </span>
 
                 <p>
@@ -283,7 +267,7 @@ function ModulePage() {
                 </h3>
 
                 <span>
-                  Payments &amp; Invoicing
+                  Payments & Invoicing
                 </span>
 
                 <p>
@@ -354,7 +338,7 @@ function ModulePage() {
                 </h3>
 
                 <span>
-                  API &amp; System Management
+                  API & System Management
                 </span>
 
                 <p>

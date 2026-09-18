@@ -88,7 +88,7 @@ function LandingPage() {
   const [submitted, setSubmitted] = useState(false);
 
   const goToModule = () => {
-    navigate("/modules");
+    navigate("/module");
   };
 
   const scrollToSection = (id) => {
@@ -222,7 +222,7 @@ function LandingPage() {
             className="hero-image"
             style={{
               backgroundImage:
-                "url('/assets/landing/hero-bg.jpg')",
+                "url('/assets/landing/hero-bg.png')",
             }}
           />
 
