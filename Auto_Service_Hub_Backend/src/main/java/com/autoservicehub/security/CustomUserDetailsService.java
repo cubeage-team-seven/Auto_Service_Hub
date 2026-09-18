@@ -11,10 +11,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/**
- * Loads application users for Spring Security authentication (SRS 19). Role lookup
- * should be extended to read from the users/roles/user_roles tables (SRS 8.2).
- */
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
@@ -22,14 +18,31 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
+<<<<<<< HEAD
+    public UserDetails loadUserByUsername(String usernameOrEmail) {
+
+        User user = userRepository.findByUsernameIgnoreCase(usernameOrEmail)
+                .orElseGet(() -> userRepository.findByEmailIgnoreCase(usernameOrEmail)
+                        .orElseThrow(() ->
+                                new UsernameNotFoundException(
+                                        "User not found: " + usernameOrEmail
+                                )));
+=======
     public UserDetails loadUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+>>>>>>> origin/development
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
                 .password(user.getPasswordHash())
+<<<<<<< HEAD
+                .authorities(List.of(
+                        new SimpleGrantedAuthority("ROLE_USER")
+                ))
+=======
                 .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER")))
+>>>>>>> origin/development
                 .disabled(Boolean.FALSE.equals(user.getActive()))
                 .build();
     }

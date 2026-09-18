@@ -31,7 +31,7 @@ function CustomerLogin() {
           <div className="header-logo">
             <div className="logo-box">▰</div>
             <div>
-              <div className="logo-title">SMARTGARAGE AI CRM</div>
+              <div className="logo-title">Auto_Service_Hub</div>
               <div className="logo-subtitle">Select your role to continue</div>
             </div>
           </div>
