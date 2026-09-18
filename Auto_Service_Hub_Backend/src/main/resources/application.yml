@@ -4,13 +4,18 @@ spring:
 
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:auto_service_hub}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+<<<<<<< HEAD
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:YOUR_MYSQL_PASSWORD}
+=======
+    username: Anchal
+    password: Anchal
+>>>>>>> origin/development
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     properties:
       hibernate:

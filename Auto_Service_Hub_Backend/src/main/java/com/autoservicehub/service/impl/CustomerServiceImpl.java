@@ -12,11 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Customer CRM (SRS 4.1)
- * Business rules to enforce here per SRS section 12 (e.g. server-side total
- * recalculation, stock limits, audit trail) before persisting.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,25 +22,23 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public CustomerResponseDTO create(CustomerRequestDTO request) {
         Customer entity = new Customer();
-        // TODO: map request -> entity
-        Customer saved = repository.save(entity);
-        return toResponse(saved);
+        mapToEntity(request, entity);
+        return toResponse(repository.save(entity));
     }
 
     @Override
     public CustomerResponseDTO update(Long id, CustomerRequestDTO request) {
         Customer existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
-        // TODO: map request -> existing
+        mapToEntity(request, existing);
         return toResponse(repository.save(existing));
     }
 
     @Override
     @Transactional(readOnly = true)
     public CustomerResponseDTO getById(Long id) {
-        Customer found = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id));
-        return toResponse(found);
+        return toResponse(repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + id)));
     }
 
     @Override
@@ -56,18 +49,28 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Customer not found: " + id);
-        }
+        if (!repository.existsById(id)) throw new ResourceNotFoundException("Customer not found: " + id);
         repository.deleteById(id);
     }
 
-    private CustomerResponseDTO toResponse(Customer entity) {
+    private void mapToEntity(CustomerRequestDTO r, Customer e) {
+        e.setName(r.getName());
+        e.setPhone(r.getPhone());
+        e.setEmail(r.getEmail());
+        e.setAddress(r.getAddress());
+        e.setStatus(r.getStatus() != null ? r.getStatus() : "ACTIVE");
+    }
+
+    private CustomerResponseDTO toResponse(Customer e) {
         CustomerResponseDTO dto = new CustomerResponseDTO();
-        dto.setId(entity.getId());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-        // TODO: map remaining fields
+        dto.setId(e.getId());
+        dto.setName(e.getName());
+        dto.setPhone(e.getPhone());
+        dto.setEmail(e.getEmail());
+        dto.setAddress(e.getAddress());
+        dto.setStatus(e.getStatus());
+        dto.setCreatedAt(e.getCreatedAt());
+        dto.setUpdatedAt(e.getUpdatedAt());
         return dto;
     }
 }

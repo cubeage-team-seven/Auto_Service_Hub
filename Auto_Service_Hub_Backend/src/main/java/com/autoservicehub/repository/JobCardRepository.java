@@ -11,4 +11,6 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface JobCardRepository extends JpaRepository<JobCard, Long>, JpaSpecificationExecutor<JobCard> {
+    long countByStatus(String status);
+    long countByAssignedDateBetween(java.time.LocalDateTime from, java.time.LocalDateTime to);
 }

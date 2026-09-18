@@ -12,11 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Spare Parts Inventory (SRS 4.7)
- * Business rules to enforce here per SRS section 12 (e.g. server-side total
- * recalculation, stock limits, audit trail) before persisting.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,25 +22,23 @@ public class PartServiceImpl implements PartService {
     @Override
     public PartResponseDTO create(PartRequestDTO request) {
         Part entity = new Part();
-        // TODO: map request -> entity
-        Part saved = repository.save(entity);
-        return toResponse(saved);
+        mapToEntity(request, entity);
+        return toResponse(repository.save(entity));
     }
 
     @Override
     public PartResponseDTO update(Long id, PartRequestDTO request) {
         Part existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Part not found: " + id));
-        // TODO: map request -> existing
+        mapToEntity(request, existing);
         return toResponse(repository.save(existing));
     }
 
     @Override
     @Transactional(readOnly = true)
     public PartResponseDTO getById(Long id) {
-        Part found = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Part not found: " + id));
-        return toResponse(found);
+        return toResponse(repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Part not found: " + id)));
     }
 
     @Override
@@ -56,18 +49,34 @@ public class PartServiceImpl implements PartService {
 
     @Override
     public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Part not found: " + id);
-        }
+        if (!repository.existsById(id)) throw new ResourceNotFoundException("Part not found: " + id);
         repository.deleteById(id);
     }
 
-    private PartResponseDTO toResponse(Part entity) {
+    private void mapToEntity(PartRequestDTO r, Part e) {
+        e.setSku(r.getSku());
+        e.setName(r.getName());
+        e.setUnit(r.getUnit());
+        e.setSellingPrice(r.getSellingPrice());
+        e.setPurchasePrice(r.getPurchasePrice());
+        e.setStockQty(r.getStockQty() != null ? r.getStockQty() : 0);
+        e.setMinStock(r.getMinStock() != null ? r.getMinStock() : 0);
+    }
+
+    private PartResponseDTO toResponse(Part e) {
         PartResponseDTO dto = new PartResponseDTO();
-        dto.setId(entity.getId());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-        // TODO: map remaining fields
+        dto.setId(e.getId());
+        dto.setSku(e.getSku());
+        dto.setName(e.getName());
+        dto.setUnit(e.getUnit());
+        dto.setSellingPrice(e.getSellingPrice());
+        dto.setPurchasePrice(e.getPurchasePrice());
+        dto.setStockQty(e.getStockQty());
+        dto.setMinStock(e.getMinStock());
+        dto.setLowStock(e.getStockQty() != null && e.getMinStock() != null
+                && e.getStockQty() <= e.getMinStock());
+        dto.setCreatedAt(e.getCreatedAt());
+        dto.setUpdatedAt(e.getUpdatedAt());
         return dto;
     }
 }

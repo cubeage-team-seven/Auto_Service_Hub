@@ -12,11 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Mechanic Management (SRS 4.6)
- * Business rules to enforce here per SRS section 12 (e.g. server-side total
- * recalculation, stock limits, audit trail) before persisting.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -27,25 +22,23 @@ public class MechanicServiceImpl implements MechanicService {
     @Override
     public MechanicResponseDTO create(MechanicRequestDTO request) {
         Mechanic entity = new Mechanic();
-        // TODO: map request -> entity
-        Mechanic saved = repository.save(entity);
-        return toResponse(saved);
+        mapToEntity(request, entity);
+        return toResponse(repository.save(entity));
     }
 
     @Override
     public MechanicResponseDTO update(Long id, MechanicRequestDTO request) {
         Mechanic existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mechanic not found: " + id));
-        // TODO: map request -> existing
+        mapToEntity(request, existing);
         return toResponse(repository.save(existing));
     }
 
     @Override
     @Transactional(readOnly = true)
     public MechanicResponseDTO getById(Long id) {
-        Mechanic found = repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mechanic not found: " + id));
-        return toResponse(found);
+        return toResponse(repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Mechanic not found: " + id)));
     }
 
     @Override
@@ -56,18 +49,28 @@ public class MechanicServiceImpl implements MechanicService {
 
     @Override
     public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Mechanic not found: " + id);
-        }
+        if (!repository.existsById(id)) throw new ResourceNotFoundException("Mechanic not found: " + id);
         repository.deleteById(id);
     }
 
-    private MechanicResponseDTO toResponse(Mechanic entity) {
+    private void mapToEntity(MechanicRequestDTO r, Mechanic e) {
+        e.setName(r.getName());
+        e.setEmployeeCode(r.getEmployeeCode());
+        e.setPhone(r.getPhone());
+        e.setExperienceYears(r.getExperienceYears());
+        e.setStatus(r.getStatus() != null ? r.getStatus() : "ACTIVE");
+    }
+
+    private MechanicResponseDTO toResponse(Mechanic e) {
         MechanicResponseDTO dto = new MechanicResponseDTO();
-        dto.setId(entity.getId());
-        dto.setCreatedAt(entity.getCreatedAt());
-        dto.setUpdatedAt(entity.getUpdatedAt());
-        // TODO: map remaining fields
+        dto.setId(e.getId());
+        dto.setEmployeeCode(e.getEmployeeCode());
+        dto.setName(e.getName());
+        dto.setPhone(e.getPhone());
+        dto.setExperienceYears(e.getExperienceYears());
+        dto.setStatus(e.getStatus());
+        dto.setCreatedAt(e.getCreatedAt());
+        dto.setUpdatedAt(e.getUpdatedAt());
         return dto;
     }
 }

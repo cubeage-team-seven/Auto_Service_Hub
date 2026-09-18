@@ -1,15 +1,20 @@
 package com.autoservicehub.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
-/**
- * Inbound payload for Invoice create/update endpoints. Billing - Invoices (SRS 4.9)
- * Extend with the fields listed for the 'Invoice' entity (SRS 8.2/8.3) and add
- * jakarta.validation annotations per SRS 14 (Validation Rules).
- */
 @Getter
 @Setter
 public class InvoiceRequestDTO {
-    // TODO: map fields from entity.Invoice per confirmed API contract (SRS 9)
+    @NotNull
+    private Long jobCardId;
+    private BigDecimal subtotal;
+    private BigDecimal discount;
+    private BigDecimal gst;
+    private BigDecimal total;
+    private String status;
+    private LocalDate invoiceDate;
 }

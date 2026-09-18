@@ -2,16 +2,17 @@ package com.autoservicehub.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Outbound payload for ServicePackage endpoints. Never expose the JPA entity directly (SRS 9.1).
- */
 @Getter
 @Setter
 public class ServicePackageResponseDTO {
     private Long id;
+    private String name;
+    private String type;
+    private BigDecimal price;
+    private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    // TODO: map remaining fields from entity.ServicePackage
 }

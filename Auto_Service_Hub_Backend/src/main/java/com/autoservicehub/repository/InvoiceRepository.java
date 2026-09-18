@@ -11,4 +11,6 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long>, JpaSpecificationExecutor<Invoice> {
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(i.total), 0) FROM Invoice i WHERE i.invoiceDate = CURRENT_DATE")
+    java.math.BigDecimal sumTodayRevenue();
 }

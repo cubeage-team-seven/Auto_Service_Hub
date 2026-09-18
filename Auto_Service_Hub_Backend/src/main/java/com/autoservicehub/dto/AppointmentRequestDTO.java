@@ -1,15 +1,23 @@
 package com.autoservicehub.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import java.time.LocalDateTime;
 
-/**
- * Inbound payload for Appointment create/update endpoints. Appointment & Booking (SRS 4.3)
- * Extend with the fields listed for the 'Appointment' entity (SRS 8.2/8.3) and add
- * jakarta.validation annotations per SRS 14 (Validation Rules).
- */
 @Getter
 @Setter
 public class AppointmentRequestDTO {
-    // TODO: map fields from entity.Appointment per confirmed API contract (SRS 9)
+    @NotNull
+    private Long customerId;
+    @NotNull
+    private Long vehicleId;
+    @NotBlank
+    private String serviceType;
+    @NotNull
+    private LocalDateTime appointmentAt;
+    private Boolean pickupDrop;
+    private String notes;
+    private String status;
 }
