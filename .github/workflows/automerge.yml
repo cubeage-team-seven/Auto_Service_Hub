@@ -1,0 +1,42 @@
+name: Auto-Merge Dev Branches to Development
+
+on:
+  push:
+    branches:
+      - "dev-*"
+
+permissions:
+  contents: write
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git bot identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch all branches
+        run: git fetch origin --prune
+
+      - name: Merge dev branch into development
+        run: |
+          SOURCE_BRANCH="${GITHUB_REF_NAME}"
+          echo "Merging $SOURCE_BRANCH into development..."
+          
+          # Checkout and sync development branch
+          git checkout development
+          git pull origin development
+
+          # Merge dev branch
+          git merge "origin/$SOURCE_BRANCH" --no-ff -m "auto-merge: $SOURCE_BRANCH into development [skip ci]"
+
+          # Push changes to development
+          git push origin development

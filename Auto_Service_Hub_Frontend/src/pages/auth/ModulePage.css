@@ -1,0 +1,555 @@
+/* =====================================================
+   Auto_Service_Hub CRM
+   MODULE SELECTION PAGE
+   Figma Match
+===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+}
+
+body {
+    background: #050505;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =====================================================
+   MAIN PAGE
+===================================================== */
+
+.module-page {
+    width: 100%;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    background: #050505;
+    overflow: hidden;
+}
+
+
+/* =====================================================
+   LEFT SIDE
+===================================================== */
+
+.module-left {
+    position: relative;
+    height: 100vh;
+    min-height: 700px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 35px 38px;
+    background-image: linear-gradient( to bottom, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.82)), url("../../assets/mechanic-bg.jpg");
+    background-size: cover;
+    /* Figma image position */
+    background-position: center center;
+    background-repeat: no-repeat;
+    overflow: hidden;
+}
+
+
+/* =====================================================
+   IMAGE DARK OVERLAY
+===================================================== */
+
+.module-left-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( to right, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.38)), linear-gradient( to bottom, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.58));
+    pointer-events: none;
+    z-index: 1;
+}
+
+
+/* =====================================================
+   BACK TO SITE
+===================================================== */
+
+.module-back {
+    position: relative;
+    z-index: 5;
+    width: fit-content;
+    color: rgba(255, 255, 255, 0.62);
+    text-decoration: none;
+    font-size: 11px;
+    font-weight: 400;
+    transition: 0.2s ease;
+}
+
+.module-back:hover {
+    color: #d7ff36;
+}
+
+
+/* =====================================================
+   LEFT CONTENT
+===================================================== */
+
+.module-brand-content {
+    position: relative;
+    z-index: 3;
+    max-width: 520px;
+    margin-bottom: 2px;
+}
+
+
+/* =====================================================
+   AI LABEL
+===================================================== */
+
+.module-brand-content .module-label {
+    margin-bottom: 17px;
+    color: #d7ff36;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+}
+
+
+/* =====================================================
+   MAIN TITLE
+===================================================== */
+
+.module-brand-content h1 {
+    margin: 0;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: clamp(52px, 5.3vw, 78px);
+    line-height: 0.88;
+    font-weight: 900;
+    letter-spacing: -0.055em;
+}
+
+
+/* GREEN AI */
+
+.module-brand-content h1 span {
+    color: #d7ff36;
+}
+
+
+/* =====================================================
+   LEFT DESCRIPTION
+===================================================== */
+
+.module-brand-content p {
+    max-width: 560px;
+    margin: 20px 0 0;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 11px;
+    line-height: 1.55;
+}
+
+
+/* =====================================================
+   RIGHT SIDE
+===================================================== */
+
+.module-right {
+    position: relative;
+    height: 100vh;
+    min-height: 700px;
+    background: #050505;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+}
+
+
+/* =====================================================
+   RIGHT CONTAINER
+===================================================== */
+
+.module-container {
+    width: 100%;
+    max-width: 560px;
+    padding: 48px 34px 45px;
+}
+
+
+/* =====================================================
+   BRAND
+===================================================== */
+
+.module-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 43px;
+}
+
+
+/* =====================================================
+   BRAND ICON
+===================================================== */
+
+.module-brand-icon {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #d7ff36;
+    color: #050505;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: 900;
+    box-shadow: 0 0 18px rgba(215, 255, 54, 0.12);
+}
+
+
+/* =====================================================
+   BRAND TITLE
+===================================================== */
+
+.module-brand-title {
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.1;
+}
+
+
+/* =====================================================
+   BRAND SUBTITLE
+===================================================== */
+
+.module-brand-subtitle {
+    margin-top: 4px;
+    color: rgba(255, 255, 255, 0.34);
+    font-size: 9px;
+    line-height: 1;
+}
+
+
+/* =====================================================
+   HEADING
+===================================================== */
+
+.module-heading {
+    margin-bottom: 28px;
+}
+
+
+/* =====================================================
+   WORKSPACE LABEL
+===================================================== */
+
+.module-heading .module-label {
+    margin-bottom: 13px;
+    color: #d7ff36;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+}
+
+
+/* =====================================================
+   SELECT MODULE
+===================================================== */
+
+.module-heading h2 {
+    margin: 0 0 10px;
+    color: #ffffff;
+    font-size: 31px;
+    line-height: 0.98;
+    font-weight: 900;
+    letter-spacing: -0.045em;
+}
+
+
+/* =====================================================
+   HEADING DESCRIPTION
+===================================================== */
+
+.module-heading p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+
+/* =====================================================
+   MODULE LIST
+===================================================== */
+
+.module-list {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+
+/* =====================================================
+   MODULE CARD
+===================================================== */
+
+.module-card {
+    position: relative;
+    min-height: 120px;
+    padding: 14px 15px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #0d0d0d;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 6px;
+    color: #ffffff;
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+
+/* =====================================================
+   CARD HOVER
+===================================================== */
+
+.module-card:hover {
+    background: #111111;
+    border-color: rgba(215, 255, 54, 0.35);
+    transform: translateY(-1px);
+}
+
+
+/* =====================================================
+   CARD ICON
+===================================================== */
+
+.module-card-icon {
+    width: 20px;
+    min-width: 20px;
+    padding-top: 1px;
+    font-size: 14px;
+    line-height: 1;
+}
+
+
+/* =====================================================
+   CARD CONTENT
+===================================================== */
+
+.module-card-content {
+    min-width: 0;
+    padding-right: 9px;
+}
+
+
+/* =====================================================
+   CARD TITLE
+===================================================== */
+
+.module-card-content h3 {
+    margin: 0 0 4px;
+    color: #ffffff;
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 800;
+}
+
+
+/* =====================================================
+   CARD SUBTITLE
+===================================================== */
+
+.module-card-content span {
+    display: block;
+    margin-bottom: 7px;
+    color: #d7ff36;
+    font-size: 9px;
+    line-height: 1.1;
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   CARD DESCRIPTION
+===================================================== */
+
+.module-card-content p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.38);
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+
+/* =====================================================
+   ARROW
+===================================================== */
+
+.module-arrow {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 11px;
+    transition: 0.2s ease;
+}
+
+.module-card:hover .module-arrow {
+    color: #d7ff36;
+}
+
+
+/* =====================================================
+   ROLE COLORS
+===================================================== */
+
+
+/* Garage Owner */
+
+.module-card:nth-child(1) .module-card-content span {
+    color: #d7ff36;
+}
+
+
+/* Service Advisor */
+
+.module-card:nth-child(2) .module-card-content span {
+    color: #159dff;
+}
+
+
+/* Mechanic */
+
+.module-card:nth-child(3) .module-card-content span {
+    color: #d7ff36;
+}
+
+
+/* Inventory */
+
+.module-card:nth-child(4) .module-card-content span {
+    color: #d7a43b;
+}
+
+
+/* Billing */
+
+.module-card:nth-child(5) .module-card-content span {
+    color: #21d96b;
+}
+
+
+/* Customer */
+
+.module-card:nth-child(6) .module-card-content span {
+    color: #ff8b35;
+}
+
+
+/* Developer */
+
+.module-card:nth-child(7) .module-card-content span {
+    color: #62a9ff;
+}
+
+
+/* =====================================================
+   CLICKABLE CARDS
+===================================================== */
+
+.module-card-link {
+    cursor: pointer;
+}
+
+
+/* =====================================================
+   SCROLLBAR
+===================================================== */
+
+.module-right::-webkit-scrollbar {
+    width: 5px;
+}
+
+.module-right::-webkit-scrollbar-track {
+    background: #050505;
+}
+
+.module-right::-webkit-scrollbar-thumb {
+    background: #222222;
+    border-radius: 10px;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 1000px) {
+    .module-container {
+        padding-left: 25px;
+        padding-right: 25px;
+    }
+    .module-brand-content h1 {
+        font-size: 52px;
+    }
+    .module-heading h2 {
+        font-size: 28px;
+    }
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 800px) {
+    .module-page {
+        grid-template-columns: 1fr;
+        overflow: visible;
+    }
+    .module-left {
+        height: 430px;
+        min-height: 430px;
+    }
+    .module-right {
+        height: auto;
+        min-height: 650px;
+    }
+    .module-container {
+        max-width: 650px;
+        margin: 0 auto;
+    }
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 550px) {
+    .module-left {
+        height: 370px;
+        min-height: 370px;
+        padding: 25px;
+    }
+    .module-brand-content h1 {
+        font-size: 46px;
+    }
+    .module-brand-content p {
+        font-size: 10px;
+    }
+    .module-container {
+        padding: 35px 20px;
+    }
+    .module-list {
+        grid-template-columns: 1fr;
+    }
+    .module-card {
+        min-height: 110px;
+    }
+}

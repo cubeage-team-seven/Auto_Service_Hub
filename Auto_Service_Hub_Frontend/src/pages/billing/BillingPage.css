@@ -1,0 +1,319 @@
+/* ALL STYLES FOR BILLING MODULE */
+
+/* Reset & Containers */
+.billing-login-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #050505;
+  color: #ffffff;
+  font-family: inherit;
+}
+
+/* Login Page Layout */
+.login-left {
+  flex: 1;
+  background: #000000;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.back-site {
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.brand-label {
+  font-size: 10px;
+  color: #d8ff3d;
+  letter-spacing: 2px;
+  font-weight: 800;
+}
+
+.brand-title {
+  font-size: 48px;
+  font-weight: 900;
+  line-height: 1;
+  margin: 15px 0;
+}
+
+.lime-text {
+  color: #d8ff3d;
+}
+
+.brand-desc {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 13px;
+  max-width: 380px;
+}
+
+.login-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: #080808;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+}
+
+.role-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  border-radius: 6px;
+  margin: 20px 0;
+}
+
+.role-icon {
+  width: 32px;
+  height: 32px;
+  background: rgba(216, 255, 61, 0.1);
+  color: #d8ff3d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  border-radius: 4px;
+}
+
+.input-field {
+  margin-bottom: 15px;
+}
+
+.input-field label {
+  display: block;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+
+.input-field input, .crm-select, .crm-textarea {
+  width: 100%;
+  background: #121212;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.pass-wrap {
+  position: relative;
+}
+
+.toggle-pass {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.btn-access {
+  width: 100%;
+  background: #d8ff3d;
+  color: #000;
+  border: none;
+  padding: 12px;
+  font-size: 11px;
+  font-weight: 900;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* Workspace / Dashboard Layout */
+.billing-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #050505;
+  color: #fff;
+}
+
+.sidebar {
+  width: 200px;
+  background: #080808;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 30px;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.nav-btn.active {
+  background: #12140a;
+  color: #d8ff3d;
+  border-left: 2px solid #d8ff3d;
+}
+
+.main-view {
+  flex: 1;
+  padding: 20px 30px;
+  overflow-y: auto;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.bread-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.badge-lime {
+  background: rgba(216, 255, 61, 0.12);
+  color: #d8ff3d;
+  border: 1px solid rgba(216, 255, 61, 0.3);
+  padding: 4px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  border-radius: 4px;
+}
+
+.badge-dark {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 4px 8px;
+  font-size: 9px;
+  border-radius: 10px;
+}
+
+/* KPI Cards */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.kpi-box {
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.kpi-lbl {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.kpi-val {
+  font-size: 26px;
+  font-weight: 900;
+  margin: 6px 0;
+}
+
+/* Tables & Grid */
+.grid-main {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.panel-box {
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.crm-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 11px;
+}
+
+.crm-tbl th {
+  padding: 8px;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 800;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.crm-tbl td {
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.tag-badge {
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 800;
+}
+.tag-paid { background: rgba(33, 217, 107, 0.12); color: #21d96b; }
+.tag-pending { background: rgba(255, 164, 36, 0.12); color: #ffa424; }
+.tag-overdue { background: rgba(255, 77, 77, 0.12); color: #ff4d4d; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-box {
+  width: 440px;
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 20px;
+}

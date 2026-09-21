@@ -1,0 +1,834 @@
+/* =====================================================
+   GARAGE OWNER - JOB CARDS
+===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+.garage-jobcards-page {
+    width: 100%;
+    min-height: 100vh;
+    background: #080909;
+    color: #f4f4f4;
+    display: flex;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =====================================================
+   SIDEBAR
+===================================================== */
+
+.garage-sidebar {
+    width: 260px;
+    min-width: 260px;
+    height: 100vh;
+    background: #0d0e0e;
+    border-right: 1px solid #242525;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+}
+
+.garage-brand {
+    height: 72px;
+    border-bottom: 1px solid #242525;
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    gap: 12px;
+}
+
+.garage-brand-icon {
+    width: 30px;
+    height: 30px;
+    background: #b9ff00;
+    color: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 900;
+    border-radius: 5px;
+}
+
+.garage-brand-name {
+    color: #f5f5f5;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+.garage-navigation {
+    padding-top: 14px;
+    flex: 1;
+}
+
+.garage-nav-item {
+    height: 42px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 18px;
+    color: #777b7d;
+    text-decoration: none;
+    font-size: 15px;
+    border-left: 2px solid transparent;
+    transition: 0.2s ease;
+}
+
+.garage-nav-item:hover {
+    color: #d7d7d7;
+    background: #131515;
+}
+
+.garage-nav-item.active {
+    color: #b9ff00;
+    background: #171c0e;
+    border-left-color: #b9ff00;
+}
+
+.garage-nav-icon {
+    width: 18px;
+    text-align: center;
+    font-size: 18px;
+    color: #707577;
+}
+
+.garage-nav-item.active .garage-nav-icon {
+    color: #b9ff00;
+}
+
+
+/* =====================================================
+   SIDEBAR BOTTOM
+===================================================== */
+
+.garage-sidebar-bottom {
+    height: 58px;
+    border-top: 1px solid #242525;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-collapse {
+    background: none;
+    border: none;
+    color: #777;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+
+/* =====================================================
+   MAIN
+===================================================== */
+
+.garage-main {
+    flex: 1;
+    min-width: 0;
+    background: #080909;
+}
+
+
+/* =====================================================
+   TOP BAR
+===================================================== */
+
+.garage-topbar {
+    height: 59px;
+    border-bottom: 1px solid #242525;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 25px;
+}
+
+.garage-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+}
+
+.garage-breadcrumb span {
+    color: #555b5d;
+}
+
+.garage-breadcrumb b {
+    color: #6e7273;
+    font-weight: 400;
+}
+
+.garage-breadcrumb strong {
+    color: #e8e8e8;
+    font-weight: 600;
+}
+
+.garage-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.garage-role {
+    padding: 6px 10px;
+    border: 1px solid #587800;
+    background: #172000;
+    color: #b9ff00;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.garage-alert-button {
+    height: 34px;
+    padding: 0 13px;
+    border: 1px solid #252828;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #777d7f;
+    font-size: 13px;
+}
+
+.green-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #00e878;
+}
+
+.garage-settings {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: #b9ff00;
+    color: #101010;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+
+/* =====================================================
+   CONTENT
+===================================================== */
+
+.garage-content {
+    padding: 27px 24px 40px;
+    max-width: 1450px;
+    margin: 0 auto;
+}
+
+
+/* =====================================================
+   HEADING
+===================================================== */
+
+.jobcards-heading-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 23px;
+}
+
+.jobcards-heading-row h1 {
+    margin: 0;
+    color: #f4f4f4;
+    font-size: 27px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+}
+
+.new-jobcard-button {
+    height: 35px;
+    padding: 0 17px;
+    border: none;
+    border-radius: 5px;
+    background: #b9ff00;
+    color: #111;
+    font-size: 10px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.new-jobcard-button:hover {
+    background: #c8ff32;
+}
+
+
+/* =====================================================
+   STAT CARDS
+===================================================== */
+
+.jobcard-stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.jobcard-stat-card {
+    min-height: 92px;
+    background: #151616;
+    border: 1px solid #292b2c;
+    border-radius: 6px;
+    padding: 17px;
+}
+
+.jobcard-stat-label {
+    color: #777c7e;
+    font-size: 10px;
+    letter-spacing: 1.3px;
+    margin-bottom: 10px;
+}
+
+.jobcard-stat-value {
+    color: #eeeeee;
+    font-size: 29px;
+    line-height: 1;
+    font-weight: 800;
+}
+
+.jobcard-stat-value.lime {
+    color: #b9ff00;
+}
+
+
+/* =====================================================
+   FILTERS
+===================================================== */
+
+.jobcard-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.jobcard-filter {
+    height: 31px;
+    padding: 0 14px;
+    background: #151616;
+    border: 1px solid #292b2c;
+    border-radius: 4px;
+    color: #6e7476;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.jobcard-filter:hover {
+    color: #eeeeee;
+}
+
+.jobcard-filter.active {
+    background: #b9ff00;
+    color: #111;
+    border-color: #b9ff00;
+}
+
+
+/* =====================================================
+   JOB CARDS LIST
+===================================================== */
+
+.jobcards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.jobcard-item {
+    background: #151616;
+    border: 1px solid #292b2c;
+    border-radius: 7px;
+    padding: 17px;
+}
+
+.jobcard-top {
+    min-height: 70px;
+    display: grid;
+    grid-template-columns: 1fr 2.2fr 1.35fr;
+    gap: 20px;
+    align-items: center;
+}
+
+.jobcard-left {
+    min-width: 0;
+}
+
+.jobcard-id {
+    color: #b9ff00;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.jobcard-customer {
+    color: #eeeeee;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.jobcard-vehicle {
+    color: #707577;
+    font-size: 12px;
+}
+
+.jobcard-service {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.jobcard-service span {
+    color: #707577;
+    font-size: 12px;
+}
+
+.jobcard-service strong {
+    color: #eeeeee;
+    font-size: 14px;
+}
+
+.jobcard-service small {
+    color: #707577;
+    font-size: 12px;
+}
+
+.jobcard-right {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 14px;
+    justify-content: end;
+}
+
+.jobcard-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 24px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.jobcard-status.repair {
+    color: #00e878;
+    background: #09261a;
+    border: 1px solid #095f39;
+}
+
+.jobcard-status.quality {
+    color: #c87aff;
+    background: #291b2d;
+    border: 1px solid #683d75;
+}
+
+.jobcard-status.delivered {
+    color: #b9ff00;
+    background: #1d290c;
+    border: 1px solid #506d14;
+}
+
+.jobcard-status.inspection {
+    color: #ffa900;
+    background: #2b2109;
+    border: 1px solid #775000;
+}
+
+.jobcard-status.received {
+    color: #00baff;
+    background: #09252e;
+    border: 1px solid #075a73;
+}
+
+.jobcard-eta {
+    color: #707577;
+    font-size: 12px;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.jobcard-amount {
+    color: #eeeeee;
+    font-size: 16px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.jobcard-details {
+    height: 31px;
+    padding: 0 12px;
+    background: transparent;
+    border: 1px solid #303334;
+    border-radius: 4px;
+    color: #777d7f;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.jobcard-details:hover {
+    color: #eeeeee;
+    border-color: #55595a;
+}
+
+
+/* =====================================================
+   PROGRESS
+===================================================== */
+
+.jobcard-progress {
+    margin-top: 10px;
+}
+
+.progress-track {
+    width: 100%;
+    height: 5px;
+    background: #202222;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #b9ff00;
+    border-radius: 5px;
+}
+
+.progress-labels {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    margin-top: 6px;
+}
+
+.progress-labels span {
+    color: #707577;
+    font-size: 11px;
+}
+
+.progress-labels span:nth-child(2),
+.progress-labels span:nth-child(3),
+.progress-labels span:nth-child(4) {
+    text-align: center;
+}
+
+.progress-labels span:last-child {
+    text-align: right;
+}
+
+
+/* =====================================================
+   MODAL OVERLAY
+===================================================== */
+
+.jobcard-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 25px;
+}
+
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+.jobcard-modal {
+    width: 530px;
+    max-width: 100%;
+    max-height: 92vh;
+    background: #0d0e0e;
+    border: 1px solid #292b2c;
+    border-radius: 13px;
+    overflow: hidden;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* =====================================================
+   MODAL HEADER
+===================================================== */
+
+.jobcard-modal-header {
+    height: 62px;
+    flex-shrink: 0;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #292b2c;
+}
+
+.jobcard-modal-header h2 {
+    margin: 0;
+    color: #eeeeee;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.3px;
+}
+
+.jobcard-modal-close {
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    border: none;
+    color: #6f7476;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.jobcard-modal-close:hover {
+    color: #eeeeee;
+}
+
+
+/* =====================================================
+   FORM
+===================================================== */
+
+.jobcard-form {
+    padding: 21px 24px 20px;
+    overflow-y: auto;
+}
+
+.jobcard-form::-webkit-scrollbar {
+    width: 6px;
+}
+
+.jobcard-form::-webkit-scrollbar-track {
+    background: #101111;
+}
+
+.jobcard-form::-webkit-scrollbar-thumb {
+    background: #303333;
+    border-radius: 10px;
+}
+
+.jobcard-form-group {
+    margin-bottom: 17px;
+}
+
+.jobcard-form-group label {
+    display: block;
+    margin-bottom: 7px;
+    color: #777d7f;
+    font-size: 10px;
+    letter-spacing: 0.7px;
+}
+
+.jobcard-form-group input,
+.jobcard-form-group select,
+.jobcard-form-group textarea {
+    width: 100%;
+    background: #151616;
+    border: 1px solid #292b2c;
+    border-radius: 7px;
+    outline: none;
+    color: #eeeeee;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+}
+
+.jobcard-form-group input,
+.jobcard-form-group select {
+    height: 42px;
+    padding: 0 14px;
+}
+
+.jobcard-form-group textarea {
+    min-height: 64px;
+    padding: 12px 14px;
+    resize: vertical;
+    line-height: 1.4;
+}
+
+.jobcard-form-group input::placeholder,
+.jobcard-form-group textarea::placeholder {
+    color: #777d7f;
+}
+
+.jobcard-form-group input:focus,
+.jobcard-form-group select:focus,
+.jobcard-form-group textarea:focus {
+    border-color: #55595a;
+}
+
+.jobcard-form-group select {
+    cursor: pointer;
+    appearance: auto;
+}
+
+.jobcard-form-group select option {
+    background: #151616;
+    color: #eeeeee;
+}
+
+
+/* =====================================================
+   MODAL FOOTER
+===================================================== */
+
+.jobcard-modal-footer {
+    display: grid;
+    grid-template-columns: 1fr 92px;
+    gap: 12px;
+    padding-top: 16px;
+    margin-top: 5px;
+    border-top: 1px solid #292b2c;
+}
+
+.create-jobcard-button {
+    height: 43px;
+    border: none;
+    border-radius: 7px;
+    background: #b9ff00;
+    color: #101010;
+    font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+}
+
+.create-jobcard-button:hover {
+    background: #c8ff32;
+}
+
+.cancel-jobcard-button {
+    height: 43px;
+    border: 1px solid #292b2c;
+    border-radius: 7px;
+    background: transparent;
+    color: #777d7f;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.cancel-jobcard-button:hover {
+    color: #eeeeee;
+    border-color: #55595a;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 1200px) {
+    .garage-sidebar {
+        width: 220px;
+        min-width: 220px;
+    }
+    .jobcard-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .jobcard-top {
+        grid-template-columns: 1fr 1.5fr;
+    }
+    .jobcard-right {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 800px) {
+    .garage-sidebar {
+        width: 70px;
+        min-width: 70px;
+    }
+    .garage-brand {
+        justify-content: center;
+        padding: 0;
+    }
+    .garage-brand-name {
+        display: none;
+    }
+    .garage-nav-item {
+        justify-content: center;
+        padding: 0;
+    }
+    .garage-nav-item span:last-child {
+        display: none;
+    }
+    .garage-content {
+        padding: 20px 14px;
+    }
+    .jobcard-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .garage-topbar {
+        padding: 0 14px;
+    }
+    .garage-role,
+    .garage-alert-button {
+        display: none;
+    }
+    .jobcards-heading-row {
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .jobcards-heading-row h1 {
+        font-size: 23px;
+    }
+    .new-jobcard-button {
+        font-size: 9px;
+        padding: 0 10px;
+    }
+    .jobcard-stats {
+        grid-template-columns: 1fr;
+    }
+    .jobcard-top {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .jobcard-right {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+    .jobcard-filters {
+        overflow-x: auto;
+    }
+    .jobcard-modal-overlay {
+        padding: 10px;
+    }
+    .jobcard-modal {
+        max-height: 95vh;
+    }
+    .jobcard-modal-header {
+        padding: 0 18px;
+    }
+    .jobcard-form {
+        padding: 18px;
+    }
+    .jobcard-modal-footer {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,396 @@
+/* =========================================================
+   SMARTGARAGE / MECHANIC LAYOUT
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+.mechanic-layout {
+    width: 100%;
+    min-height: 100vh;
+    background: #090909;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.mechanic-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #0b0b0b;
+    border-right: 1px solid #252525;
+    z-index: 1000;
+    transition: width 0.2s ease;
+}
+
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.mechanic-brand {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid #252525;
+    flex-shrink: 0;
+}
+
+.mechanic-brand-icon {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 4px;
+    background: #d7ff36;
+    color: #080808;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.mechanic-brand-name {
+    margin-left: 11px;
+    color: #ffffff;
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.mechanic-navigation {
+    padding-top: 12px;
+}
+
+.mechanic-nav-link {
+    position: relative;
+    width: 100%;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    color: #646464;
+    text-decoration: none;
+    font-size: 12px;
+    line-height: 1;
+    border-left: 2px solid transparent;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.mechanic-nav-link:hover {
+    color: #ffffff;
+    background: #141414;
+}
+
+.mechanic-nav-link.active {
+    color: #d7ff36;
+    background: rgba(215, 255, 54, 0.07);
+    border-left-color: #d7ff36;
+}
+
+.mechanic-nav-icon {
+    width: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.mechanic-nav-text {
+    margin-left: 10px;
+}
+
+
+/* =========================================================
+   SIDEBAR FOOTER
+========================================================= */
+
+.mechanic-sidebar-footer {
+    height: 72px;
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 16px;
+    border-top: 1px solid #252525;
+}
+
+.mechanic-collapse-button {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #292929;
+    border-radius: 50%;
+    background: #111111;
+    color: #777777;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.mechanic-collapse-button:hover {
+    color: #d7ff36;
+    border-color: #d7ff36;
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+.mechanic-main {
+    width: calc(100% - 260px);
+    min-height: 100vh;
+    margin-left: 260px;
+    background: #090909;
+    transition: width 0.2s ease, margin-left 0.2s ease;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.mechanic-header {
+    width: 100%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: #0b0b0b;
+    border-bottom: 1px solid #252525;
+}
+
+
+/* =========================================================
+   BREADCRUMB
+========================================================= */
+
+.mechanic-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 11px;
+    line-height: 1;
+}
+
+.breadcrumb-muted {
+    color: #686868;
+}
+
+.breadcrumb-slash {
+    color: #414141;
+}
+
+.mechanic-breadcrumb strong {
+    color: #eeeeee;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   HEADER ACTIONS
+========================================================= */
+
+.mechanic-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* =========================================================
+   ROLE
+========================================================= */
+
+.mechanic-role {
+    padding: 5px 9px;
+    border: 1px solid rgba(215, 255, 54, 0.35);
+    border-radius: 4px;
+    color: #d7ff36;
+    font-size: 8px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+
+/* =========================================================
+   AI ALERT
+========================================================= */
+
+.mechanic-ai-alert {
+    height: 29px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 0 10px;
+    border: 1px solid #292929;
+    border-radius: 5px;
+    color: #777777;
+    font-size: 9px;
+    line-height: 1;
+}
+
+.mechanic-ai-dot {
+    width: 6px;
+    height: 6px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #19d96b;
+    box-shadow: 0 0 7px rgba(25, 217, 107, 0.35);
+}
+
+
+/* =========================================================
+   HEADER LIME BUTTON
+========================================================= */
+
+.mechanic-header-button {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: #d7ff36;
+    color: #080808;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.mechanic-header-button:hover {
+    box-shadow: 0 0 20px rgba(215, 255, 54, 0.18);
+}
+
+
+/* =========================================================
+   PAGE CONTENT
+========================================================= */
+
+.mechanic-page-content {
+    width: 100%;
+    min-height: calc(100vh - 60px);
+}
+
+
+/* =========================================================
+   COLLAPSED SIDEBAR
+========================================================= */
+
+.mechanic-layout.sidebar-closed .mechanic-sidebar {
+    width: 70px;
+}
+
+.mechanic-layout.sidebar-closed .mechanic-main {
+    width: calc(100% - 70px);
+    margin-left: 70px;
+}
+
+.mechanic-layout.sidebar-closed .mechanic-brand {
+    justify-content: center;
+    padding: 0;
+}
+
+.mechanic-layout.sidebar-closed .mechanic-brand-name {
+    display: none;
+}
+
+.mechanic-layout.sidebar-closed .mechanic-nav-link {
+    justify-content: center;
+    padding: 0;
+}
+
+.mechanic-layout.sidebar-closed .mechanic-nav-text {
+    display: none;
+}
+
+.mechanic-layout.sidebar-closed .mechanic-sidebar-footer {
+    justify-content: center;
+    padding: 0;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+    .mechanic-sidebar {
+        width: 230px;
+    }
+    .mechanic-main {
+        width: calc(100% - 230px);
+        margin-left: 230px;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 650px) {
+    .mechanic-sidebar {
+        width: 70px;
+    }
+    .mechanic-main {
+        width: calc(100% - 70px);
+        margin-left: 70px;
+    }
+    .mechanic-brand {
+        justify-content: center;
+        padding: 0;
+    }
+    .mechanic-brand-name {
+        display: none;
+    }
+    .mechanic-nav-link {
+        justify-content: center;
+        padding: 0;
+    }
+    .mechanic-nav-text {
+        display: none;
+    }
+    .mechanic-sidebar-footer {
+        justify-content: center;
+        padding: 0;
+    }
+    .mechanic-header {
+        padding: 0 14px;
+    }
+    .mechanic-role {
+        display: none;
+    }
+}
