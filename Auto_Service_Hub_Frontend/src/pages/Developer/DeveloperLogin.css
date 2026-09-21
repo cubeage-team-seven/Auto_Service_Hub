@@ -1,0 +1,437 @@
+/* =========================================================
+   DEVELOPER LOGIN
+========================================================= */
+
+.developer-login-container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    background: #050505;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   LEFT BANNER
+========================================================= */
+
+.developer-login-banner {
+    width: 50%;
+    min-height: 100vh;
+    position: relative;
+    background-image: url("/assets/landing/mechanic-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: flex-end;
+    padding: 42px;
+}
+
+
+/* Dark Image Overlay */
+
+.developer-login-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( to bottom, rgba(0, 0, 0, 0.40), rgba(0, 0, 0, 0.72));
+}
+
+
+/* =========================================================
+   BACK BUTTON
+========================================================= */
+
+.developer-login-back {
+    position: absolute;
+    top: 38px;
+    left: 42px;
+    z-index: 3;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.developer-login-back:hover {
+    color: #c7ff00;
+}
+
+
+/* =========================================================
+   BANNER CONTENT
+========================================================= */
+
+.developer-login-banner-content {
+    position: relative;
+    z-index: 2;
+    max-width: 650px;
+}
+
+
+/* Kicker */
+
+.developer-login-kicker {
+    color: #c7ff00;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-bottom: 18px;
+}
+
+
+/* Main Heading */
+
+.developer-login-hero-title {
+    margin: 0;
+    font-size: clamp(50px, 5vw, 78px);
+    line-height: 0.95;
+    font-weight: 900;
+    letter-spacing: -2px;
+    color: #ffffff;
+}
+
+.developer-login-hero-title span {
+    color: #c7ff00;
+}
+
+
+/* Subtitle */
+
+.developer-login-subtitle {
+    margin-top: 28px;
+    max-width: 650px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.62);
+}
+
+
+/* =========================================================
+   RIGHT SIDE
+========================================================= */
+
+.developer-login-form-area {
+    width: 50%;
+    min-height: 100vh;
+    background: #050505;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 50px;
+}
+
+
+/* Login Box */
+
+.developer-login-box {
+    width: 100%;
+    max-width: 530px;
+}
+
+
+/* =========================================================
+   BRAND
+========================================================= */
+
+.developer-login-header {
+    width: 100%;
+}
+
+.developer-login-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+
+/* Logo */
+
+.developer-logo-icon {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #c7ff00;
+    color: #050505;
+    border-radius: 4px;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+
+/* Brand Name */
+
+.developer-brand-name {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+}
+
+
+/* Brand Subtitle */
+
+.developer-brand-sub {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #666666;
+}
+
+
+/* =========================================================
+   CHANGE ROLE
+========================================================= */
+
+.developer-change-role-btn {
+    margin-top: 45px;
+    border: none;
+    background: transparent;
+    color: #777777;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.developer-change-role-btn:hover {
+    color: #c7ff00;
+}
+
+
+/* =========================================================
+   SELECTED ROLE
+========================================================= */
+
+.developer-selected-role-card {
+    margin-top: 35px;
+    width: 100%;
+    min-height: 72px;
+    border: 1px solid #2c2c2c;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 18px 20px;
+    background: #0b0b0b;
+}
+
+
+/* Developer Icon */
+
+.developer-role-icon {
+    font-size: 27px;
+    color: #ffffff;
+    font-weight: 500;
+    width: 38px;
+    text-align: center;
+}
+
+
+/* Role */
+
+.developer-role-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.developer-role-sub {
+    margin-top: 5px;
+    font-size: 13px;
+    color: #777777;
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.developer-login-form {
+    margin-top: 38px;
+}
+
+
+/* Title */
+
+.developer-form-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+}
+
+
+/* Description */
+
+.developer-form-desc {
+    margin-top: 12px;
+    margin-bottom: 35px;
+    color: #777777;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+.developer-field {
+    margin-bottom: 25px;
+}
+
+
+/* Label */
+
+.developer-label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: #666666;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+
+/* Input */
+
+.developer-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    background: #0d0d0d;
+    border: 1px solid #272727;
+    border-radius: 7px;
+    color: #ffffff;
+    font-size: 14px;
+    outline: none;
+}
+
+.developer-input:focus {
+    border-color: #c7ff00;
+}
+
+
+/* =========================================================
+   OPTIONS
+========================================================= */
+
+.developer-form-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 5px;
+    margin-bottom: 22px;
+}
+
+
+/* Remember */
+
+.developer-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666666;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.developer-checkbox-label input {
+    width: 14px;
+    height: 14px;
+    accent-color: #c7ff00;
+    cursor: pointer;
+}
+
+
+/* Forgot */
+
+.developer-forgot-link {
+    color: #c7ff00;
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.developer-forgot-link:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   SUBMIT BUTTON
+========================================================= */
+
+.developer-submit-btn {
+    width: 100%;
+    height: 48px;
+    border: none;
+    border-radius: 7px;
+    background: #c7ff00;
+    color: #050505;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.developer-submit-btn:hover {
+    background: #d5ff45;
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+    .developer-login-container {
+        flex-direction: column;
+        overflow: auto;
+    }
+    .developer-login-banner {
+        width: 100%;
+        min-height: 420px;
+        padding: 35px;
+    }
+    .developer-login-form-area {
+        width: 100%;
+        min-height: auto;
+        padding: 45px 30px;
+    }
+    .developer-login-hero-title {
+        font-size: 55px;
+    }
+}
+
+@media (max-width: 500px) {
+    .developer-login-banner {
+        min-height: 360px;
+        padding: 25px;
+    }
+    .developer-login-back {
+        top: 25px;
+        left: 25px;
+    }
+    .developer-login-form-area {
+        padding: 35px 20px;
+    }
+    .developer-login-hero-title {
+        font-size: 45px;
+    }
+    .developer-login-subtitle {
+        font-size: 14px;
+    }
+    .developer-form-title {
+        font-size: 25px;
+    }
+    .developer-form-options {
+        gap: 15px;
+    }
+}
