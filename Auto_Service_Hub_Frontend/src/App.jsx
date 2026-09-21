@@ -27,7 +27,7 @@ import DashboardPage from "./pages/dashboard/DashboardPage";
 ========================= */
 import InventoryLogin from "./pages/inventory/InventoryLogin";
 import InventoryLayout from "./pages/inventory/InventoryLayout";
-import InventoryDashboard from "./pages/inventory/InventoryDashboard"; // NEW
+import InventoryDashboard from "./pages/inventory/InventoryDashboard";
 import InventoryPage from "./pages/inventory/InventoryPage";
 
 /* =========================
@@ -56,6 +56,16 @@ import BillingPage from "./pages/billing/BillingPage";
 import GarageOwnerLogin from "./pages/garage-owner/GarageOwnerLogin";
 
 /* =========================
+   SERVICE ADVISOR LOGIN
+========================= */
+import ServiceAdvisorLogin from "./pages/Service Advisor/ServiceAdvisorLogin";
+
+/* =========================
+   DEVELOPER LOGIN
+========================= */
+import DeveloperLogin from "./pages/Developer/DeveloperLogin";
+
+/* =========================
    GARAGE OWNER LAYOUT
 ========================= */
 import GarageOwnerLayout from "./pages/garage-owner/GarageOwnerLayout";
@@ -80,22 +90,41 @@ import GarageOwnerReports from "./pages/garage-owner/GarageOwnerReports";
 ========================= */
 import PackagesPage from "./pages/packages/PackagesPage";
 
+
 function App() {
   return (
     <BrowserRouter>
+
       <Routes>
 
-        {/* ================= LANDING ================= */}
+        {/* =====================================================
+            LANDING
+        ===================================================== */}
 
-        <Route path="/" element={<LandingPage />} />
+        <Route
+          path="/"
+          element={<LandingPage />}
+        />
 
-        {/* ================= MODULE SELECTION ================= */}
 
-        <Route path="/modules" element={<ModulePage />} />
+        {/* =====================================================
+            MODULE SELECTION
+        ===================================================== */}
 
-        {/* ================= MECHANIC ================= */}
+        <Route
+          path="/modules"
+          element={<ModulePage />}
+        />
 
-        <Route path="/mechanic" element={<MechanicLogin />} />
+
+        {/* =====================================================
+            MECHANIC
+        ===================================================== */}
+
+        <Route
+          path="/mechanic"
+          element={<MechanicLogin />}
+        />
 
         <Route element={<MechanicLayout />}>
 
@@ -121,25 +150,27 @@ function App() {
 
         </Route>
 
-        {/* ================= INVENTORY LOGIN ================= */}
+
+        {/* =====================================================
+            INVENTORY LOGIN
+        ===================================================== */}
 
         <Route
           path="/inventory-login"
           element={<InventoryLogin />}
         />
 
-        {/* ================= INVENTORY MODULE ================= */}
+
+        {/* =====================================================
+            INVENTORY MODULE
+        ===================================================== */}
 
         <Route element={<InventoryLayout />}>
-
-          {/* Dashboard */}
 
           <Route
             path="/inventory-dashboard"
             element={<InventoryDashboard />}
           />
-
-          {/* Inventory */}
 
           <Route
             path="/inventory"
@@ -148,9 +179,15 @@ function App() {
 
         </Route>
 
-        {/* ================= CUSTOMERS ================= */}
 
-        <Route path="/customers" element={<CustomerLogin />} />
+        {/* =====================================================
+            CUSTOMERS
+        ===================================================== */}
+
+        <Route
+          path="/customers"
+          element={<CustomerLogin />}
+        />
 
         <Route
           path="/customer-dashboard"
@@ -162,23 +199,55 @@ function App() {
           element={<Appointments />}
         />
 
-        {/* ================= BILLING ================= */}
 
-        <Route path="/billing" element={<BillingLogin />} />
+        {/* =====================================================
+            BILLING
+        ===================================================== */}
+
+        <Route
+          path="/billing"
+          element={<BillingLogin />}
+        />
 
         <Route
           path="/billing/dashboard"
           element={<BillingPage />}
         />
 
-        {/* ================= GARAGE OWNER LOGIN ================= */}
+
+        {/* =====================================================
+            GARAGE OWNER LOGIN
+        ===================================================== */}
 
         <Route
           path="/garage-owner-login"
           element={<GarageOwnerLogin />}
         />
 
-        {/* ================= GARAGE OWNER MODULE ================= */}
+
+        {/* =====================================================
+            SERVICE ADVISOR LOGIN
+        ===================================================== */}
+
+        <Route
+          path="/service-advisor-login"
+          element={<ServiceAdvisorLogin />}
+        />
+
+
+        {/* =====================================================
+            DEVELOPER LOGIN
+        ===================================================== */}
+
+        <Route
+          path="/developer-login"
+          element={<DeveloperLogin />}
+        />
+
+
+        {/* =====================================================
+            GARAGE OWNER MODULE
+        ===================================================== */}
 
         <Route
           path="/garage-owner"
@@ -252,7 +321,121 @@ function App() {
 
         </Route>
 
+
+        {/* =====================================================
+            DEVELOPER MODULE
+            REUSES GARAGE OWNER COMPONENTS
+        ===================================================== */}
+
+        <Route
+          path="/developer"
+          element={<GarageOwnerLayout />}
+        >
+
+          {/* Developer Dashboard */}
+
+          <Route
+            index
+            element={<GarageOwnerDashboard />}
+          />
+
+          <Route
+            path="dashboard"
+            element={<GarageOwnerDashboard />}
+          />
+
+
+          {/* Developer Customers */}
+
+          <Route
+            path="customers"
+            element={<GarageOwnerCustomers />}
+          />
+
+
+          {/* Developer Vehicles */}
+
+          <Route
+            path="vehicles"
+            element={<GarageOwnerVehicles />}
+          />
+
+
+          {/* Developer Appointments */}
+
+          <Route
+            path="appointments"
+            element={<GarageOwnerAppointments />}
+          />
+
+
+          {/* Developer Job Cards */}
+
+          <Route
+            path="jobcards"
+            element={<GarageOwnerJobCards />}
+          />
+
+
+          {/* Developer Mechanics */}
+
+          <Route
+            path="mechanics"
+            element={<GarageOwnerMechanics />}
+          />
+
+
+          {/* Developer Inventory */}
+
+          <Route
+            path="inventory"
+            element={<GarageOwnerInventory />}
+          />
+
+
+          {/* Developer Packages */}
+
+          <Route
+            path="packages"
+            element={<PackagesPage />}
+          />
+
+
+          {/* Developer Billing */}
+
+          <Route
+            path="billing"
+            element={<GarageOwnerBilling />}
+          />
+
+
+          {/* Developer Follow Up */}
+
+          <Route
+            path="follow-up"
+            element={<GarageOwnerFollowup />}
+          />
+
+
+          {/* Developer AI Hub */}
+
+          <Route
+            path="ai-hub"
+            element={<GarageOwnerAIHub />}
+          />
+
+
+          {/* Developer Reports */}
+
+          <Route
+            path="reports"
+            element={<GarageOwnerReports />}
+          />
+
+        </Route>
+
       </Routes>
+
     </BrowserRouter>
   );
 }

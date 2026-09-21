@@ -341,7 +341,10 @@ function ModulePage() {
                 DEVELOPER
             ================================================= */}
 
-            <div className="module-card">
+            <Link
+              to="/developer-login"
+              className="module-card module-card-link"
+            >
 
               <div className="module-card-icon">
                 &lt;/&gt;
@@ -354,7 +357,7 @@ function ModulePage() {
                 </h3>
 
                 <span>
-                  API &amp; System Management
+                  QA Engineer
                 </span>
 
                 <p>
@@ -368,7 +371,8 @@ function ModulePage() {
                 →
               </span>
 
-            </div>
+            </Link>
+
 
           </div>
 
