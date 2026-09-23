@@ -2,6 +2,8 @@ package com.autoservicehub.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -11,7 +13,11 @@ import java.time.LocalDateTime;
 @Setter
 public class EstimateResponseDTO {
     private Long id;
+    private BigDecimal subtotal;
+    private BigDecimal discount;
+    private BigDecimal tax;
+    private BigDecimal total;
+    private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    // TODO: map remaining fields from entity.Estimate
 }
