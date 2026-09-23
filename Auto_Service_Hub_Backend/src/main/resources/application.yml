@@ -3,14 +3,12 @@ spring:
     name: autoservicehub-backend
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:auto_service_hub}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-<<<<<<< HEAD
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:YOUR_MYSQL_PASSWORD}
-=======
-    username: Anchal
-    password: Anchal
->>>>>>> origin/development
+    url: jdbc:mysql://localhost:3306/car_services
+
+    username: root
+    password: Root@123
+
+    
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
