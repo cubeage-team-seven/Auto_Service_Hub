@@ -27,7 +27,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public PaymentResponseDTO create(PaymentRequestDTO request) {
         Payment entity = new Payment();
-        // TODO: map request -> entity
+        entity.setAmount(request.getAmount());
+        entity.setMode(request.getMode());
+        entity.setTransactionRef(request.getTransactionRef());
+        entity.setStatus(request.getStatus());
+        entity.setPaidAt(request.getPaidAt());
         Payment saved = repository.save(entity);
         return toResponse(saved);
     }
@@ -36,7 +40,11 @@ public class PaymentServiceImpl implements PaymentService {
     public PaymentResponseDTO update(Long id, PaymentRequestDTO request) {
         Payment existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found: " + id));
-        // TODO: map request -> existing
+        existing.setAmount(request.getAmount());
+        existing.setMode(request.getMode());
+        existing.setTransactionRef(request.getTransactionRef());
+        existing.setStatus(request.getStatus());
+        existing.setPaidAt(request.getPaidAt());
         return toResponse(repository.save(existing));
     }
 
@@ -65,9 +73,13 @@ public class PaymentServiceImpl implements PaymentService {
     private PaymentResponseDTO toResponse(Payment entity) {
         PaymentResponseDTO dto = new PaymentResponseDTO();
         dto.setId(entity.getId());
+        dto.setAmount(entity.getAmount());
+        dto.setMode(entity.getMode());
+        dto.setTransactionRef(entity.getTransactionRef());
+        dto.setStatus(entity.getStatus());
+        dto.setPaidAt(entity.getPaidAt());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-        // TODO: map remaining fields
         return dto;
     }
 }
