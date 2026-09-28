@@ -27,7 +27,10 @@ public class InspectionServiceImpl implements InspectionService {
     @Override
     public InspectionResponseDTO create(InspectionRequestDTO request) {
         Inspection entity = new Inspection();
-        // TODO: map request -> entity
+        entity.setComplaint(request.getComplaint());
+        entity.setTechnicianNotes(request.getTechnicianNotes());
+        entity.setEstimatedCost(request.getEstimatedCost());
+        entity.setStatus(request.getStatus());
         Inspection saved = repository.save(entity);
         return toResponse(saved);
     }
@@ -36,7 +39,10 @@ public class InspectionServiceImpl implements InspectionService {
     public InspectionResponseDTO update(Long id, InspectionRequestDTO request) {
         Inspection existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Inspection not found: " + id));
-        // TODO: map request -> existing
+        existing.setComplaint(request.getComplaint());
+        existing.setTechnicianNotes(request.getTechnicianNotes());
+        existing.setEstimatedCost(request.getEstimatedCost());
+        existing.setStatus(request.getStatus());
         return toResponse(repository.save(existing));
     }
 
@@ -65,9 +71,12 @@ public class InspectionServiceImpl implements InspectionService {
     private InspectionResponseDTO toResponse(Inspection entity) {
         InspectionResponseDTO dto = new InspectionResponseDTO();
         dto.setId(entity.getId());
+        dto.setComplaint(entity.getComplaint());
+        dto.setTechnicianNotes(entity.getTechnicianNotes());
+        dto.setEstimatedCost(entity.getEstimatedCost());
+        dto.setStatus(entity.getStatus());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-        // TODO: map remaining fields
         return dto;
     }
 }

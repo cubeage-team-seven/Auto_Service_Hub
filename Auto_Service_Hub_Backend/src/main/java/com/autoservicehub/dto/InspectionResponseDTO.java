@@ -2,6 +2,8 @@ package com.autoservicehub.dto;
 
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -11,7 +13,10 @@ import java.time.LocalDateTime;
 @Setter
 public class InspectionResponseDTO {
     private Long id;
+    private String complaint;
+    private String technicianNotes;
+    private BigDecimal estimatedCost;
+    private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    // TODO: map remaining fields from entity.Inspection
 }

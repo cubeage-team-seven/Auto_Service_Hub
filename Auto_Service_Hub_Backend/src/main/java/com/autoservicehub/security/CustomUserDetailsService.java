@@ -19,20 +19,22 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String usernameOrEmail) {
-
         User user = userRepository.findByUsernameIgnoreCase(usernameOrEmail)
-                .orElseGet(() -> userRepository.findByEmailIgnoreCase(usernameOrEmail)
-                        .orElseThrow(() ->
-                                new UsernameNotFoundException(
-                                        "User not found: " + usernameOrEmail
-                                )));
+                .or(() -> userRepository.findByEmailIgnoreCase(usernameOrEmail))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + usernameOrEmail));
+
+        String roleName = user.getRole() != null ? user.getRole().getName() : null;
+        if (roleName == null || roleName.isBlank()) {
+            throw new UsernameNotFoundException("User role not assigned: " + usernameOrEmail);
+        }
+
+        String srsRoleName = roleName.startsWith("ROLE_") ? roleName.substring(5) : roleName.trim();
+        String normalizedRole = "ROLE_" + srsRoleName;
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
                 .password(user.getPasswordHash())
-                .authorities(List.of(
-                        new SimpleGrantedAuthority("ROLE_USER")
-                ))
+                .authorities(List.of(new SimpleGrantedAuthority(normalizedRole)))
                 .disabled(Boolean.FALSE.equals(user.getActive()))
                 .build();
     }
