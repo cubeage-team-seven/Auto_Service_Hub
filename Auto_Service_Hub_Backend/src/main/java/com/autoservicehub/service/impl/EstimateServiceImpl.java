@@ -27,7 +27,11 @@ public class EstimateServiceImpl implements EstimateService {
     @Override
     public EstimateResponseDTO create(EstimateRequestDTO request) {
         Estimate entity = new Estimate();
-        // TODO: map request -> entity
+        entity.setSubtotal(request.getSubtotal());
+        entity.setDiscount(request.getDiscount());
+        entity.setTax(request.getTax());
+        entity.setTotal(request.getTotal());
+        entity.setStatus(request.getStatus() != null ? request.getStatus() : "DRAFT");
         Estimate saved = repository.save(entity);
         return toResponse(saved);
     }
@@ -36,7 +40,11 @@ public class EstimateServiceImpl implements EstimateService {
     public EstimateResponseDTO update(Long id, EstimateRequestDTO request) {
         Estimate existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Estimate not found: " + id));
-        // TODO: map request -> existing
+        existing.setSubtotal(request.getSubtotal());
+        existing.setDiscount(request.getDiscount());
+        existing.setTax(request.getTax());
+        existing.setTotal(request.getTotal());
+        existing.setStatus(request.getStatus() != null ? request.getStatus() : existing.getStatus());
         return toResponse(repository.save(existing));
     }
 
@@ -65,9 +73,13 @@ public class EstimateServiceImpl implements EstimateService {
     private EstimateResponseDTO toResponse(Estimate entity) {
         EstimateResponseDTO dto = new EstimateResponseDTO();
         dto.setId(entity.getId());
+        dto.setSubtotal(entity.getSubtotal());
+        dto.setDiscount(entity.getDiscount());
+        dto.setTax(entity.getTax());
+        dto.setTotal(entity.getTotal());
+        dto.setStatus(entity.getStatus());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
-        // TODO: map remaining fields
         return dto;
     }
 }

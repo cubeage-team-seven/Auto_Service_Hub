@@ -14,65 +14,73 @@ function GarageOwnerLayout() {
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Detect which module is currently open
+  const isDeveloper = location.pathname.startsWith("/developer");
+
+  // Dynamic base path
+  const basePath = isDeveloper
+    ? "/developer"
+    : "/garage-owner";
+
   const menuItems = [
     {
       label: "Dashboard",
-      path: "/garage-owner/dashboard",
+      path: `${basePath}/dashboard`,
       icon: "▦",
     },
     {
       label: "Customers",
-      path: "/garage-owner/customers",
+      path: `${basePath}/customers`,
       icon: "♧",
     },
     {
       label: "Vehicles",
-      path: "/garage-owner/vehicles",
+      path: `${basePath}/vehicles`,
       icon: "▱",
     },
     {
       label: "Appointments",
-      path: "/garage-owner/appointments",
+      path: `${basePath}/appointments`,
       icon: "□",
     },
     {
       label: "Job Cards",
-      path: "/garage-owner/jobcards",
+      path: `${basePath}/jobcards`,
       icon: "▢",
     },
     {
       label: "Mechanics",
-      path: "/garage-owner/mechanics",
+      path: `${basePath}/mechanics`,
       icon: "⚒",
     },
     {
       label: "Inventory",
-      path: "/garage-owner/inventory",
+      path: `${basePath}/inventory`,
       icon: "◇",
     },
     {
       label: "Packages",
-      path: "/garage-owner/packages",
+      path: `${basePath}/packages`,
       icon: "⬡",
     },
     {
       label: "Billing",
-      path: "/garage-owner/billing",
+      path: `${basePath}/billing`,
       icon: "☆",
     },
     {
       label: "Follow-up",
-      path: "/garage-owner/follow-up",
+      path: `${basePath}/follow-up`,
       icon: "□",
     },
     {
       label: "AI Hub",
-      path: "/garage-owner/ai-hub",
+      path: `${basePath}/ai-hub`,
       icon: "?",
     },
     {
       label: "Reports",
-      path: "/garage-owner/reports",
+      path: `${basePath}/reports`,
       icon: "▥",
     },
   ];
@@ -83,7 +91,10 @@ function GarageOwnerLayout() {
     if (
       pathname === "/garage-owner" ||
       pathname === "/garage-owner/" ||
-      pathname === "/garage-owner/dashboard"
+      pathname === "/garage-owner/dashboard" ||
+      pathname === "/developer" ||
+      pathname === "/developer/" ||
+      pathname === "/developer/dashboard"
     ) {
       return "Dashboard";
     }
@@ -177,6 +188,7 @@ function GarageOwnerLayout() {
                 }`
               }
             >
+
               <span className="garage-owner-nav-icon">
                 {item.icon}
               </span>
@@ -184,6 +196,7 @@ function GarageOwnerLayout() {
               <span className="garage-owner-nav-label">
                 {item.label}
               </span>
+
             </NavLink>
           ))}
 
@@ -248,9 +261,8 @@ function GarageOwnerLayout() {
           <div className="garage-owner-header-actions">
 
             <div className="garage-owner-role">
-              GARAGE OWNER
+              {isDeveloper ? "DEVELOPER" : "GARAGE OWNER"}
             </div>
-
 
             <div className="garage-owner-alerts">
 
@@ -261,11 +273,7 @@ function GarageOwnerLayout() {
             </div>
 
 
-            {/* =================================================
-                SETTINGS / LANDING BUTTON
-
-                Clicking this button goes to "/"
-            ================================================= */}
+            {/* SETTINGS / LANDING */}
 
             <button
               className="garage-owner-settings"
