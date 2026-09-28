@@ -4,14 +4,12 @@ import com.autoservicehub.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
-import java.util.Optional;
-
 
 import java.util.Optional;
 
 /**
  * Spring Data JPA repository for User.
- * Extends JpaSpecificationExecutor so list/report endpoints (SRS 9, 17)
+ * Extends JpaSpecificationExecutor so list/report endpoints
  * can apply dynamic filters.
  */
 @Repository
