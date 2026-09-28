@@ -1,6 +1,8 @@
 package com.autoservicehub.service.impl;
 
 import com.autoservicehub.dto.DashboardSummaryDTO;
+import com.autoservicehub.dto.RevenueReportDTO;
+import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.repository.AppointmentRepository;
 import com.autoservicehub.repository.InvoiceRepository;
 import com.autoservicehub.repository.JobCardRepository;
@@ -9,6 +11,8 @@ import com.autoservicehub.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -43,8 +47,25 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Object getRevenueReport(LocalDate from, LocalDate to) {
-        return null;
+    public RevenueReportDTO getRevenueReport(LocalDate from, LocalDate to) {
+        if (from == null || to == null) {
+            throw new BusinessRuleException("Revenue report requires both from and to dates.");
+        }
+        if (from.isAfter(to)) {
+            throw new BusinessRuleException("Revenue report date range is invalid: from date cannot be after to date.");
+        }
+
+        BigDecimal totalRevenue = invoiceRepository.sumTotalByInvoiceDateBetween(from, to);
+        if (totalRevenue == null) {
+            totalRevenue = BigDecimal.ZERO;
+        }
+
+        long invoiceCount = invoiceRepository.countByInvoiceDateBetween(from, to);
+        BigDecimal averageInvoiceValue = invoiceCount == 0
+                ? BigDecimal.ZERO
+                : totalRevenue.divide(BigDecimal.valueOf(invoiceCount), 2, RoundingMode.HALF_UP);
+
+        return new RevenueReportDTO(from, to, totalRevenue, invoiceCount, averageInvoiceValue);
     }
 
     @Override
