@@ -1,9 +1,11 @@
 package com.autoservicehub.service.impl;
 
+import com.autoservicehub.dto.CustomerGrowthReportDTO;
 import com.autoservicehub.dto.DashboardSummaryDTO;
 import com.autoservicehub.dto.RevenueReportDTO;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.repository.AppointmentRepository;
+import com.autoservicehub.repository.CustomerRepository;
 import com.autoservicehub.repository.InvoiceRepository;
 import com.autoservicehub.repository.JobCardRepository;
 import com.autoservicehub.repository.PartRepository;
@@ -24,6 +26,7 @@ public class ReportServiceImpl implements ReportService {
     private final InvoiceRepository invoiceRepository;
     private final PartRepository partRepository;
     private final AppointmentRepository appointmentRepository;
+    private final CustomerRepository customerRepository;
 
     @Override
     public DashboardSummaryDTO getDashboardSummary() {
@@ -79,8 +82,19 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Object getCustomerGrowthReport(LocalDate from, LocalDate to) {
-        return null;
+    public CustomerGrowthReportDTO getCustomerGrowthReport(LocalDate from, LocalDate to) {
+        if (from == null || to == null) {
+            throw new BusinessRuleException("Customer growth report requires both from and to dates.");
+        }
+        if (from.isAfter(to)) {
+            throw new BusinessRuleException("Customer growth report date range is invalid: from date cannot be after to date.");
+        }
+
+        LocalDateTime fromDateTime = from.atStartOfDay();
+        LocalDateTime toDateTime = to.plusDays(1).atStartOfDay();
+
+        long newCustomerCount = customerRepository.countByCreatedAtBetween(fromDateTime, toDateTime);
+        return new CustomerGrowthReportDTO(from, to, newCustomerCount);
     }
 
     @Override
