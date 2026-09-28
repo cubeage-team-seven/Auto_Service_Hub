@@ -2,12 +2,16 @@ package com.autoservicehub.service.impl;
 
 import com.autoservicehub.dto.CustomerGrowthReportDTO;
 import com.autoservicehub.dto.DashboardSummaryDTO;
+import com.autoservicehub.dto.MechanicPerformanceReportDTO;
 import com.autoservicehub.dto.RevenueReportDTO;
+import com.autoservicehub.entity.Mechanic;
 import com.autoservicehub.exception.BusinessRuleException;
+import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.AppointmentRepository;
 import com.autoservicehub.repository.CustomerRepository;
 import com.autoservicehub.repository.InvoiceRepository;
 import com.autoservicehub.repository.JobCardRepository;
+import com.autoservicehub.repository.MechanicRepository;
 import com.autoservicehub.repository.PartRepository;
 import com.autoservicehub.service.ReportService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +31,7 @@ public class ReportServiceImpl implements ReportService {
     private final PartRepository partRepository;
     private final AppointmentRepository appointmentRepository;
     private final CustomerRepository customerRepository;
+    private final MechanicRepository mechanicRepository;
 
     @Override
     public DashboardSummaryDTO getDashboardSummary() {
@@ -72,8 +77,38 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Object getMechanicPerformanceReport(LocalDate from, LocalDate to, Long mechanicId) {
-        return null;
+    public MechanicPerformanceReportDTO getMechanicPerformanceReport(LocalDate from, LocalDate to, Long mechanicId) {
+        if (from == null || to == null) {
+            throw new BusinessRuleException("Mechanic performance report requires both from and to dates.");
+        }
+        if (from.isAfter(to)) {
+            throw new BusinessRuleException("Mechanic performance report date range is invalid: from date cannot be after to date.");
+        }
+
+        LocalDateTime fromDateTime = from.atStartOfDay();
+        LocalDateTime toDateTime = to.plusDays(1).atStartOfDay();
+
+        String mechanicName = "ALL MECHANICS";
+        if (mechanicId != null) {
+            Mechanic mechanic = mechanicRepository.findById(mechanicId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Mechanic not found: " + mechanicId));
+            mechanicName = mechanic.getName();
+        }
+
+        long completedJobs = mechanicId == null
+                ? jobCardRepository.countByStatusAndAssignedDateBetween("DELIVERED", fromDateTime, toDateTime)
+                : jobCardRepository.countByMechanicIdAndStatusAndAssignedDateBetween(mechanicId, "DELIVERED", fromDateTime, toDateTime);
+
+        BigDecimal totalRevenue = invoiceRepository.sumTotalByMechanicAndJobStatus(mechanicId, "DELIVERED", fromDateTime, toDateTime);
+        if (totalRevenue == null) {
+            totalRevenue = BigDecimal.ZERO;
+        }
+
+        BigDecimal averageRevenuePerJob = completedJobs == 0
+                ? BigDecimal.ZERO
+                : totalRevenue.divide(BigDecimal.valueOf(completedJobs), 2, RoundingMode.HALF_UP);
+
+        return new MechanicPerformanceReportDTO(from, to, mechanicId, mechanicName, completedJobs, totalRevenue, averageRevenuePerJob);
     }
 
     @Override
