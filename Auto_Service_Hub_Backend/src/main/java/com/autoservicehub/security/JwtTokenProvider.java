@@ -25,11 +25,12 @@ public class JwtTokenProvider {
     }
 
     public String generateAccessToken(String username, String role) {
+        String srsRoleName = role == null ? null : role.startsWith("ROLE_") ? role.substring(5) : role;
         Date now = new Date();
         Date expiry = new Date(now.getTime() + accessTokenExpiryMs);
         return Jwts.builder()
                 .subject(username)
-                .claim("role", role)
+                .claim("role", srsRoleName)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key())

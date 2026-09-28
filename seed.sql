@@ -1,21 +1,30 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ============================================================
--- ROLES
+-- ROLES (SRS v1.0 Roles & Permissions)
 -- ============================================================
 INSERT INTO roles (created_at, updated_at, name) VALUES
-(NOW(6), NOW(6), 'ROLE_ADMIN'),
-(NOW(6), NOW(6), 'ROLE_MECHANIC'),
-(NOW(6), NOW(6), 'ROLE_INVENTORY'),
-(NOW(6), NOW(6), 'ROLE_ADVISOR');
+(NOW(6), NOW(6), 'ADMIN'),
+(NOW(6), NOW(6), 'OWNER'),
+(NOW(6), NOW(6), 'MANAGER'),
+(NOW(6), NOW(6), 'SERVICE_ADVISOR'),
+(NOW(6), NOW(6), 'MECHANIC'),
+(NOW(6), NOW(6), 'INVENTORY_MANAGER'),
+(NOW(6), NOW(6), 'BILLING_USER'),
+(NOW(6), NOW(6), 'CUSTOMER');
 
 -- ============================================================
 -- USERS  (password = "password123" BCrypt)
 -- ============================================================
-INSERT INTO users (created_at, updated_at, username, password_hash, active, full_name) VALUES
-(NOW(6), NOW(6), 'admin',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh7y', 1, 'Admin User'),
-(NOW(6), NOW(6), 'mechanic1',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh7y', 1, 'Ravi Kumar'),
-(NOW(6), NOW(6), 'inventory1', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh7y', 1, 'Inventory Manager');
+INSERT INTO users (created_at, updated_at, username, password_hash, active, full_name, role_id) VALUES
+(NOW(6), NOW(6), 'admin',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh7y', 1, 'Admin User', 1),
+(NOW(6), NOW(6), 'owner',      '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh7y', 1, 'Garage Owner', 2),
+(NOW(6), NOW(6), 'manager',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh7y', 1, 'Operations Manager', 3),
+(NOW(6), NOW(6), 'advisor',    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh7y', 1, 'Service Advisor', 4),
+(NOW(6), NOW(6), 'mechanic1',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh7y', 1, 'Ravi Kumar', 5),
+(NOW(6), NOW(6), 'inventory1', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh7y', 1, 'Inventory Manager', 6),
+(NOW(6), NOW(6), 'billing1',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh7y', 1, 'Billing User', 7),
+(NOW(6), NOW(6), 'customer1',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lh7y', 1, 'Customer Portal User', 8);
 
 -- ============================================================
 -- CUSTOMERS

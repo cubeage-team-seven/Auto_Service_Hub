@@ -14,6 +14,10 @@ import lombok.Setter;
 @Table(name = "users")
 public class User extends BaseEntity {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
     @Column(name = "username")
     private String username;
     @Column(name = "email")
