@@ -1,6 +1,7 @@
 package com.autoservicehub.controller;
 
 import com.autoservicehub.dto.ApiResponse;
+import com.autoservicehub.dto.CustomerGrowthReportDTO;
 import com.autoservicehub.dto.DashboardSummaryDTO;
 import com.autoservicehub.dto.RevenueReportDTO;
 import com.autoservicehub.service.ReportService;
@@ -43,7 +44,8 @@ public class ReportController {
     }
 
     @GetMapping("/customer-growth")
-    public ApiResponse<Object> customerGrowth(@RequestParam LocalDate from, @RequestParam LocalDate to) {
+    public ApiResponse<CustomerGrowthReportDTO> customerGrowth(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                                              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return ApiResponse.ok(reportService.getCustomerGrowthReport(from, to));
     }
 
