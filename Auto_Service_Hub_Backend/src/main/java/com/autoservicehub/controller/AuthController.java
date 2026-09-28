@@ -6,6 +6,8 @@ import com.autoservicehub.dto.LoginRequestDTO;
 import com.autoservicehub.dto.LoginResponseDTO;
 import com.autoservicehub.dto.ResetPasswordRequest;
 import com.autoservicehub.dto.VerifyOtpRequest;
+import com.autoservicehub.entity.User;
+import com.autoservicehub.repository.UserRepository;
 import com.autoservicehub.security.JwtTokenProvider;
 import com.autoservicehub.service.PasswordResetService;
 import jakarta.validation.Valid;
@@ -25,6 +27,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordResetService passwordResetService;
+    private final UserRepository userRepository;
 
     @PostMapping("/login")
     public ApiResponse<LoginResponseDTO> login(
@@ -37,9 +40,20 @@ public class AuthController {
                 )
         );
 
+        User user = userRepository.findByUsernameIgnoreCase(request.getUsername())
+                .or(() -> userRepository.findByEmailIgnoreCase(request.getUsername()))
+                .orElseThrow(() -> new IllegalStateException("Authenticated user not found: " + request.getUsername()));
+
+        String roleName = user.getRole() != null ? user.getRole().getName() : null;
+        if (roleName == null || roleName.isBlank()) {
+            throw new IllegalStateException("Authenticated user has no assigned role: " + request.getUsername());
+        }
+
+        String srsRoleName = roleName.startsWith("ROLE_") ? roleName.substring(5) : roleName;
+
         String accessToken = jwtTokenProvider.generateAccessToken(
-                request.getUsername(),
-                "USER"
+                user.getUsername(),
+                srsRoleName
         );
 
         return ApiResponse.ok(
