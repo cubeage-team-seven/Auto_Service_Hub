@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
-<<<<<<< HEAD
+
 import java.util.Optional;
 
 /**
@@ -21,9 +21,3 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     Optional<User> findByUsernameIgnoreCase(String username);
 }
-=======
-@Repository
-public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
-    Optional<User> findByUsername(String username);
-}
->>>>>>> origin/development
