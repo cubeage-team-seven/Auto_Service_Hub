@@ -3,6 +3,7 @@ package com.autoservicehub.controller;
 import com.autoservicehub.dto.ApiResponse;
 import com.autoservicehub.dto.CustomerGrowthReportDTO;
 import com.autoservicehub.dto.DashboardSummaryDTO;
+import com.autoservicehub.dto.MechanicPerformanceReportDTO;
 import com.autoservicehub.dto.RevenueReportDTO;
 import com.autoservicehub.service.ReportService;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +34,9 @@ public class ReportController {
     }
 
     @GetMapping("/mechanic-performance")
-    public ApiResponse<Object> mechanicPerformance(@RequestParam LocalDate from, @RequestParam LocalDate to,
-                                                     @RequestParam(required = false) Long mechanicId) {
+    public ApiResponse<MechanicPerformanceReportDTO> mechanicPerformance(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+                                                                        @RequestParam(required = false) Long mechanicId) {
         return ApiResponse.ok(reportService.getMechanicPerformanceReport(from, to, mechanicId));
     }
 
