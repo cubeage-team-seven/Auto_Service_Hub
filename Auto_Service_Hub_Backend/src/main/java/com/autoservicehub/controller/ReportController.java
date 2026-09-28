@@ -2,6 +2,7 @@ package com.autoservicehub.controller;
 
 import com.autoservicehub.dto.ApiResponse;
 import com.autoservicehub.dto.DashboardSummaryDTO;
+import com.autoservicehub.dto.RevenueReportDTO;
 import com.autoservicehub.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,8 +26,8 @@ public class ReportController {
     }
 
     @GetMapping("/revenue")
-    public ApiResponse<Object> revenue(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                                        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+    public ApiResponse<RevenueReportDTO> revenue(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return ApiResponse.ok(reportService.getRevenueReport(from, to));
     }
 

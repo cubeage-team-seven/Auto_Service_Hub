@@ -5,6 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 /**
  * Spring Data JPA repository for Invoice. Extends JpaSpecificationExecutor so
  * list/report endpoints (SRS 9, 17) can apply dynamic filters.
@@ -12,5 +15,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long>, JpaSpecificationExecutor<Invoice> {
     @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(i.total), 0) FROM Invoice i WHERE i.invoiceDate = CURRENT_DATE")
-    java.math.BigDecimal sumTodayRevenue();
+    BigDecimal sumTodayRevenue();
+
+    @org.springframework.data.jpa.repository.Query("SELECT COALESCE(SUM(i.total), 0) FROM Invoice i WHERE i.invoiceDate BETWEEN :from AND :to")
+    BigDecimal sumTotalByInvoiceDateBetween(LocalDate from, LocalDate to);
+
+    long countByInvoiceDateBetween(LocalDate from, LocalDate to);
 }

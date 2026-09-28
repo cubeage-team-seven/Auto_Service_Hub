@@ -1,6 +1,7 @@
 package com.autoservicehub.service;
 
 import com.autoservicehub.dto.DashboardSummaryDTO;
+import com.autoservicehub.dto.RevenueReportDTO;
 import java.time.LocalDate;
 
 /**
@@ -9,7 +10,7 @@ import java.time.LocalDate;
  */
 public interface ReportService {
     DashboardSummaryDTO getDashboardSummary();
-    Object getRevenueReport(LocalDate from, LocalDate to);
+    RevenueReportDTO getRevenueReport(LocalDate from, LocalDate to);
     Object getMechanicPerformanceReport(LocalDate from, LocalDate to, Long mechanicId);
     Object getPartsUsageReport(LocalDate from, LocalDate to);
     Object getCustomerGrowthReport(LocalDate from, LocalDate to);
