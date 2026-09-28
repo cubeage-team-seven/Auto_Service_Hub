@@ -1,0 +1,233 @@
+.sa-login-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background: var(--sa-bg, #080909);
+  color: var(--sa-text, #f2f2ef);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Left Hero Banner */
+.sa-login-banner {
+  flex: 1.1;
+  position: relative;
+  background: linear-gradient(180deg, rgba(8, 9, 9, 0.4) 0%, rgba(8, 9, 9, 0.85) 100%),
+              url('https://images.unsplash.com/photo-1617814076367-b759c7d7e738?q=80&w=1200&auto=format&fit=crop') center/cover no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px 40px;
+}
+
+.sa-login-back {
+  align-self: flex-start;
+  background: rgba(21, 22, 22, 0.7);
+  border: 1px solid var(--sa-line, #292a2a);
+  color: #a0a5aa;
+  padding: 7px 14px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.sa-login-back:hover {
+  color: var(--sa-text, #f2f2ef);
+}
+
+.sa-login-banner-content {
+  margin-top: auto;
+}
+
+.sa-login-kicker {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #a0a5aa;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.sa-login-hero-title {
+  font-size: 44px;
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin: 0 0 16px 0;
+  color: #ffffff;
+}
+
+.sa-login-subtitle {
+  font-size: 12px;
+  color: #a0a5aa;
+  max-width: 380px;
+  line-height: 1.5;
+}
+
+/* Right Form Section */
+.sa-login-form-area {
+  flex: 0.9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: #0d0e0e;
+}
+
+.sa-login-box {
+  width: 100%;
+  max-width: 380px;
+}
+
+.sa-login-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.sa-brand-name {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+.sa-brand-sub {
+  font-size: 10px;
+  color: var(--sa-muted, #777b80);
+}
+
+.sa-change-role-btn {
+  background: none;
+  border: none;
+  color: var(--sa-muted, #777b80);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 12px;
+}
+
+.sa-change-role-btn:hover {
+  color: var(--sa-lime, #d5ff32);
+}
+
+.sa-selected-role-card {
+  background: var(--sa-panel, #151616);
+  border: 1px solid var(--sa-line, #292a2a);
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.sa-role-icon {
+  font-size: 16px;
+}
+
+.sa-role-title {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.sa-role-sub {
+  font-size: 10px;
+  color: var(--sa-muted, #777b80);
+}
+
+.sa-login-title-group {
+  margin-bottom: 24px;
+}
+
+.sa-form-title {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  margin: 0 0 6px 0;
+}
+
+.sa-form-desc {
+  font-size: 11px;
+  color: var(--sa-muted, #777b80);
+  margin: 0;
+}
+
+.sa-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.sa-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--sa-muted, #777b80);
+}
+
+.sa-input {
+  background: var(--sa-panel, #151616);
+  border: 1px solid var(--sa-line, #292a2a);
+  border-radius: 4px;
+  height: 40px;
+  padding: 0 12px;
+  color: var(--sa-text, #f2f2ef);
+  font-size: 12px;
+  outline: none;
+}
+
+.sa-input:focus {
+  border-color: var(--sa-lime, #d5ff32);
+}
+
+.sa-form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  margin: 18px 0 24px 0;
+}
+
+.sa-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--sa-muted, #777b80);
+  cursor: pointer;
+}
+
+.sa-checkbox-label input {
+  accent-color: var(--sa-lime, #d5ff32);
+}
+
+.sa-forgot-link {
+  color: var(--sa-lime, #d5ff32);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.sa-submit-btn {
+  width: 100%;
+  height: 42px;
+  background: var(--sa-lime, #d5ff32);
+  color: #0c0d0d;
+  border: 0;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.sa-submit-btn:hover {
+  opacity: 0.9;
+}
+
+@media (max-width: 850px) {
+  .sa-login-banner {
+    display: none;
+  }
+  .sa-login-form-area {
+    flex: 1;
+  }
+}

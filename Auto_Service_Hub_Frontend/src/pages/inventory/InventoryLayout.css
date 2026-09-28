@@ -1,0 +1,402 @@
+/* =========================================================
+   INVENTORY LAYOUT
+   AUTO SERVICE HUB
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   MAIN LAYOUT
+========================================================= */
+
+.inventory-layout {
+    min-height: 100vh;
+    width: 100%;
+    background: #050505;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+.inventory-layout-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 64px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #0b0c0c;
+    border-right: 1px solid #242626;
+    z-index: 1000;
+    transition: width 0.25s ease;
+}
+
+
+/* OPEN SIDEBAR */
+
+.inventory-layout.sidebar-open .inventory-layout-sidebar {
+    width: 278px;
+}
+
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.inventory-layout-logo {
+    height: 76px;
+    display: flex;
+    align-items: center;
+    padding: 0 17px;
+    gap: 13px;
+    border-bottom: 1px solid #242626;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.inventory-layout-logo-icon {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #b9ff00;
+    border-radius: 4px;
+    color: #111111;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.inventory-layout-logo span {
+    color: #eeeeee;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    opacity: 1;
+    transition: opacity 0.2s ease, width 0.2s ease;
+}
+
+
+/* CLOSED LOGO */
+
+.inventory-layout.sidebar-closed .inventory-layout-logo span {
+    opacity: 0;
+    width: 0;
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.inventory-layout-nav {
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.inventory-layout-nav-item {
+    position: relative;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 20px;
+    color: #696e70;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+
+/* ICON */
+
+.inventory-layout-nav-icon {
+    width: 20px;
+    flex: 0 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #626769;
+    font-size: 14px;
+}
+
+
+/* TEXT */
+
+.inventory-layout-nav-text {
+    transition: opacity 0.2s ease, width 0.2s ease;
+}
+
+
+/* HOVER */
+
+.inventory-layout-nav-item:hover {
+    color: #eeeeee;
+    background: #111313;
+}
+
+.inventory-layout-nav-item:hover .inventory-layout-nav-icon {
+    color: #b9ff00;
+}
+
+
+/* =========================================================
+   ACTIVE NAV ITEM
+========================================================= */
+
+.inventory-layout-nav-item.active {
+    color: #b9ff00;
+    background: #171b0d;
+}
+
+.inventory-layout-nav-item.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: #b9ff00;
+}
+
+.inventory-layout-nav-item.active .inventory-layout-nav-icon {
+    color: #b9ff00;
+}
+
+
+/* =========================================================
+   CLOSED NAV
+========================================================= */
+
+.inventory-layout.sidebar-closed .inventory-layout-nav-item {
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+}
+
+.inventory-layout.sidebar-closed .inventory-layout-nav-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.inventory-layout.sidebar-closed .inventory-layout-nav-icon {
+    margin: 0;
+}
+
+
+/* =========================================================
+   SIDEBAR TOGGLE
+========================================================= */
+
+.inventory-layout-toggle {
+    position: absolute;
+    right: -14px;
+    bottom: 22px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid #303333;
+    border-radius: 50%;
+    background: #0d0e0e;
+    color: #888d8f;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 1001;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.inventory-layout-toggle:hover {
+    color: #b9ff00;
+    border-color: #596b19;
+    background: #111313;
+}
+
+
+/* =========================================================
+   MAIN AREA
+========================================================= */
+
+.inventory-layout-main {
+    width: calc(100% - 64px);
+    min-height: 100vh;
+    margin-left: 64px;
+    background: #050505;
+    transition: width 0.25s ease, margin-left 0.25s ease;
+}
+
+.inventory-layout.sidebar-open .inventory-layout-main {
+    width: calc(100% - 278px);
+    margin-left: 278px;
+}
+
+
+/* =========================================================
+   TOP BAR
+========================================================= */
+
+.inventory-layout-topbar {
+    width: 100%;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    background: #080909;
+    border-bottom: 1px solid #222424;
+}
+
+
+/* =========================================================
+   BREADCRUMB
+========================================================= */
+
+.inventory-layout-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #555b5d;
+    font-size: 12px;
+}
+
+.inventory-layout-breadcrumb b {
+    color: #444849;
+    font-weight: 400;
+}
+
+.inventory-layout-breadcrumb strong {
+    color: #eeeeee;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   TOP RIGHT
+========================================================= */
+
+.inventory-layout-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+
+/* ROLE */
+
+.inventory-layout-role {
+    height: 26px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border: 1px solid #596b19;
+    border-radius: 4px;
+    background: #101500;
+    color: #b9ff00;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+
+/* HOME */
+
+.inventory-layout-home {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #303333;
+    border-radius: 50%;
+    background: #b9ff00;
+    color: #101010;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 900;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.inventory-layout-home:hover {
+    background: #c7ff35;
+}
+
+.inventory-layout-home:active {
+    transform: scale(0.96);
+}
+
+
+/* =========================================================
+   CONTENT WRAPPER
+========================================================= */
+
+.inventory-layout-content {
+    width: 100%;
+    min-height: calc(100vh - 58px);
+    background: #050505;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 800px) {
+    .inventory-layout.sidebar-open .inventory-layout-sidebar {
+        width: 64px;
+    }
+    .inventory-layout.sidebar-open .inventory-layout-logo span {
+        opacity: 0;
+        width: 0;
+    }
+    .inventory-layout.sidebar-open .inventory-layout-nav-item {
+        justify-content: center;
+        padding: 0;
+        gap: 0;
+    }
+    .inventory-layout.sidebar-open .inventory-layout-nav-text {
+        opacity: 0;
+        width: 0;
+        overflow: hidden;
+    }
+    .inventory-layout.sidebar-open .inventory-layout-main {
+        width: calc(100% - 64px);
+        margin-left: 64px;
+    }
+    .inventory-layout-topbar {
+        padding: 0 18px;
+    }
+}
+
+@media (max-width: 600px) {
+    .inventory-layout-main {
+        width: calc(100% - 64px);
+        margin-left: 64px;
+    }
+    .inventory-layout-topbar {
+        padding: 0 12px;
+    }
+    .inventory-layout-breadcrumb {
+        font-size: 10px;
+        gap: 8px;
+    }
+    .inventory-layout-role {
+        display: none;
+    }
+}

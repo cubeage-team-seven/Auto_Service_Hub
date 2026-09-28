@@ -1,0 +1,4 @@
+-- Placeholder Flyway/versioned migration.
+-- Create baseline tables per SRS section 8 (customers, vehicles, appointments,
+-- inspections, job_cards, mechanics, parts, invoices, payments, ai_insights, etc.)
+-- Fill in exact columns/types once the ERD from section 8 is confirmed.

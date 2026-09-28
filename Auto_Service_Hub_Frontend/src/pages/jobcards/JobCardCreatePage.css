@@ -1,0 +1,301 @@
+/* =====================================================
+   NEW JOB CARD MODAL
+   Auto_Service_Hub
+===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+.job-create-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.72);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =====================================================
+   BACKDROP
+===================================================== */
+
+.job-create-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.68);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    cursor: pointer;
+}
+
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+.job-create-modal {
+    position: relative;
+    z-index: 2;
+    width: 480px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    background: #101010;
+    border: 1px solid #292929;
+    border-radius: 10px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.02);
+    overflow: hidden;
+}
+
+
+/* =====================================================
+   MODAL HEADER
+===================================================== */
+
+.job-create-modal-header {
+    height: 58px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 22px;
+    border-bottom: 1px solid #292929;
+    background: #111111;
+}
+
+.job-create-modal-header h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+}
+
+.job-create-close {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #777777;
+    font-size: 21px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.job-create-close:hover {
+    color: #d7ff36;
+}
+
+
+/* =====================================================
+   FORM
+===================================================== */
+
+.job-create-modal-form {
+    padding: 20px 22px 18px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #393939 transparent;
+}
+
+.job-create-modal-form::-webkit-scrollbar {
+    width: 5px;
+}
+
+.job-create-modal-form::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.job-create-modal-form::-webkit-scrollbar-thumb {
+    background: #393939;
+    border-radius: 10px;
+}
+
+
+/* =====================================================
+   FIELD
+===================================================== */
+
+.job-create-field {
+    margin-bottom: 16px;
+}
+
+.job-create-field label {
+    display: block;
+    margin-bottom: 7px;
+    color: #777777;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+}
+
+
+/* =====================================================
+   INPUT / SELECT / TEXTAREA
+===================================================== */
+
+.job-create-field input,
+.job-create-field select,
+.job-create-field textarea {
+    width: 100%;
+    border: 1px solid #292929;
+    border-radius: 7px;
+    outline: none;
+    background: #151515;
+    color: #eeeeee;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.job-create-field input,
+.job-create-field select {
+    height: 39px;
+    padding: 0 12px;
+}
+
+.job-create-field textarea {
+    min-height: 58px;
+    padding: 11px 12px;
+    resize: vertical;
+    line-height: 1.45;
+}
+
+
+/* =====================================================
+   PLACEHOLDER
+===================================================== */
+
+.job-create-field input::placeholder,
+.job-create-field textarea::placeholder {
+    color: #667080;
+}
+
+
+/* =====================================================
+   SELECT
+===================================================== */
+
+.job-create-field select {
+    cursor: pointer;
+    appearance: auto;
+}
+
+.job-create-field select option {
+    background: #151515;
+    color: #ffffff;
+}
+
+
+/* =====================================================
+   FOCUS
+===================================================== */
+
+.job-create-field input:focus,
+.job-create-field select:focus,
+.job-create-field textarea:focus {
+    border-color: rgba(215, 255, 54, 0.65);
+    background: #181818;
+}
+
+
+/* =====================================================
+   DATE INPUT
+===================================================== */
+
+.job-create-field input[type="datetime-local"] {
+    color-scheme: dark;
+}
+
+
+/* =====================================================
+   ACTIONS
+===================================================== */
+
+.job-create-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-top: 7px;
+    margin-top: 3px;
+    border-top: 1px solid #292929;
+}
+
+
+/* =====================================================
+   CREATE BUTTON
+===================================================== */
+
+.job-create-submit {
+    flex: 1;
+    height: 40px;
+    border: none;
+    border-radius: 7px;
+    background: #d7ff36;
+    color: #050505;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.job-create-submit:hover {
+    background: #e0ff5a;
+    box-shadow: 0 0 25px rgba(215, 255, 54, 0.18);
+}
+
+.job-create-submit:active {
+    transform: translateY(1px);
+}
+
+
+/* =====================================================
+   CANCEL
+===================================================== */
+
+.job-create-cancel {
+    width: 82px;
+    height: 40px;
+    border: 1px solid #292929;
+    border-radius: 7px;
+    background: #121212;
+    color: #777777;
+    font-size: 11px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.job-create-cancel:hover {
+    color: #ffffff;
+    border-color: #444444;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 600px) {
+    .job-create-modal {
+        width: calc(100vw - 24px);
+        max-height: calc(100vh - 24px);
+        border-radius: 8px;
+    }
+    .job-create-modal-header {
+        padding: 0 16px;
+    }
+    .job-create-modal-form {
+        padding: 18px 16px 15px;
+    }
+}

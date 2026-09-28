@@ -1,0 +1,464 @@
+/* =========================================================
+   GARAGE OWNER LOGIN
+   ========================================================= */
+
+.garage-login-page {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    background: #050505;
+    color: #ffffff;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* =========================================================
+   LEFT SIDE
+   ========================================================= */
+
+.garage-login-left {
+    position: relative;
+    width: 50%;
+    min-height: 100vh;
+    background-image: url("/assets/landing/mechanic-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+}
+
+
+/* IMAGE OVERLAY */
+
+.garage-login-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient( to bottom, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.72));
+    z-index: 1;
+}
+
+
+/* =========================================================
+   BACK TO SITE
+   ========================================================= */
+
+.garage-login-back {
+    position: absolute;
+    top: 42px;
+    left: 42px;
+    z-index: 5;
+    color: #777777;
+    text-decoration: none;
+    font-size: 15px;
+    line-height: 1;
+}
+
+.garage-login-back:hover {
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   LEFT CONTENT
+   ========================================================= */
+
+.garage-login-left-content {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    padding: 0 42px 42px;
+}
+
+
+/* LABEL */
+
+.garage-login-platform-label {
+    margin-bottom: 24px;
+    color: #c6ff00;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+}
+
+
+/* HEADING */
+
+.garage-login-left-content h1 {
+    margin: 0;
+    color: #f5f5f5;
+    font-size: clamp(58px, 5vw, 86px);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: -3px;
+}
+
+.garage-login-left-content h1 span {
+    color: #c6ff00;
+}
+
+
+/* DESCRIPTION */
+
+.garage-login-left-content p {
+    max-width: 650px;
+    margin: 24px 0 0;
+    color: #727272;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   RIGHT SIDE
+   ========================================================= */
+
+.garage-login-right {
+    width: 50%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    background: #050505;
+}
+
+
+/* CONTAINER */
+
+.garage-login-container {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 55px 70px;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.garage-login-brand {
+    display: flex;
+    align-items: center;
+    margin-bottom: 48px;
+}
+
+
+/* ICON */
+
+.garage-login-brand-icon {
+    width: 42px;
+    height: 42px;
+    margin-right: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #c6ff00;
+    color: #050505;
+    border-radius: 4px;
+    font-size: 20px;
+    font-weight: 900;
+}
+
+
+/* BRAND TITLE */
+
+.garage-login-brand-title {
+    color: #f3f3f3;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+
+
+/* BRAND SUBTITLE */
+
+.garage-login-brand-subtitle {
+    margin-top: 4px;
+    color: #5f5f5f;
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   CHANGE ROLE
+   ========================================================= */
+
+.garage-login-change-role {
+    display: inline-block;
+    margin-bottom: 38px;
+    color: #666666;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.garage-login-change-role:hover {
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   ROLE CARD
+   ========================================================= */
+
+.garage-login-role-card {
+    width: 100%;
+    min-height: 74px;
+    padding: 18px 20px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    border: 1px solid #303500;
+    border-radius: 9px;
+    background: #0b0b0b;
+}
+
+
+/* ROLE ICON */
+
+.garage-login-role-icon {
+    width: 38px;
+    margin-right: 14px;
+    color: #ffffff;
+    font-size: 22px;
+}
+
+
+/* ROLE TITLE */
+
+.garage-login-role-content h3 {
+    margin: 0 0 5px;
+    color: #f4f4f4;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+/* ROLE SUBTITLE */
+
+.garage-login-role-content span {
+    color: #c6ff00;
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   SIGN IN HEADING
+   ========================================================= */
+
+.garage-login-heading {
+    margin-top: 42px;
+    margin-bottom: 32px;
+}
+
+
+/* SIGN IN */
+
+.garage-login-heading h2 {
+    margin: 0 0 12px;
+    color: #f3f3f3;
+    font-size: 31px;
+    font-weight: 900;
+    letter-spacing: -1px;
+}
+
+
+/* DESCRIPTION */
+
+.garage-login-heading p {
+    max-width: 600px;
+    margin: 0;
+    color: #686868;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.garage-login-form {
+    width: 100%;
+}
+
+
+/* FIELD */
+
+.garage-login-field {
+    width: 100%;
+    margin-bottom: 22px;
+}
+
+
+/* LABEL */
+
+.garage-login-field label {
+    display: block;
+    margin-bottom: 9px;
+    color: #555555;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+
+/* INPUT */
+
+.garage-login-field input {
+    width: 100%;
+    height: 48px;
+    box-sizing: border-box;
+    padding: 0 16px;
+    border: 1px solid #292929;
+    border-radius: 8px;
+    outline: none;
+    background: #0c0c0c;
+    color: #eeeeee;
+    font-size: 15px;
+}
+
+.garage-login-field input::placeholder {
+    color: #626262;
+}
+
+.garage-login-field input:focus {
+    border-color: #4b4f00;
+    background: #0f0f0f;
+}
+
+
+/* =========================================================
+   OPTIONS
+   ========================================================= */
+
+.garage-login-options {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 5px;
+    margin-bottom: 22px;
+}
+
+
+/* REMEMBER ME */
+
+.garage-remember {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #686868;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.garage-remember input {
+    width: 14px;
+    height: 14px;
+    accent-color: #c6ff00;
+    cursor: pointer;
+}
+
+
+/* FORGOT PASSWORD */
+
+.garage-forgot-password {
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #c6ff00;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.garage-forgot-password:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   ACCESS BUTTON
+   ========================================================= */
+
+.garage-access-button {
+    width: 100%;
+    height: 52px;
+    border: none;
+    border-radius: 8px;
+    background: #c6ff00;
+    color: #050505;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.garage-access-button:hover {
+    background: #d0ff2b;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1000px) {
+    .garage-login-left {
+        width: 45%;
+    }
+    .garage-login-right {
+        width: 55%;
+    }
+    .garage-login-container {
+        padding: 45px;
+    }
+    .garage-login-left-content {
+        padding: 0 30px 35px;
+    }
+    .garage-login-back {
+        left: 30px;
+    }
+}
+
+@media (max-width: 760px) {
+    .garage-login-page {
+        flex-direction: column;
+        overflow: visible;
+    }
+    .garage-login-left {
+        width: 100%;
+        min-height: 430px;
+    }
+    .garage-login-right {
+        width: 100%;
+        min-height: auto;
+    }
+    .garage-login-container {
+        max-width: none;
+        padding: 50px 30px;
+    }
+    .garage-login-left-content h1 {
+        font-size: 58px;
+    }
+}
+
+@media (max-width: 480px) {
+    .garage-login-container {
+        padding: 40px 22px;
+    }
+    .garage-login-left-content {
+        padding: 0 22px 30px;
+    }
+    .garage-login-back {
+        top: 25px;
+        left: 22px;
+    }
+    .garage-login-options {
+        align-items: flex-start;
+        gap: 15px;
+    }
+}
