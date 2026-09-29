@@ -10,6 +10,7 @@ import com.autoservicehub.security.CustomUserDetailsService;
 import com.autoservicehub.security.JwtAuthenticationFilter;
 import com.autoservicehub.security.JwtTokenProvider;
 import com.autoservicehub.service.MaintenancePredictionService;
+import com.autoservicehub.service.MechanicAssignmentService;
 import com.autoservicehub.service.RepairCostEstimationService;
 import com.autoservicehub.service.VehicleDiagnosisService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -89,6 +90,9 @@ class AiControllerRepairCostEstimationTest {
     // AiController also serves Maintenance Prediction (FR-AI-09..12); its
     // dependency must be mocked for the slice context to build.
     @MockBean MaintenancePredictionService maintenancePredictionService;
+    // AiController also serves Mechanic Assignment (FR-AI-17..20); its
+    // dependency must be mocked for the slice context to build.
+    @MockBean MechanicAssignmentService    mechanicAssignmentService;
     @MockBean VehicleDiagnosisService     vehicleDiagnosisService;
     @MockBean AiOrchestrationService      aiOrchestrationService;
     @MockBean JwtAuthenticationFilter     jwtAuthenticationFilter;

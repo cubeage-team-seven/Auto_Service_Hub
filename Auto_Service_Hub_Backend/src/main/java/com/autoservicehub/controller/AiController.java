@@ -9,9 +9,12 @@ import com.autoservicehub.dto.DiagnosisRequestDTO;
 import com.autoservicehub.dto.DiagnosisResponseDTO;
 import com.autoservicehub.dto.MaintenancePredictionRequestDTO;
 import com.autoservicehub.dto.MaintenancePredictionResponseDTO;
+import com.autoservicehub.dto.MechanicAssignmentRequestDTO;
+import com.autoservicehub.dto.MechanicAssignmentResponseDTO;
 import com.autoservicehub.dto.RepairCostEstimationRequestDTO;
 import com.autoservicehub.dto.RepairCostEstimationResponseDTO;
 import com.autoservicehub.service.MaintenancePredictionService;
+import com.autoservicehub.service.MechanicAssignmentService;
 import com.autoservicehub.service.RepairCostEstimationService;
 import com.autoservicehub.service.VehicleDiagnosisService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,10 +33,11 @@ import org.springframework.web.bind.annotation.*;
  * <p>Every response must be reviewed/confirmed by a user before it changes a
  * job card, invoice, or stock record (BR-09).
  *
- * <p>Diagnosis (FR-AI-01..04), Repair Cost Estimation (FR-AI-05..08) and
- * Maintenance Prediction (FR-AI-09..12) are fully implemented, each with
- * domain validation, database-grounded context enrichment, a typed response
- * and an enforced human-review disclaimer.
+ * <p>Diagnosis (FR-AI-01..04), Repair Cost Estimation (FR-AI-05..08),
+ * Maintenance Prediction (FR-AI-09..12) and Mechanic Assignment
+ * (FR-AI-17..20) are fully implemented, each with domain validation,
+ * database-grounded context enrichment, a typed response and an enforced
+ * human-review disclaimer.
  * The remaining AI feature endpoints retain their original stub behaviour until
  * they are individually implemented.
  */
@@ -47,6 +51,7 @@ public class AiController {
     private final VehicleDiagnosisService       vehicleDiagnosisService;
     private final RepairCostEstimationService   repairCostEstimationService;
     private final MaintenancePredictionService  maintenancePredictionService;
+    private final MechanicAssignmentService     mechanicAssignmentService;
 
     // ── FR-AI-01..04: Vehicle Diagnosis ───────────────────────────────────
 
@@ -165,7 +170,49 @@ public class AiController {
         return ApiResponse.ok(maintenancePredictionService.predict(request));
     }
 
-    // ── Remaining AI stubs (not yet implemented — FR-AI-13..24) ───────────
+    // ── FR-AI-17..20: Mechanic Assignment ─────────────────────────────────
+
+    /**
+     * POST /api/v1/ai/mechanic-assignment
+     *
+     * <p>Recommends a mechanic for a job card, grounded in real active-mechanic
+     * records and each candidate's real open workload. Data the system does not
+     * hold — skills, certifications, ratings, availability, attendance — is
+     * reported in {@code dataLimitations} rather than approximated.
+     *
+     * <p><strong>No assignment is performed.</strong> The job card is not
+     * modified and no schedule entry is created. A service advisor or manager
+     * must review the recommendation and assign the work themselves
+     * (SRS BR-09, FR-AI-20).
+     */
+    @PostMapping("/mechanic-assignment")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @Operation(
+        summary = "AI Mechanic Assignment (recommendation only)",
+        description = "Recommends a mechanic for a job card using employment status, experience and real " +
+                      "current workload. The system holds no skill, certification, rating, availability or " +
+                      "attendance data, so those gaps are reported in dataLimitations. This is a " +
+                      "RECOMMENDATION ONLY — no assignment is made, the job card is not modified, and a " +
+                      "service advisor or manager must assign the work manually."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Recommendation produced, or no recommendation when the provider is unavailable " +
+                          "or returned an unvalidatable candidate",
+            content = @Content(schema = @Schema(implementation = MechanicAssignmentResponseDTO.class))
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation error — jobCardId missing or not positive, or a requested candidate is not active"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Authentication required"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Insufficient role"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Job card or candidate mechanic not found")
+    })
+    public ApiResponse<MechanicAssignmentResponseDTO> mechanicAssignment(
+            @Valid @RequestBody MechanicAssignmentRequestDTO request) {
+        return ApiResponse.ok(mechanicAssignmentService.recommend(request));
+    }
+
+    // ── Remaining AI stubs (not yet implemented — FR-AI-13..16, FR-AI-21..24) ─
     // These endpoints retain their original structure pending individual
     // implementation tasks.  They are NOT modified by this change.
 
@@ -174,14 +221,6 @@ public class AiController {
     @Operation(summary = "AI Damage Detection (stub)", description = "Not yet fully implemented.")
     public ApiResponse<AiResult> damage(@RequestBody AiRequest request) {
         request.setFeatureType(AiFeatureType.DAMAGE_DETECTION);
-        return ApiResponse.ok(aiOrchestrationService.process(request));
-    }
-
-    @PostMapping("/mechanic-assignment")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
-    @Operation(summary = "AI Mechanic Assignment (stub)", description = "Not yet fully implemented.")
-    public ApiResponse<AiResult> mechanicAssignment(@RequestBody AiRequest request) {
-        request.setFeatureType(AiFeatureType.MECHANIC_ASSIGNMENT);
         return ApiResponse.ok(aiOrchestrationService.process(request));
     }
 
