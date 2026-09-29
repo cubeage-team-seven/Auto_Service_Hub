@@ -5,6 +5,7 @@ import com.autoservicehub.ai.AiOrchestrationService;
 import com.autoservicehub.ai.AiRequest;
 import com.autoservicehub.ai.AiResult;
 import com.autoservicehub.dto.ApiResponse;
+<<<<<<< HEAD
 import com.autoservicehub.dto.DiagnosisRequestDTO;
 import com.autoservicehub.dto.DiagnosisResponseDTO;
 import com.autoservicehub.service.VehicleDiagnosisService;
@@ -13,8 +14,14 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+=======
+import com.autoservicehub.dto.JobCardResponseDTO;
+import com.autoservicehub.dto.MechanicAssignmentConfirmationRequestDTO;
+import com.autoservicehub.service.JobCardService;
+>>>>>>> origin/dev-Kartik
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,8 +42,13 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "AI Center", description = "AI-assisted vehicle operations — outputs are advisory and require human confirmation (SRS BR-09)")
 public class AiController {
 
+<<<<<<< HEAD
     private final AiOrchestrationService  aiOrchestrationService;
     private final VehicleDiagnosisService vehicleDiagnosisService;
+=======
+    private final AiOrchestrationService aiOrchestrationService;
+    private final JobCardService jobCardService;
+>>>>>>> origin/dev-Kartik
 
     // ── FR-AI-01..04: Vehicle Diagnosis ───────────────────────────────────
 
@@ -106,6 +118,14 @@ public class AiController {
     public ApiResponse<AiResult> mechanicAssignment(@RequestBody AiRequest request) {
         request.setFeatureType(AiFeatureType.MECHANIC_ASSIGNMENT);
         return ApiResponse.ok(aiOrchestrationService.process(request));
+    }
+
+    @PostMapping("/mechanic-assignment/confirm")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @org.springframework.web.bind.annotation.ResponseStatus(HttpStatus.OK)
+    public ApiResponse<JobCardResponseDTO> confirmMechanicAssignment(
+            @Valid @RequestBody MechanicAssignmentConfirmationRequestDTO request) {
+        return ApiResponse.ok("Assignment confirmed", jobCardService.assignMechanics(request.getJobCardId(), request.getMechanicIds()));
     }
 
     @PostMapping("/parts-prediction")

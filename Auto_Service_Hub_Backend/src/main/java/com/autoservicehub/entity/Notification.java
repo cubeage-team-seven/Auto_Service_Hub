@@ -14,6 +14,10 @@ import lombok.Setter;
 @Table(name = "notifications")
 public class Notification extends BaseEntity {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recipient_user_id")
+    private User recipient;
+
     @Column(name = "channel")
     private String channel;
     @Column(name = "title")
