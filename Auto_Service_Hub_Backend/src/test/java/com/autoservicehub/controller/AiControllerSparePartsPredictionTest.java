@@ -9,6 +9,7 @@ import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.security.CustomUserDetailsService;
 import com.autoservicehub.security.JwtAuthenticationFilter;
 import com.autoservicehub.security.JwtTokenProvider;
+import com.autoservicehub.service.DamageDetectionService;
 import com.autoservicehub.service.MaintenancePredictionService;
 import com.autoservicehub.service.MechanicAssignmentService;
 import com.autoservicehub.service.RepairCostEstimationService;
@@ -82,6 +83,7 @@ class AiControllerSparePartsPredictionTest {
     @Autowired MockMvc      mockMvc;
     @Autowired ObjectMapper mapper;
 
+    @MockBean DamageDetectionService       damageDetectionService;
     @MockBean SparePartsPredictionService  sparePartsPredictionService;
     @MockBean MechanicAssignmentService    mechanicAssignmentService;
     @MockBean MaintenancePredictionService maintenancePredictionService;

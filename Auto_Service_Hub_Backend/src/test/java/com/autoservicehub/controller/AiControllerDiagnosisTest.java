@@ -9,6 +9,7 @@ import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.security.CustomUserDetailsService;
 import com.autoservicehub.security.JwtAuthenticationFilter;
 import com.autoservicehub.security.JwtTokenProvider;
+import com.autoservicehub.service.DamageDetectionService;
 import com.autoservicehub.service.MaintenancePredictionService;
 import com.autoservicehub.service.MechanicAssignmentService;
 import com.autoservicehub.service.RepairCostEstimationService;
@@ -95,6 +96,7 @@ class AiControllerDiagnosisTest {
     @Autowired MockMvc      mockMvc;
     @Autowired ObjectMapper mapper;
 
+    @MockBean DamageDetectionService       damageDetectionService;
     @MockBean SparePartsPredictionService sparePartsPredictionService;
     @MockBean VehicleDiagnosisService  vehicleDiagnosisService;
     // AiController now also serves Repair Cost Estimation (FR-AI-05..08), so its

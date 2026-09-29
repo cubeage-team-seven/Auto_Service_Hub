@@ -1,8 +1,8 @@
 package com.autoservicehub.controller;
 
 import com.autoservicehub.ai.AiOrchestrationService;
-import com.autoservicehub.dto.MechanicAssignmentRequestDTO;
-import com.autoservicehub.dto.MechanicAssignmentResponseDTO;
+import com.autoservicehub.dto.DamageDetectionRequestDTO;
+import com.autoservicehub.dto.DamageDetectionResponseDTO;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.GlobalExceptionHandler;
 import com.autoservicehub.exception.ResourceNotFoundException;
@@ -49,17 +49,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Controller slice tests for {@code POST /api/v1/ai/mechanic-assignment}
- * (SRS 5.4, FR-AI-17..20, BR-09).
+ * Controller slice tests for {@code POST /api/v1/ai/damage-detection}
+ * (SRS 5.6, FR-AI-13..16, BR-09).
  *
- * <p>Test cases: CT1/CT2 valid requests, CT3 missing jobCardId → 400,
- * CT4 job card not found → 404, CT5 business rule → 409, CT6 anonymous → 401,
- * CT7 MECHANIC → 403, CT8 CUSTOMER → 403, CT9 no recommendation → 200 with
- * assignmentPersisted=false, CT10 no assignment persisted, CT11 no leak.
+ * <p>Test cases: CT1/CT2 valid requests, CT3 blank description → 400,
+ * CT4 missing vehicleId → 400, CT5 vehicle not found → 404,
+ * CT6 job card not found → 404, CT7 business rule → 409, CT8 anonymous → 401,
+ * CT9 CUSTOMER → 403, CT10 INVENTORY_MANAGER → 403, CT11 provider unavailable,
+ * CT12 response never claims image analysis, CT13 no leak.
  */
 @WebMvcTest(controllers = AiController.class)
-@Import({AiControllerMechanicAssignmentTest.TestSecurityConfig.class, GlobalExceptionHandler.class})
-class AiControllerMechanicAssignmentTest {
+@Import({AiControllerDamageDetectionTest.TestSecurityConfig.class, GlobalExceptionHandler.class})
+class AiControllerDamageDetectionTest {
 
     @EnableMethodSecurity
     static class TestSecurityConfig {
@@ -78,15 +79,15 @@ class AiControllerMechanicAssignmentTest {
         }
     }
 
-    private static final String URL = "/api/v1/ai/mechanic-assignment";
+    private static final String URL = "/api/v1/ai/damage-detection";
 
     @Autowired MockMvc      mockMvc;
     @Autowired ObjectMapper mapper;
 
+    @MockBean DamageDetectionService        damageDetectionService;
+    @MockBean SparePartsPredictionService  sparePartsPredictionService;
     @MockBean MechanicAssignmentService    mechanicAssignmentService;
     @MockBean MaintenancePredictionService maintenancePredictionService;
-    @MockBean DamageDetectionService       damageDetectionService;
-    @MockBean SparePartsPredictionService sparePartsPredictionService;
     @MockBean VehicleDiagnosisService      vehicleDiagnosisService;
     @MockBean RepairCostEstimationService  repairCostEstimationService;
     @MockBean AiOrchestrationService       aiOrchestrationService;
@@ -110,28 +111,36 @@ class AiControllerMechanicAssignmentTest {
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
-    private MechanicAssignmentRequestDTO validBody() {
-        MechanicAssignmentRequestDTO req = new MechanicAssignmentRequestDTO();
-        req.setJobCardId(7L);
+    private DamageDetectionRequestDTO validBody() {
+        DamageDetectionRequestDTO req = new DamageDetectionRequestDTO();
+        req.setVehicleId(3L);
+        req.setDamageDescription("Front-left wing panel is scraped and dented. Bumper cover is cracked.");
         return req;
     }
 
-    private MechanicAssignmentResponseDTO successResponse() {
-        return MechanicAssignmentResponseDTO.builder()
-                .jobCardId(7L)
-                .recommendedMechanicId(4L)
-                .recommendedMechanicEmployeeCode("MEC-004")
-                .recommendedMechanicName("Ravi Kumar")
-                .rationale("Lowest current open workload among active mechanics.")
-                .confidence(new BigDecimal("0.71"))
+    private DamageDetectionResponseDTO successResponse() {
+        return DamageDetectionResponseDTO.builder()
+                .vehicleId(3L)
+                .summary("Damage appears concentrated on the front-left corner")
+                .affectedAreas(List.of(new DamageDetectionResponseDTO.DamageAreaDTO(
+                        "Front-left wing panel", "MODERATE", "Surface scraping and denting",
+                        "The description states the panel is scraped and dented.")))
+                .confidence(new BigDecimal("0.62"))
                 .humanReviewRequired(true)
-                .assignmentPersisted(false)
                 .providerUnavailable(false)
-                .dataLimitations(List.of("No mechanic rating, availability schedule or attendance data is available."))
-                .candidatePoolSummary(
-                        new MechanicAssignmentResponseDTO.CandidatePoolSummaryDTO(3, "RECEIVED", false))
-                .disclaimer("This mechanic assignment is AI-generated and is a RECOMMENDATION ONLY. "
-                        + "No assignment has been made.")
+                .dataLimitations(List.of(
+                        "Damage assessment is based on the reported description and job context only. " +
+                        "No images or photographs were analysed — the system has no image upload or " +
+                        "vision capability.",
+                        "Inspections are not linked to vehicles or job cards in the current data model, " +
+                        "so inspection records could not be consulted.",
+                        "No damage type taxonomy or severity scale is defined in the system, so provider " +
+                        "severity levels could not be validated against a standard."))
+                .disclaimer("This damage assessment is AI-generated from a WRITTEN description of the " +
+                        "damage and is advisory only. NO photographs, images or video were analysed — " +
+                        "the system has no image upload or vision capability. This output must NOT be " +
+                        "used to settle an insurance claim, and must NOT be used to declare a vehicle " +
+                        "safe or unsafe.")
                 .build();
     }
 
@@ -141,42 +150,43 @@ class AiControllerMechanicAssignmentTest {
     @WithMockUser(roles = "SERVICE_ADVISOR")
     @DisplayName("CT1 — valid request, SERVICE_ADVISOR → 200, humanReviewRequired=true")
     void ct1_validRequest_serviceAdvisor_returns200() throws Exception {
-        when(mechanicAssignmentService.recommend(any())).thenReturn(successResponse());
+        when(damageDetectionService.assess(any())).thenReturn(successResponse());
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.jobCardId").value(7))
-                .andExpect(jsonPath("$.data.recommendedMechanicId").value(4))
+                .andExpect(jsonPath("$.data.vehicleId").value(3))
                 .andExpect(jsonPath("$.data.humanReviewRequired").value(true))
-                .andExpect(jsonPath("$.data.assignmentPersisted").value(false))
-                .andExpect(jsonPath("$.data.confidence").value(0.71))
-                .andExpect(jsonPath("$.data.candidatePoolSummary.activeCandidateCount").value(3))
-                .andExpect(jsonPath("$.data.disclaimer")
-                        .value(org.hamcrest.Matchers.containsString("RECOMMENDATION ONLY")));
+                .andExpect(jsonPath("$.data.providerUnavailable").value(false))
+                .andExpect(jsonPath("$.data.confidence").value(0.62))
+                .andExpect(jsonPath("$.data.affectedAreas.length()").value(1))
+                .andExpect(jsonPath("$.data.affectedAreas[0].severity").value("MODERATE"));
     }
 
     @Test
-    @WithMockUser(roles = "MANAGER")
-    @DisplayName("CT2 — valid request, MANAGER → 200")
-    void ct2_validRequest_manager_returns200() throws Exception {
-        when(mechanicAssignmentService.recommend(any())).thenReturn(successResponse());
+    @WithMockUser(roles = "MECHANIC")
+    @DisplayName("CT2 — valid request, MECHANIC → 200")
+    void ct2_validRequest_mechanic_returns200() throws Exception {
+        when(damageDetectionService.assess(any())).thenReturn(successResponse());
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.recommendedMechanicName").value("Ravi Kumar"));
+                .andExpect(jsonPath("$.data.summary")
+                        .value("Damage appears concentrated on the front-left corner"));
     }
 
-    // ── CT3/CT4/CT5: Validation and not-found ────────────────────────────
+    // ── CT3..CT7: Validation, not-found and business rules ───────────────
 
     @Test
     @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT3 — missing jobCardId → 400 VALIDATION_ERROR")
-    void ct3_missingJobCardId_returns400() throws Exception {
-        MechanicAssignmentRequestDTO req = new MechanicAssignmentRequestDTO();
+    @DisplayName("CT3 — blank damageDescription → 400 VALIDATION_ERROR")
+    void ct3_blankDescription_returns400() throws Exception {
+        DamageDetectionRequestDTO req = new DamageDetectionRequestDTO();
+        req.setVehicleId(3L);
+        req.setDamageDescription("");
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -187,10 +197,24 @@ class AiControllerMechanicAssignmentTest {
 
     @Test
     @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT4 — job card not found → 404 NOT_FOUND")
-    void ct4_jobCardNotFound_returns404() throws Exception {
-        when(mechanicAssignmentService.recommend(any()))
-                .thenThrow(new ResourceNotFoundException("JobCard not found: 99"));
+    @DisplayName("CT4 — missing vehicleId → 400 VALIDATION_ERROR")
+    void ct4_missingVehicleId_returns400() throws Exception {
+        DamageDetectionRequestDTO req = new DamageDetectionRequestDTO();
+        req.setDamageDescription("Front bumper is cracked and hanging loose.");
+
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    @WithMockUser(roles = "SERVICE_ADVISOR")
+    @DisplayName("CT5 — vehicle not found → 404 NOT_FOUND")
+    void ct5_vehicleNotFound_returns404() throws Exception {
+        when(damageDetectionService.assess(any()))
+                .thenThrow(new ResourceNotFoundException("Vehicle not found: 99"));
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -201,10 +225,26 @@ class AiControllerMechanicAssignmentTest {
 
     @Test
     @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT5 — inactive candidate → 409 BUSINESS_RULE_VIOLATION")
-    void ct5_inactiveCandidate_returns409() throws Exception {
-        when(mechanicAssignmentService.recommend(any()))
-                .thenThrow(new BusinessRuleException("Mechanic 9 is not active and cannot be assigned work."));
+    @DisplayName("CT6 — job card not found → 404 NOT_FOUND")
+    void ct6_jobCardNotFound_returns404() throws Exception {
+        when(damageDetectionService.assess(any()))
+                .thenThrow(new ResourceNotFoundException("JobCard not found: 88"));
+
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(validBody())))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+    }
+
+    @Test
+    @WithMockUser(roles = "SERVICE_ADVISOR")
+    @DisplayName("CT7 — job card from another vehicle → 409 BUSINESS_RULE_VIOLATION")
+    void ct7_jobCardFromAnotherVehicle_returns409() throws Exception {
+        when(damageDetectionService.assess(any()))
+                .thenThrow(new BusinessRuleException(
+                        "JobCard 7 belongs to a different vehicle and cannot be used to assess damage " +
+                        "for vehicle 3."));
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -213,62 +253,60 @@ class AiControllerMechanicAssignmentTest {
                 .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"));
     }
 
-    // ── CT6: Anonymous → 401 ─────────────────────────────────────────────
+    // ── CT8/CT9/CT10: Authorization ─────────────────────────────────────
 
     @Test
     @WithAnonymousUser
-    @DisplayName("CT6 — anonymous request → 401")
-    void ct6_anonymous_returns401() throws Exception {
+    @DisplayName("CT8 — anonymous request → 401")
+    void ct8_anonymous_returns401() throws Exception {
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isUnauthorized());
     }
 
-    // ── CT7/CT8: Insufficient role → 403 ─────────────────────────────────
-
-    @Test
-    @WithMockUser(roles = "MECHANIC")
-    @DisplayName("CT7 — MECHANIC role is not permitted → 403")
-    void ct7_mechanicRole_returns403() throws Exception {
-        mockMvc.perform(post(URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(validBody())))
-                .andExpect(status().isForbidden());
-    }
-
     @Test
     @WithMockUser(roles = "CUSTOMER")
-    @DisplayName("CT8 — CUSTOMER role is not permitted → 403")
-    void ct8_customerRole_returns403() throws Exception {
+    @DisplayName("CT9 — CUSTOMER role is not permitted → 403")
+    void ct9_customerRole_returns403() throws Exception {
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isForbidden());
     }
 
-    // ── CT9/CT10: No recommendation, and no assignment persisted ──────────
+    @Test
+    @WithMockUser(roles = "INVENTORY_MANAGER")
+    @DisplayName("CT10 — INVENTORY_MANAGER role is not permitted → 403")
+    void ct10_inventoryManager_returns403() throws Exception {
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(validBody())))
+                .andExpect(status().isForbidden());
+    }
+
+    // ── CT11/CT12/CT13 ──────────────────────────────────────────────────
 
     @Test
     @WithMockUser(roles = "MANAGER")
-    @DisplayName("CT9 — provider unavailable → 200, no mechanic recommended")
-    void ct9_providerUnavailable_noRecommendation() throws Exception {
-        MechanicAssignmentResponseDTO unavailable = MechanicAssignmentResponseDTO.builder()
-                .jobCardId(7L)
-                .recommendedMechanicId(null)
-                .recommendedMechanicName(null)
-                .rationale(null)
+    @DisplayName("CT11 — provider unavailable → 200, no damage areas fabricated")
+    void ct11_providerUnavailable_noDamageAreas() throws Exception {
+        DamageDetectionResponseDTO unavailable = DamageDetectionResponseDTO.builder()
+                .vehicleId(3L)
+                .summary(null)
+                .affectedAreas(List.of())
                 .confidence(null)
                 .humanReviewRequired(true)
-                .assignmentPersisted(false)
                 .providerUnavailable(true)
-                .dataLimitations(List.of("The AI provider is unavailable, so no mechanic could be "
-                        + "recommended. Please assign the work manually."))
-                .candidatePoolSummary(
-                        new MechanicAssignmentResponseDTO.CandidatePoolSummaryDTO(2, "RECEIVED", false))
-                .disclaimer("This mechanic assignment is AI-generated and is a RECOMMENDATION ONLY.")
+                .dataLimitations(List.of(
+                        "Damage assessment is based on the reported description and job context only. " +
+                        "No images or photographs were analysed — the system has no image upload or " +
+                        "vision capability.",
+                        "The AI provider is unavailable, so no damage assessment could be produced."))
+                .disclaimer("This damage assessment is AI-generated from a WRITTEN description. " +
+                        "NO photographs, images or video were analysed.")
                 .build();
-        when(mechanicAssignmentService.recommend(any())).thenReturn(unavailable);
+        when(damageDetectionService.assess(any())).thenReturn(unavailable);
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -276,15 +314,16 @@ class AiControllerMechanicAssignmentTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.providerUnavailable").value(true))
                 .andExpect(jsonPath("$.data.humanReviewRequired").value(true))
-                .andExpect(jsonPath("$.data.recommendedMechanicId").doesNotExist())
+                .andExpect(jsonPath("$.data.affectedAreas.length()").value(0))
+                .andExpect(jsonPath("$.data.summary").doesNotExist())
                 .andExpect(jsonPath("$.data.confidence").doesNotExist());
     }
 
     @Test
     @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT10 — a recommendation never reports a persisted assignment")
-    void ct10_assignmentPersisted_isAlwaysFalse() throws Exception {
-        when(mechanicAssignmentService.recommend(any())).thenReturn(successResponse());
+    @DisplayName("CT12 — response never claims an image or photo was analysed")
+    void ct12_neverClaimsImageAnalysis() throws Exception {
+        when(damageDetectionService.assess(any())).thenReturn(successResponse());
 
         String body = mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -292,17 +331,17 @@ class AiControllerMechanicAssignmentTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        // The response explicitly declares that no assignment was made.
-        assertThat(body).contains("\"assignmentPersisted\":false");
+        assertThat(body).contains("No images or photographs were analysed");
+        assertThat(body).contains("must NOT be used to settle an insurance claim");
+        assertThat(body).doesNotContain("vision analysis performed")
+                         .doesNotContain("image analysed by the AI");
     }
-
-    // ── CT11: No sensitive information leakage ────────────────────────────
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("CT11 — response body leaks no API key or provider internals")
-    void ct11_noSensitiveInformationLeakage() throws Exception {
-        when(mechanicAssignmentService.recommend(any()))
+    @DisplayName("CT13 — response body leaks no API key or provider internals")
+    void ct13_noSensitiveInformationLeakage() throws Exception {
+        when(damageDetectionService.assess(any()))
                 .thenThrow(new RuntimeException("Connection failed for key sk-live-TOPSECRET"));
 
         String body = mockMvc.perform(post(URL)
