@@ -1,9 +1,8 @@
 package com.autoservicehub.controller;
 
 import com.autoservicehub.ai.AiOrchestrationService;
-import com.autoservicehub.dto.RepairCostEstimationRequestDTO;
-import com.autoservicehub.dto.RepairCostEstimationResponseDTO;
-import com.autoservicehub.exception.BusinessRuleException;
+import com.autoservicehub.dto.MaintenancePredictionRequestDTO;
+import com.autoservicehub.dto.MaintenancePredictionResponseDTO;
 import com.autoservicehub.exception.GlobalExceptionHandler;
 import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.security.CustomUserDetailsService;
@@ -46,22 +45,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Controller slice tests for {@code POST /api/v1/ai/repair-cost-estimation}
- * (SRS 5.2, FR-AI-05..08, BR-09).
+ * Controller slice tests for {@code POST /api/v1/ai/maintenance-prediction}
+ * (SRS 5.3, FR-AI-09..12, BR-09).
  *
- * <p>Mirrors AiControllerDiagnosisTest: a minimal inner security config enables
- * {@code @PreAuthorize} and requires authentication, without registering the
- * real JWT filter.
- *
- * <p>Test cases: CT1/CT2 valid requests, CT3 blank description → 400,
+ * <p>Test cases: CT1/CT2 valid requests, CT3 missing vehicleId → 400,
  * CT4 non-positive vehicleId → 400, CT5 anonymous → 401,
- * CT6 MECHANIC → 403, CT7 CUSTOMER → 403, CT8 not found → 404,
- * CT9 business rule → 409, CT10 provider unavailable → 200,
- * CT11 no provider/secret leakage in the response body.
+ * CT6 INVENTORY_MANAGER → 403, CT7 CUSTOMER → 403, CT8 vehicle not found → 404,
+ * CT9 provider unavailable → 200 with no fabricated items,
+ * CT10 no API key or provider internals leaked in the response body.
  */
 @WebMvcTest(controllers = AiController.class)
-@Import({AiControllerRepairCostEstimationTest.TestSecurityConfig.class, GlobalExceptionHandler.class})
-class AiControllerRepairCostEstimationTest {
+@Import({AiControllerMaintenancePredictionTest.TestSecurityConfig.class, GlobalExceptionHandler.class})
+class AiControllerMaintenancePredictionTest {
 
     @EnableMethodSecurity
     static class TestSecurityConfig {
@@ -80,20 +75,18 @@ class AiControllerRepairCostEstimationTest {
         }
     }
 
-    private static final String URL = "/api/v1/ai/repair-cost-estimation";
+    private static final String URL = "/api/v1/ai/maintenance-prediction";
 
     @Autowired MockMvc      mockMvc;
     @Autowired ObjectMapper mapper;
 
-    @MockBean RepairCostEstimationService repairCostEstimationService;
-    // AiController also serves Maintenance Prediction (FR-AI-09..12); its
-    // dependency must be mocked for the slice context to build.
     @MockBean MaintenancePredictionService maintenancePredictionService;
-    @MockBean VehicleDiagnosisService     vehicleDiagnosisService;
-    @MockBean AiOrchestrationService      aiOrchestrationService;
-    @MockBean JwtAuthenticationFilter     jwtAuthenticationFilter;
-    @MockBean JwtTokenProvider            jwtTokenProvider;
-    @MockBean CustomUserDetailsService    customUserDetailsService;
+    @MockBean VehicleDiagnosisService         vehicleDiagnosisService;
+    @MockBean RepairCostEstimationService     repairCostEstimationService;
+    @MockBean AiOrchestrationService          aiOrchestrationService;
+    @MockBean JwtAuthenticationFilter         jwtAuthenticationFilter;
+    @MockBean JwtTokenProvider                jwtTokenProvider;
+    @MockBean CustomUserDetailsService        customUserDetailsService;
 
     @BeforeEach
     void configureFilterPassthrough() throws ServletException, IOException {
@@ -111,67 +104,73 @@ class AiControllerRepairCostEstimationTest {
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
-    private RepairCostEstimationRequestDTO validBody() {
-        RepairCostEstimationRequestDTO req = new RepairCostEstimationRequestDTO();
-        req.setServiceDescription("Front brake disc and pad replacement");
+    private MaintenancePredictionRequestDTO validBody() {
+        MaintenancePredictionRequestDTO req = new MaintenancePredictionRequestDTO();
+        req.setVehicleId(3L);
         return req;
     }
 
-    private RepairCostEstimationResponseDTO successResponse() {
-        return RepairCostEstimationResponseDTO.builder()
-                .estimatedTotalCost(new BigDecimal("8450.00"))
-                .currency("INR")
-                .costBreakdown(List.of())
-                .confidence(new BigDecimal("0.82"))
-                .disclaimer("This cost estimate is an approximation only, NOT a guaranteed price. "
-                        + "It must be reviewed by a service advisor or manager.")
+    private MaintenancePredictionResponseDTO successResponse() {
+        return MaintenancePredictionResponseDTO.builder()
+                .vehicleId(3L)
+                .summary("Routine service due soon")
+                .predictedItems(List.of(new MaintenancePredictionResponseDTO.MaintenanceItemDTO(
+                        "Engine oil and filter change", "MEDIUM", 55000, null, "Due soon")))
+                .confidence(new BigDecimal("0.78"))
                 .humanReviewRequired(true)
                 .providerUnavailable(false)
-                .dataLimitations(List.of("The system has no labour-rate table."))
+                .dataLimitations(List.of("The system has no maintenance schedule or service-interval table."))
+                .serviceHistorySummary(
+                        new MaintenancePredictionResponseDTO.ServiceHistorySummaryDTO(3, 3,
+                                java.time.LocalDateTime.of(2025, 11, 2, 10, 0), 42000))
+                .disclaimer("This maintenance prediction is AI-generated and is advisory only. It is NOT a "
+                        + "service schedule and NOT a safety instruction.")
                 .build();
     }
 
-    // ── CT1: Valid request, SERVICE_ADVISOR → 200 ────────────────────────
+    // ── CT1/CT2: Valid requests ──────────────────────────────────────────
 
     @Test
     @WithMockUser(roles = "SERVICE_ADVISOR")
     @DisplayName("CT1 — valid request, SERVICE_ADVISOR → 200, humanReviewRequired=true")
     void ct1_validRequest_serviceAdvisor_returns200() throws Exception {
-        when(repairCostEstimationService.estimate(any())).thenReturn(successResponse());
+        when(maintenancePredictionService.predict(any())).thenReturn(successResponse());
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.vehicleId").value(3))
                 .andExpect(jsonPath("$.data.humanReviewRequired").value(true))
                 .andExpect(jsonPath("$.data.providerUnavailable").value(false))
-                .andExpect(jsonPath("$.data.currency").value("INR"))
-                .andExpect(jsonPath("$.data.estimatedTotalCost").value(8450.00))
+                .andExpect(jsonPath("$.data.confidence").value(0.78))
+                .andExpect(jsonPath("$.data.predictedItems.length()").value(1))
+                .andExpect(jsonPath("$.data.predictedItems[0].priority").value("MEDIUM"))
+                .andExpect(jsonPath("$.data.serviceHistorySummary.completedJobCards").value(3))
                 .andExpect(jsonPath("$.data.disclaimer")
-                        .value(org.hamcrest.Matchers.containsString("NOT a guaranteed price")));
+                        .value(org.hamcrest.Matchers.containsString("NOT a service schedule")));
     }
 
     @Test
-    @WithMockUser(roles = "BILLING_USER")
-    @DisplayName("CT2 — valid request, BILLING_USER → 200")
-    void ct2_validRequest_billingUser_returns200() throws Exception {
-        when(repairCostEstimationService.estimate(any())).thenReturn(successResponse());
+    @WithMockUser(roles = "MECHANIC")
+    @DisplayName("CT2 — valid request, MECHANIC → 200")
+    void ct2_validRequest_mechanic_returns200() throws Exception {
+        when(maintenancePredictionService.predict(any())).thenReturn(successResponse());
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.confidence").value(0.82));
+                .andExpect(jsonPath("$.data.summary").value("Routine service due soon"));
     }
 
     // ── CT3/CT4: Validation → 400 ────────────────────────────────────────
 
     @Test
     @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT3 — blank serviceDescription → 400 VALIDATION_ERROR")
-    void ct3_blankDescription_returns400() throws Exception {
-        RepairCostEstimationRequestDTO req = new RepairCostEstimationRequestDTO();
-        req.setServiceDescription("");
+    @DisplayName("CT3 — missing vehicleId → 400 VALIDATION_ERROR")
+    void ct3_missingVehicleId_returns400() throws Exception {
+        MaintenancePredictionRequestDTO req = new MaintenancePredictionRequestDTO();
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -184,8 +183,8 @@ class AiControllerRepairCostEstimationTest {
     @WithMockUser(roles = "SERVICE_ADVISOR")
     @DisplayName("CT4 — non-positive vehicleId → 400 VALIDATION_ERROR")
     void ct4_nonPositiveVehicleId_returns400() throws Exception {
-        RepairCostEstimationRequestDTO req = validBody();
-        req.setVehicleId(-1L);
+        MaintenancePredictionRequestDTO req = validBody();
+        req.setVehicleId(0L);
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -209,9 +208,9 @@ class AiControllerRepairCostEstimationTest {
     // ── CT6/CT7: Insufficient role → 403 ─────────────────────────────────
 
     @Test
-    @WithMockUser(roles = "MECHANIC")
-    @DisplayName("CT6 — MECHANIC role is not permitted → 403")
-    void ct6_mechanicRole_returns403() throws Exception {
+    @WithMockUser(roles = "INVENTORY_MANAGER")
+    @DisplayName("CT6 — INVENTORY_MANAGER role is not permitted → 403")
+    void ct6_inventoryManager_returns403() throws Exception {
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
@@ -228,59 +227,42 @@ class AiControllerRepairCostEstimationTest {
                 .andExpect(status().isForbidden());
     }
 
-    // ── CT8: Entity not found → 404 ──────────────────────────────────────
+    // ── CT8: Vehicle not found → 404 ──────────────────────────────────────
 
     @Test
     @WithMockUser(roles = "SERVICE_ADVISOR")
     @DisplayName("CT8 — vehicle not found → 404 NOT_FOUND")
     void ct8_vehicleNotFound_returns404() throws Exception {
-        when(repairCostEstimationService.estimate(any()))
+        when(maintenancePredictionService.predict(any()))
                 .thenThrow(new ResourceNotFoundException("Vehicle not found: 99"));
-
-        RepairCostEstimationRequestDTO req = validBody();
-        req.setVehicleId(99L);
-
-        mockMvc.perform(post(URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(req)))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
-    }
-
-    // ── CT9: Business rule → 409 ─────────────────────────────────────────
-
-    @Test
-    @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT9 — BusinessRuleException → 409")
-    void ct9_businessRule_returns409() throws Exception {
-        when(repairCostEstimationService.estimate(any()))
-                .thenThrow(new BusinessRuleException(
-                        "serviceDescription is too short to produce a meaningful cost estimate."));
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
     }
 
-    // ── CT10: Provider unavailable → 200, no figure invented ─────────────
+    // ── CT9: Provider unavailable → 200, nothing fabricated ──────────────
 
     @Test
-    @WithMockUser(roles = "ADMIN")
-    @DisplayName("CT10 — providerUnavailable → 200 with null total and human review required")
-    void ct10_providerUnavailable_flaggedInResponse() throws Exception {
-        RepairCostEstimationResponseDTO unavailable = RepairCostEstimationResponseDTO.builder()
-                .estimatedTotalCost(null)
-                .currency("INR")
-                .costBreakdown(List.of())
+    @WithMockUser(roles = "MANAGER")
+    @DisplayName("CT9 — providerUnavailable → 200, empty items, no summary fabricated")
+    void ct9_providerUnavailable_noFabrication() throws Exception {
+        MaintenancePredictionResponseDTO unavailable = MaintenancePredictionResponseDTO.builder()
+                .vehicleId(3L)
+                .summary(null)
+                .predictedItems(List.of())
                 .confidence(null)
-                .disclaimer("This cost estimate is an approximation only, NOT a guaranteed price.")
                 .humanReviewRequired(true)
                 .providerUnavailable(true)
-                .dataLimitations(List.of("The AI provider is unavailable, so no cost figure could be produced."))
+                .dataLimitations(List.of("The AI provider is unavailable, so no maintenance prediction "
+                        + "could be produced. Please perform a manual inspection."))
+                .serviceHistorySummary(
+                        new MaintenancePredictionResponseDTO.ServiceHistorySummaryDTO(2, 1, null, 42000))
+                .disclaimer("This maintenance prediction is AI-generated and is advisory only.")
                 .build();
-        when(repairCostEstimationService.estimate(any())).thenReturn(unavailable);
+        when(maintenancePredictionService.predict(any())).thenReturn(unavailable);
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -288,16 +270,20 @@ class AiControllerRepairCostEstimationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.providerUnavailable").value(true))
                 .andExpect(jsonPath("$.data.humanReviewRequired").value(true))
-                .andExpect(jsonPath("$.data.estimatedTotalCost").doesNotExist());
+                .andExpect(jsonPath("$.data.predictedItems.length()").value(0))
+                .andExpect(jsonPath("$.data.summary").doesNotExist())
+                .andExpect(jsonPath("$.data.confidence").doesNotExist())
+                // History is still factual even with no provider.
+                .andExpect(jsonPath("$.data.serviceHistorySummary.totalJobCards").value(2));
     }
 
-    // ── CT11: No sensitive information leakage ────────────────────────────
+    // ── CT10: No sensitive information leakage ────────────────────────────
 
     @Test
-    @WithMockUser(roles = "MANAGER")
-    @DisplayName("CT11 — response body leaks no API key, token or provider internals")
-    void ct11_noSensitiveInformationLeakage() throws Exception {
-        when(repairCostEstimationService.estimate(any()))
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("CT10 — response body leaks no API key, token or provider internals")
+    void ct10_noSensitiveInformationLeakage() throws Exception {
+        when(maintenancePredictionService.predict(any()))
                 .thenThrow(new RuntimeException("Connection failed for key sk-live-TOPSECRET"));
 
         String body = mockMvc.perform(post(URL)
