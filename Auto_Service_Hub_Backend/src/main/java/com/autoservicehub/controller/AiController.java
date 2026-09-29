@@ -13,9 +13,12 @@ import com.autoservicehub.dto.MechanicAssignmentRequestDTO;
 import com.autoservicehub.dto.MechanicAssignmentResponseDTO;
 import com.autoservicehub.dto.RepairCostEstimationRequestDTO;
 import com.autoservicehub.dto.RepairCostEstimationResponseDTO;
+import com.autoservicehub.dto.SparePartsPredictionRequestDTO;
+import com.autoservicehub.dto.SparePartsPredictionResponseDTO;
 import com.autoservicehub.service.MaintenancePredictionService;
 import com.autoservicehub.service.MechanicAssignmentService;
 import com.autoservicehub.service.RepairCostEstimationService;
+import com.autoservicehub.service.SparePartsPredictionService;
 import com.autoservicehub.service.VehicleDiagnosisService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,10 +37,10 @@ import org.springframework.web.bind.annotation.*;
  * job card, invoice, or stock record (BR-09).
  *
  * <p>Diagnosis (FR-AI-01..04), Repair Cost Estimation (FR-AI-05..08),
- * Maintenance Prediction (FR-AI-09..12) and Mechanic Assignment
- * (FR-AI-17..20) are fully implemented, each with domain validation,
- * database-grounded context enrichment, a typed response and an enforced
- * human-review disclaimer.
+ * Maintenance Prediction (FR-AI-09..12), Mechanic Assignment (FR-AI-17..20)
+ * and Spare Parts Prediction (FR-AI-21..24) are fully implemented, each with
+ * domain validation, database-grounded context enrichment, a typed response
+ * and an enforced human-review disclaimer.
  * The remaining AI feature endpoints retain their original stub behaviour until
  * they are individually implemented.
  */
@@ -52,6 +55,7 @@ public class AiController {
     private final RepairCostEstimationService   repairCostEstimationService;
     private final MaintenancePredictionService  maintenancePredictionService;
     private final MechanicAssignmentService     mechanicAssignmentService;
+    private final SparePartsPredictionService   sparePartsPredictionService;
 
     // ── FR-AI-01..04: Vehicle Diagnosis ───────────────────────────────────
 
@@ -212,7 +216,50 @@ public class AiController {
         return ApiResponse.ok(mechanicAssignmentService.recommend(request));
     }
 
-    // ── Remaining AI stubs (not yet implemented — FR-AI-13..16, FR-AI-21..24) ─
+    // ── FR-AI-21..24: Spare Parts Prediction ─────────────────────────────
+
+    /**
+     * POST /api/v1/ai/spare-parts-prediction
+     *
+     * <p>Predicts the spare parts a described repair may require, grounded in
+     * the real parts catalogue with its current stock and pricing. Predicted
+     * parts are validated against the catalogue; any part the provider names
+     * that does not exist is discarded rather than substituted.
+     *
+     * <p><strong>No inventory action is taken.</strong> Stock is not deducted or
+     * reserved, no stock movement, purchase or supplier record is created, and no
+     * job card is modified. A parts professional must review the prediction and
+     * confirm the requirement before ordering (SRS BR-09, FR-AI-24).
+     */
+    @PostMapping("/spare-parts-prediction")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'INVENTORY_MANAGER', 'SERVICE_ADVISOR')")
+    @Operation(
+        summary = "AI Spare Parts Prediction (prediction only)",
+        description = "Predicts the spare parts a repair may require, using the real parts catalogue and " +
+                      "current stock. Parts are not linked to job cards and stock movements are not linked " +
+                      "to parts, so no historical parts-usage signal is available; these gaps are reported in " +
+                      "dataLimitations. This is a PREDICTION ONLY — no stock is reserved or deducted, no " +
+                      "stock movement, purchase or job card change is created, and a parts professional must " +
+                      "review the prediction and confirm the requirement before ordering."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Prediction produced, or no prediction when the provider is unavailable, the " +
+                          "catalogue is empty, or returned unmatchable parts",
+            content = @Content(schema = @Schema(implementation = SparePartsPredictionResponseDTO.class))
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation error — serviceDescription missing or too short, or a requested part id is not positive"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Authentication required"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Insufficient role"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Vehicle, job card or requested part not found")
+    })
+    public ApiResponse<SparePartsPredictionResponseDTO> sparePartsPrediction(
+            @Valid @RequestBody SparePartsPredictionRequestDTO request) {
+        return ApiResponse.ok(sparePartsPredictionService.predict(request));
+    }
+
+    // ── Remaining AI stubs (not yet implemented — FR-AI-13..16) ───────────
     // These endpoints retain their original structure pending individual
     // implementation tasks.  They are NOT modified by this change.
 
@@ -221,14 +268,6 @@ public class AiController {
     @Operation(summary = "AI Damage Detection (stub)", description = "Not yet fully implemented.")
     public ApiResponse<AiResult> damage(@RequestBody AiRequest request) {
         request.setFeatureType(AiFeatureType.DAMAGE_DETECTION);
-        return ApiResponse.ok(aiOrchestrationService.process(request));
-    }
-
-    @PostMapping("/parts-prediction")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'INVENTORY_MANAGER')")
-    @Operation(summary = "AI Parts Prediction (stub)", description = "Not yet fully implemented.")
-    public ApiResponse<AiResult> partsPrediction(@RequestBody AiRequest request) {
-        request.setFeatureType(AiFeatureType.PARTS_PREDICTION);
         return ApiResponse.ok(aiOrchestrationService.process(request));
     }
 }

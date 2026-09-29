@@ -1,8 +1,8 @@
 package com.autoservicehub.controller;
 
 import com.autoservicehub.ai.AiOrchestrationService;
-import com.autoservicehub.dto.MechanicAssignmentRequestDTO;
-import com.autoservicehub.dto.MechanicAssignmentResponseDTO;
+import com.autoservicehub.dto.SparePartsPredictionRequestDTO;
+import com.autoservicehub.dto.SparePartsPredictionResponseDTO;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.GlobalExceptionHandler;
 import com.autoservicehub.exception.ResourceNotFoundException;
@@ -48,17 +48,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Controller slice tests for {@code POST /api/v1/ai/mechanic-assignment}
- * (SRS 5.4, FR-AI-17..20, BR-09).
+ * Controller slice tests for {@code POST /api/v1/ai/spare-parts-prediction}
+ * (SRS 5.5, FR-AI-21..24, BR-09).
  *
- * <p>Test cases: CT1/CT2 valid requests, CT3 missing jobCardId → 400,
- * CT4 job card not found → 404, CT5 business rule → 409, CT6 anonymous → 401,
- * CT7 MECHANIC → 403, CT8 CUSTOMER → 403, CT9 no recommendation → 200 with
- * assignmentPersisted=false, CT10 no assignment persisted, CT11 no leak.
+ * <p>Test cases: CT1/CT2 valid requests, CT3 blank description → 400,
+ * CT4 job card not found → 404, CT5 part not found → 404, CT6 business rule → 409,
+ * CT7 anonymous → 401, CT8 MECHANIC → 403, CT9 CUSTOMER → 403,
+ * CT10 no prediction → 200, CT11 inventoryModified always false, CT12 no leak.
  */
 @WebMvcTest(controllers = AiController.class)
-@Import({AiControllerMechanicAssignmentTest.TestSecurityConfig.class, GlobalExceptionHandler.class})
-class AiControllerMechanicAssignmentTest {
+@Import({AiControllerSparePartsPredictionTest.TestSecurityConfig.class, GlobalExceptionHandler.class})
+class AiControllerSparePartsPredictionTest {
 
     @EnableMethodSecurity
     static class TestSecurityConfig {
@@ -77,14 +77,14 @@ class AiControllerMechanicAssignmentTest {
         }
     }
 
-    private static final String URL = "/api/v1/ai/mechanic-assignment";
+    private static final String URL = "/api/v1/ai/spare-parts-prediction";
 
     @Autowired MockMvc      mockMvc;
     @Autowired ObjectMapper mapper;
 
+    @MockBean SparePartsPredictionService  sparePartsPredictionService;
     @MockBean MechanicAssignmentService    mechanicAssignmentService;
     @MockBean MaintenancePredictionService maintenancePredictionService;
-    @MockBean SparePartsPredictionService sparePartsPredictionService;
     @MockBean VehicleDiagnosisService      vehicleDiagnosisService;
     @MockBean RepairCostEstimationService  repairCostEstimationService;
     @MockBean AiOrchestrationService       aiOrchestrationService;
@@ -108,73 +108,77 @@ class AiControllerMechanicAssignmentTest {
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
-    private MechanicAssignmentRequestDTO validBody() {
-        MechanicAssignmentRequestDTO req = new MechanicAssignmentRequestDTO();
-        req.setJobCardId(7L);
+    private SparePartsPredictionRequestDTO validBody() {
+        SparePartsPredictionRequestDTO req = new SparePartsPredictionRequestDTO();
+        req.setServiceDescription("Front brake disc and pad replacement");
         return req;
     }
 
-    private MechanicAssignmentResponseDTO successResponse() {
-        return MechanicAssignmentResponseDTO.builder()
-                .jobCardId(7L)
-                .recommendedMechanicId(4L)
-                .recommendedMechanicEmployeeCode("MEC-004")
-                .recommendedMechanicName("Ravi Kumar")
-                .rationale("Lowest current open workload among active mechanics.")
-                .confidence(new BigDecimal("0.71"))
+    private SparePartsPredictionResponseDTO successResponse() {
+        return SparePartsPredictionResponseDTO.builder()
+                .summary("Brake pads and a disc are typically required")
+                .predictedParts(List.of(new SparePartsPredictionResponseDTO.PredictedPartDTO(
+                        4L, "Front brake pad set", "BRK-PAD-01", 1, "set", 12, true,
+                        "Pads are replaced with discs.")))
+                .confidence(new BigDecimal("0.69"))
                 .humanReviewRequired(true)
-                .assignmentPersisted(false)
+                .inventoryModified(false)
                 .providerUnavailable(false)
-                .dataLimitations(List.of("No mechanic rating, availability schedule or attendance data is available."))
-                .candidatePoolSummary(
-                        new MechanicAssignmentResponseDTO.CandidatePoolSummaryDTO(3, "RECEIVED", false))
-                .disclaimer("This mechanic assignment is AI-generated and is a RECOMMENDATION ONLY. "
-                        + "No assignment has been made.")
+                .dataLimitations(List.of("Parts are not linked to job cards, so this workshop's historical " +
+                        "parts usage could not be analysed."))
+                .inventorySnapshot(
+                        new SparePartsPredictionResponseDTO.InventorySnapshotDTO(42, 3, 5))
+                .disclaimer("This spare parts prediction is AI-generated and is advisory only. No stock has " +
+                        "been reserved, deducted or ordered.")
                 .build();
     }
 
     // ── CT1/CT2: Valid requests ──────────────────────────────────────────
 
     @Test
-    @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT1 — valid request, SERVICE_ADVISOR → 200, humanReviewRequired=true")
-    void ct1_validRequest_serviceAdvisor_returns200() throws Exception {
-        when(mechanicAssignmentService.recommend(any())).thenReturn(successResponse());
+    @WithMockUser(roles = "INVENTORY_MANAGER")
+    @DisplayName("CT1 — valid request, INVENTORY_MANAGER → 200, no inventory modified")
+    void ct1_validRequest_inventoryManager_returns200() throws Exception {
+        when(sparePartsPredictionService.predict(any())).thenReturn(successResponse());
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.jobCardId").value(7))
-                .andExpect(jsonPath("$.data.recommendedMechanicId").value(4))
                 .andExpect(jsonPath("$.data.humanReviewRequired").value(true))
-                .andExpect(jsonPath("$.data.assignmentPersisted").value(false))
-                .andExpect(jsonPath("$.data.confidence").value(0.71))
-                .andExpect(jsonPath("$.data.candidatePoolSummary.activeCandidateCount").value(3))
+                .andExpect(jsonPath("$.data.inventoryModified").value(false))
+                .andExpect(jsonPath("$.data.providerUnavailable").value(false))
+                .andExpect(jsonPath("$.data.confidence").value(0.69))
+                .andExpect(jsonPath("$.data.predictedParts.length()").value(1))
+                .andExpect(jsonPath("$.data.predictedParts[0].partId").value(4))
+                .andExpect(jsonPath("$.data.predictedParts[0].partSku").value("BRK-PAD-01"))
+                .andExpect(jsonPath("$.data.inventorySnapshot.catalogueSize").value(42))
                 .andExpect(jsonPath("$.data.disclaimer")
-                        .value(org.hamcrest.Matchers.containsString("RECOMMENDATION ONLY")));
+                        .value(org.hamcrest.Matchers.containsString("No stock has been reserved")));
     }
 
     @Test
-    @WithMockUser(roles = "MANAGER")
-    @DisplayName("CT2 — valid request, MANAGER → 200")
-    void ct2_validRequest_manager_returns200() throws Exception {
-        when(mechanicAssignmentService.recommend(any())).thenReturn(successResponse());
+    @WithMockUser(roles = "SERVICE_ADVISOR")
+    @DisplayName("CT2 — valid request, SERVICE_ADVISOR → 200")
+    void ct2_validRequest_serviceAdvisor_returns200() throws Exception {
+        when(sparePartsPredictionService.predict(any())).thenReturn(successResponse());
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.recommendedMechanicName").value("Ravi Kumar"));
+                .andExpect(jsonPath("$.data.summary")
+                        .value("Brake pads and a disc are typically required"));
     }
 
-    // ── CT3/CT4/CT5: Validation and not-found ────────────────────────────
+    // ── CT3..CT6: Validation, not-found and business rules ───────────────
 
     @Test
-    @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT3 — missing jobCardId → 400 VALIDATION_ERROR")
-    void ct3_missingJobCardId_returns400() throws Exception {
-        MechanicAssignmentRequestDTO req = new MechanicAssignmentRequestDTO();
+    @WithMockUser(roles = "INVENTORY_MANAGER")
+    @DisplayName("CT3 — blank serviceDescription → 400 VALIDATION_ERROR")
+    void ct3_blankDescription_returns400() throws Exception {
+        SparePartsPredictionRequestDTO req = new SparePartsPredictionRequestDTO();
+        req.setServiceDescription("");
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -184,10 +188,10 @@ class AiControllerMechanicAssignmentTest {
     }
 
     @Test
-    @WithMockUser(roles = "SERVICE_ADVISOR")
+    @WithMockUser(roles = "INVENTORY_MANAGER")
     @DisplayName("CT4 — job card not found → 404 NOT_FOUND")
     void ct4_jobCardNotFound_returns404() throws Exception {
-        when(mechanicAssignmentService.recommend(any()))
+        when(sparePartsPredictionService.predict(any()))
                 .thenThrow(new ResourceNotFoundException("JobCard not found: 99"));
 
         mockMvc.perform(post(URL)
@@ -198,11 +202,26 @@ class AiControllerMechanicAssignmentTest {
     }
 
     @Test
-    @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT5 — inactive candidate → 409 BUSINESS_RULE_VIOLATION")
-    void ct5_inactiveCandidate_returns409() throws Exception {
-        when(mechanicAssignmentService.recommend(any()))
-                .thenThrow(new BusinessRuleException("Mechanic 9 is not active and cannot be assigned work."));
+    @WithMockUser(roles = "INVENTORY_MANAGER")
+    @DisplayName("CT5 — requested part not found → 404 NOT_FOUND")
+    void ct5_partNotFound_returns404() throws Exception {
+        when(sparePartsPredictionService.predict(any()))
+                .thenThrow(new ResourceNotFoundException("Part not found: 77"));
+
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(validBody())))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+    }
+
+    @Test
+    @WithMockUser(roles = "INVENTORY_MANAGER")
+    @DisplayName("CT6 — business rule violation → 409")
+    void ct6_businessRule_returns409() throws Exception {
+        when(sparePartsPredictionService.predict(any()))
+                .thenThrow(new BusinessRuleException(
+                        "serviceDescription is too short to predict parts for."));
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -211,24 +230,22 @@ class AiControllerMechanicAssignmentTest {
                 .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"));
     }
 
-    // ── CT6: Anonymous → 401 ─────────────────────────────────────────────
+    // ── CT7/CT8/CT9: Authorization ──────────────────────────────────────
 
     @Test
     @WithAnonymousUser
-    @DisplayName("CT6 — anonymous request → 401")
-    void ct6_anonymous_returns401() throws Exception {
+    @DisplayName("CT7 — anonymous request → 401")
+    void ct7_anonymous_returns401() throws Exception {
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isUnauthorized());
     }
 
-    // ── CT7/CT8: Insufficient role → 403 ─────────────────────────────────
-
     @Test
     @WithMockUser(roles = "MECHANIC")
-    @DisplayName("CT7 — MECHANIC role is not permitted → 403")
-    void ct7_mechanicRole_returns403() throws Exception {
+    @DisplayName("CT8 — MECHANIC role is not permitted → 403")
+    void ct8_mechanicRole_returns403() throws Exception {
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
@@ -237,36 +254,33 @@ class AiControllerMechanicAssignmentTest {
 
     @Test
     @WithMockUser(roles = "CUSTOMER")
-    @DisplayName("CT8 — CUSTOMER role is not permitted → 403")
-    void ct8_customerRole_returns403() throws Exception {
+    @DisplayName("CT9 — CUSTOMER role is not permitted → 403")
+    void ct9_customerRole_returns403() throws Exception {
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isForbidden());
     }
 
-    // ── CT9/CT10: No recommendation, and no assignment persisted ──────────
+    // ── CT10/CT11/CT12 ──────────────────────────────────────────────────
 
     @Test
     @WithMockUser(roles = "MANAGER")
-    @DisplayName("CT9 — provider unavailable → 200, no mechanic recommended")
-    void ct9_providerUnavailable_noRecommendation() throws Exception {
-        MechanicAssignmentResponseDTO unavailable = MechanicAssignmentResponseDTO.builder()
-                .jobCardId(7L)
-                .recommendedMechanicId(null)
-                .recommendedMechanicName(null)
-                .rationale(null)
+    @DisplayName("CT10 — provider unavailable → 200, no parts predicted, no fabrication")
+    void ct10_providerUnavailable_noPrediction() throws Exception {
+        SparePartsPredictionResponseDTO unavailable = SparePartsPredictionResponseDTO.builder()
+                .summary(null)
+                .predictedParts(List.of())
                 .confidence(null)
                 .humanReviewRequired(true)
-                .assignmentPersisted(false)
+                .inventoryModified(false)
                 .providerUnavailable(true)
-                .dataLimitations(List.of("The AI provider is unavailable, so no mechanic could be "
-                        + "recommended. Please assign the work manually."))
-                .candidatePoolSummary(
-                        new MechanicAssignmentResponseDTO.CandidatePoolSummaryDTO(2, "RECEIVED", false))
-                .disclaimer("This mechanic assignment is AI-generated and is a RECOMMENDATION ONLY.")
+                .dataLimitations(List.of("The AI provider is unavailable, so no parts could be predicted."))
+                .inventorySnapshot(
+                        new SparePartsPredictionResponseDTO.InventorySnapshotDTO(42, 3, 5))
+                .disclaimer("This spare parts prediction is AI-generated and is advisory only.")
                 .build();
-        when(mechanicAssignmentService.recommend(any())).thenReturn(unavailable);
+        when(sparePartsPredictionService.predict(any())).thenReturn(unavailable);
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -274,15 +288,16 @@ class AiControllerMechanicAssignmentTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.providerUnavailable").value(true))
                 .andExpect(jsonPath("$.data.humanReviewRequired").value(true))
-                .andExpect(jsonPath("$.data.recommendedMechanicId").doesNotExist())
+                .andExpect(jsonPath("$.data.predictedParts.length()").value(0))
+                .andExpect(jsonPath("$.data.summary").doesNotExist())
                 .andExpect(jsonPath("$.data.confidence").doesNotExist());
     }
 
     @Test
     @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT10 — a recommendation never reports a persisted assignment")
-    void ct10_assignmentPersisted_isAlwaysFalse() throws Exception {
-        when(mechanicAssignmentService.recommend(any())).thenReturn(successResponse());
+    @DisplayName("CT11 — a prediction never reports a modified inventory")
+    void ct11_inventoryModified_isAlwaysFalse() throws Exception {
+        when(sparePartsPredictionService.predict(any())).thenReturn(successResponse());
 
         String body = mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -290,17 +305,15 @@ class AiControllerMechanicAssignmentTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        // The response explicitly declares that no assignment was made.
-        assertThat(body).contains("\"assignmentPersisted\":false");
+        // The response explicitly declares that no stock was touched.
+        assertThat(body).contains("\"inventoryModified\":false");
     }
-
-    // ── CT11: No sensitive information leakage ────────────────────────────
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("CT11 — response body leaks no API key or provider internals")
-    void ct11_noSensitiveInformationLeakage() throws Exception {
-        when(mechanicAssignmentService.recommend(any()))
+    @DisplayName("CT12 — response body leaks no API key or provider internals")
+    void ct12_noSensitiveInformationLeakage() throws Exception {
+        when(sparePartsPredictionService.predict(any()))
                 .thenThrow(new RuntimeException("Connection failed for key sk-live-TOPSECRET"));
 
         String body = mockMvc.perform(post(URL)
