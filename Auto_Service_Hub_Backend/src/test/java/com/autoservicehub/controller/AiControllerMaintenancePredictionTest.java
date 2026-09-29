@@ -11,6 +11,7 @@ import com.autoservicehub.security.JwtTokenProvider;
 import com.autoservicehub.service.MaintenancePredictionService;
 import com.autoservicehub.service.MechanicAssignmentService;
 import com.autoservicehub.service.RepairCostEstimationService;
+import com.autoservicehub.service.SparePartsPredictionService;
 import com.autoservicehub.service.VehicleDiagnosisService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -85,6 +86,7 @@ class AiControllerMaintenancePredictionTest {
     // AiController also serves Mechanic Assignment (FR-AI-17..20); its
     // dependency must be mocked for the slice context to build.
     @MockBean MechanicAssignmentService    mechanicAssignmentService;
+    @MockBean SparePartsPredictionService sparePartsPredictionService;
     @MockBean VehicleDiagnosisService         vehicleDiagnosisService;
     @MockBean RepairCostEstimationService     repairCostEstimationService;
     @MockBean AiOrchestrationService          aiOrchestrationService;

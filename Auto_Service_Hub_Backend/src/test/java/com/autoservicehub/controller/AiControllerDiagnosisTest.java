@@ -12,6 +12,7 @@ import com.autoservicehub.security.JwtTokenProvider;
 import com.autoservicehub.service.MaintenancePredictionService;
 import com.autoservicehub.service.MechanicAssignmentService;
 import com.autoservicehub.service.RepairCostEstimationService;
+import com.autoservicehub.service.SparePartsPredictionService;
 import com.autoservicehub.service.VehicleDiagnosisService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -94,6 +95,7 @@ class AiControllerDiagnosisTest {
     @Autowired MockMvc      mockMvc;
     @Autowired ObjectMapper mapper;
 
+    @MockBean SparePartsPredictionService sparePartsPredictionService;
     @MockBean VehicleDiagnosisService  vehicleDiagnosisService;
     // AiController now also serves Repair Cost Estimation (FR-AI-05..08), so its
     // dependency must be mocked here for the slice context to build. The
