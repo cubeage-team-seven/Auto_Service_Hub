@@ -7,6 +7,9 @@ import com.autoservicehub.ai.AiResult;
 import com.autoservicehub.dto.ApiResponse;
 import com.autoservicehub.dto.DiagnosisRequestDTO;
 import com.autoservicehub.dto.DiagnosisResponseDTO;
+import com.autoservicehub.dto.RepairCostEstimationRequestDTO;
+import com.autoservicehub.dto.RepairCostEstimationResponseDTO;
+import com.autoservicehub.service.RepairCostEstimationService;
 import com.autoservicehub.service.VehicleDiagnosisService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,9 +27,10 @@ import org.springframework.web.bind.annotation.*;
  * <p>Every response must be reviewed/confirmed by a user before it changes a
  * job card, invoice, or stock record (BR-09).
  *
- * <p>Diagnosis (FR-AI-01..04) is fully implemented with domain validation,
- * vehicle context enrichment, and structured response.
- * All other AI feature endpoints retain their original stub behaviour until
+ * <p>Diagnosis (FR-AI-01..04) and Repair Cost Estimation (FR-AI-05..08) are
+ * fully implemented, each with domain validation, database-grounded context
+ * enrichment, a typed response and an enforced human-review disclaimer.
+ * The remaining AI feature endpoints retain their original stub behaviour until
  * they are individually implemented.
  */
 @RestController
@@ -35,8 +39,9 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "AI Center", description = "AI-assisted vehicle operations — outputs are advisory and require human confirmation (SRS BR-09)")
 public class AiController {
 
-    private final AiOrchestrationService  aiOrchestrationService;
-    private final VehicleDiagnosisService vehicleDiagnosisService;
+    private final AiOrchestrationService        aiOrchestrationService;
+    private final VehicleDiagnosisService       vehicleDiagnosisService;
+    private final RepairCostEstimationService   repairCostEstimationService;
 
     // ── FR-AI-01..04: Vehicle Diagnosis ───────────────────────────────────
 
@@ -72,17 +77,53 @@ public class AiController {
         return ApiResponse.ok(vehicleDiagnosisService.diagnose(request));
     }
 
-    // ── Remaining AI stubs (not yet implemented — FR-AI-05..24) ───────────
+    // ── FR-AI-05..08: Repair Cost Estimation ─────────────────────────────
+
+    /**
+     * POST /api/v1/ai/repair-cost-estimation
+     *
+     * <p>Produces an AI-assisted estimate of the cost of a repair. The request
+     * deliberately accepts no client-supplied price or total — the figure is
+     * produced by the AI provider and is advisory only.
+     *
+     * <p>Vehicle, job card and parts context is read from the database when
+     * supplied. The response reports which inputs were missing rather than
+     * filling the gaps in.
+     *
+     * <p>The result is NOT a quotation and NOT a guaranteed price. It must be
+     * reviewed by a service advisor or manager and agreed with the customer
+     * before any work is authorised (SRS BR-09, FR-AI-08).
+     */
+    @PostMapping("/repair-cost-estimation")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'BILLING_USER')")
+    @Operation(
+        summary = "AI Repair Cost Estimation",
+        description = "Estimates the cost of a repair using AI, grounded in vehicle, job card and parts " +
+                      "data from the database. Accepts no client-supplied totals. The output is an " +
+                      "APPROXIMATION, not a quotation or guaranteed price, and MUST be reviewed by a " +
+                      "service advisor or manager and agreed with the customer before work is authorised. " +
+                      "When the AI provider is unavailable no figure is returned and a manual estimate " +
+                      "must be prepared."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Estimate produced (or provider unavailable — see providerUnavailable flag)",
+            content = @Content(schema = @Schema(implementation = RepairCostEstimationResponseDTO.class))
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation error — serviceDescription missing or too short"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Authentication required"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Insufficient role"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Vehicle, job card or part not found (when the corresponding id was supplied)")
+    })
+    public ApiResponse<RepairCostEstimationResponseDTO> repairCostEstimation(
+            @Valid @RequestBody RepairCostEstimationRequestDTO request) {
+        return ApiResponse.ok(repairCostEstimationService.estimate(request));
+    }
+
+    // ── Remaining AI stubs (not yet implemented — FR-AI-09..24) ───────────
     // These endpoints retain their original structure pending individual
     // implementation tasks.  They are NOT modified by this change.
-
-    @PostMapping("/cost-estimate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'BILLING_USER')")
-    @Operation(summary = "AI Repair Cost Estimate (stub)", description = "Not yet fully implemented.")
-    public ApiResponse<AiResult> costEstimate(@RequestBody AiRequest request) {
-        request.setFeatureType(AiFeatureType.REPAIR_COST_ESTIMATE);
-        return ApiResponse.ok(aiOrchestrationService.process(request));
-    }
 
     @PostMapping("/maintenance")
     @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER')")
