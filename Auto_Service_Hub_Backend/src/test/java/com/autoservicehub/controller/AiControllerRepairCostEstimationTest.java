@@ -9,6 +9,7 @@ import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.security.CustomUserDetailsService;
 import com.autoservicehub.security.JwtAuthenticationFilter;
 import com.autoservicehub.security.JwtTokenProvider;
+import com.autoservicehub.service.DamageDetectionService;
 import com.autoservicehub.service.MaintenancePredictionService;
 import com.autoservicehub.service.MechanicAssignmentService;
 import com.autoservicehub.service.RepairCostEstimationService;
@@ -94,6 +95,7 @@ class AiControllerRepairCostEstimationTest {
     // AiController also serves Mechanic Assignment (FR-AI-17..20); its
     // dependency must be mocked for the slice context to build.
     @MockBean MechanicAssignmentService    mechanicAssignmentService;
+    @MockBean DamageDetectionService       damageDetectionService;
     @MockBean SparePartsPredictionService sparePartsPredictionService;
     @MockBean VehicleDiagnosisService     vehicleDiagnosisService;
     @MockBean AiOrchestrationService      aiOrchestrationService;

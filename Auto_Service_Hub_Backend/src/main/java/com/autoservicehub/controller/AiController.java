@@ -5,6 +5,8 @@ import com.autoservicehub.ai.AiOrchestrationService;
 import com.autoservicehub.ai.AiRequest;
 import com.autoservicehub.ai.AiResult;
 import com.autoservicehub.dto.ApiResponse;
+import com.autoservicehub.dto.DamageDetectionRequestDTO;
+import com.autoservicehub.dto.DamageDetectionResponseDTO;
 import com.autoservicehub.dto.DiagnosisRequestDTO;
 import com.autoservicehub.dto.DiagnosisResponseDTO;
 import com.autoservicehub.dto.MaintenancePredictionRequestDTO;
@@ -15,6 +17,7 @@ import com.autoservicehub.dto.RepairCostEstimationRequestDTO;
 import com.autoservicehub.dto.RepairCostEstimationResponseDTO;
 import com.autoservicehub.dto.SparePartsPredictionRequestDTO;
 import com.autoservicehub.dto.SparePartsPredictionResponseDTO;
+import com.autoservicehub.service.DamageDetectionService;
 import com.autoservicehub.service.MaintenancePredictionService;
 import com.autoservicehub.service.MechanicAssignmentService;
 import com.autoservicehub.service.RepairCostEstimationService;
@@ -36,11 +39,18 @@ import org.springframework.web.bind.annotation.*;
  * <p>Every response must be reviewed/confirmed by a user before it changes a
  * job card, invoice, or stock record (BR-09).
  *
- * <p>Diagnosis (FR-AI-01..04), Repair Cost Estimation (FR-AI-05..08),
- * Maintenance Prediction (FR-AI-09..12), Mechanic Assignment (FR-AI-17..20)
- * and Spare Parts Prediction (FR-AI-21..24) are fully implemented, each with
- * domain validation, database-grounded context enrichment, a typed response
- * and an enforced human-review disclaimer.
+ * <p>All six SRS AI capabilities are fully implemented, each with domain
+ * validation, database-grounded context enrichment, a typed response and an
+ * enforced human-review disclaimer:
+ * <ul>
+ *   <li>Vehicle Diagnosis (FR-AI-01..04)</li>
+ *   <li>Repair Cost Estimation (FR-AI-05..08)</li>
+ *   <li>Maintenance Prediction (FR-AI-09..12)</li>
+ *   <li>Damage Detection (FR-AI-13..16) — text-based assessment; the system has
+ *       no image upload or vision capability, so no image is analysed</li>
+ *   <li>Mechanic Assignment (FR-AI-17..20)</li>
+ *   <li>Spare Parts Prediction (FR-AI-21..24)</li>
+ * </ul>
  * The remaining AI feature endpoints retain their original stub behaviour until
  * they are individually implemented.
  */
@@ -56,6 +66,7 @@ public class AiController {
     private final MaintenancePredictionService  maintenancePredictionService;
     private final MechanicAssignmentService     mechanicAssignmentService;
     private final SparePartsPredictionService   sparePartsPredictionService;
+    private final DamageDetectionService        damageDetectionService;
 
     // ── FR-AI-01..04: Vehicle Diagnosis ───────────────────────────────────
 
@@ -259,15 +270,48 @@ public class AiController {
         return ApiResponse.ok(sparePartsPredictionService.predict(request));
     }
 
-    // ── Remaining AI stubs (not yet implemented — FR-AI-13..16) ───────────
-    // These endpoints retain their original structure pending individual
-    // implementation tasks.  They are NOT modified by this change.
+    // ── FR-AI-13..16: Damage Detection (text-based assessment) ────────────
 
-    @PostMapping("/damage")
+    /**
+     * POST /api/v1/ai/damage-detection
+     *
+     * <p>Assesses reported vehicle damage from a WRITTEN description, grounded
+     * in the vehicle's real record and, when supplied, a job card belonging to
+     * that vehicle.
+     *
+     * <p><strong>This is a text-based advisory assessment. No photographs,
+     * images or video are accepted or analysed</strong> — the system has no image
+     * upload, storage or vision capability, and no AI provider capable of vision
+     * is configured. A qualified technician must physically inspect the vehicle.
+     * The output must not be used to settle an insurance claim or to declare a
+     * vehicle safe or unsafe (SRS BR-09, FR-AI-16).
+     */
+    @PostMapping("/damage-detection")
     @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
-    @Operation(summary = "AI Damage Detection (stub)", description = "Not yet fully implemented.")
-    public ApiResponse<AiResult> damage(@RequestBody AiRequest request) {
-        request.setFeatureType(AiFeatureType.DAMAGE_DETECTION);
-        return ApiResponse.ok(aiOrchestrationService.process(request));
+    @Operation(
+        summary = "AI Damage Assessment (text-based, NOT image analysis)",
+        description = "Assesses reported damage from a WRITTEN description together with the vehicle record " +
+                      "and job context. IMPORTANT: this endpoint does NOT analyse photographs, images or " +
+                      "video — the system has no image upload or vision capability, so no image can be " +
+                      "submitted or interpreted. Output is advisory and must be confirmed by a qualified " +
+                      "technician who physically inspects the vehicle. It must NOT be used to settle or " +
+                      "value an insurance claim, nor to declare a vehicle safe or unsafe. When the AI " +
+                      "provider is unavailable no damage areas are returned and a manual inspection is " +
+                      "required."
+    )
+    @ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Assessment produced, or a safe degraded response when the provider is unavailable",
+            content = @Content(schema = @Schema(implementation = DamageDetectionResponseDTO.class))
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Validation error — vehicleId or damageDescription missing/invalid, or the job card belongs to another vehicle"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Authentication required"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Insufficient role"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Vehicle or job card not found")
+    })
+    public ApiResponse<DamageDetectionResponseDTO> damageDetection(
+            @Valid @RequestBody DamageDetectionRequestDTO request) {
+        return ApiResponse.ok(damageDetectionService.assess(request));
     }
 }
