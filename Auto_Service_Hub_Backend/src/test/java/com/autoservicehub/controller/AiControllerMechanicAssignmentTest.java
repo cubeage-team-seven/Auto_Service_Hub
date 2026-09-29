@@ -1,8 +1,9 @@
 package com.autoservicehub.controller;
 
 import com.autoservicehub.ai.AiOrchestrationService;
-import com.autoservicehub.dto.MaintenancePredictionRequestDTO;
-import com.autoservicehub.dto.MaintenancePredictionResponseDTO;
+import com.autoservicehub.dto.MechanicAssignmentRequestDTO;
+import com.autoservicehub.dto.MechanicAssignmentResponseDTO;
+import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.GlobalExceptionHandler;
 import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.security.CustomUserDetailsService;
@@ -46,18 +47,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Controller slice tests for {@code POST /api/v1/ai/maintenance-prediction}
- * (SRS 5.3, FR-AI-09..12, BR-09).
+ * Controller slice tests for {@code POST /api/v1/ai/mechanic-assignment}
+ * (SRS 5.4, FR-AI-17..20, BR-09).
  *
- * <p>Test cases: CT1/CT2 valid requests, CT3 missing vehicleId → 400,
- * CT4 non-positive vehicleId → 400, CT5 anonymous → 401,
- * CT6 INVENTORY_MANAGER → 403, CT7 CUSTOMER → 403, CT8 vehicle not found → 404,
- * CT9 provider unavailable → 200 with no fabricated items,
- * CT10 no API key or provider internals leaked in the response body.
+ * <p>Test cases: CT1/CT2 valid requests, CT3 missing jobCardId → 400,
+ * CT4 job card not found → 404, CT5 business rule → 409, CT6 anonymous → 401,
+ * CT7 MECHANIC → 403, CT8 CUSTOMER → 403, CT9 no recommendation → 200 with
+ * assignmentPersisted=false, CT10 no assignment persisted, CT11 no leak.
  */
 @WebMvcTest(controllers = AiController.class)
-@Import({AiControllerMaintenancePredictionTest.TestSecurityConfig.class, GlobalExceptionHandler.class})
-class AiControllerMaintenancePredictionTest {
+@Import({AiControllerMechanicAssignmentTest.TestSecurityConfig.class, GlobalExceptionHandler.class})
+class AiControllerMechanicAssignmentTest {
 
     @EnableMethodSecurity
     static class TestSecurityConfig {
@@ -76,21 +76,19 @@ class AiControllerMaintenancePredictionTest {
         }
     }
 
-    private static final String URL = "/api/v1/ai/maintenance-prediction";
+    private static final String URL = "/api/v1/ai/mechanic-assignment";
 
     @Autowired MockMvc      mockMvc;
     @Autowired ObjectMapper mapper;
 
-    @MockBean MaintenancePredictionService maintenancePredictionService;
-    // AiController also serves Mechanic Assignment (FR-AI-17..20); its
-    // dependency must be mocked for the slice context to build.
     @MockBean MechanicAssignmentService    mechanicAssignmentService;
-    @MockBean VehicleDiagnosisService         vehicleDiagnosisService;
-    @MockBean RepairCostEstimationService     repairCostEstimationService;
-    @MockBean AiOrchestrationService          aiOrchestrationService;
-    @MockBean JwtAuthenticationFilter         jwtAuthenticationFilter;
-    @MockBean JwtTokenProvider                jwtTokenProvider;
-    @MockBean CustomUserDetailsService        customUserDetailsService;
+    @MockBean MaintenancePredictionService maintenancePredictionService;
+    @MockBean VehicleDiagnosisService      vehicleDiagnosisService;
+    @MockBean RepairCostEstimationService  repairCostEstimationService;
+    @MockBean AiOrchestrationService       aiOrchestrationService;
+    @MockBean JwtAuthenticationFilter      jwtAuthenticationFilter;
+    @MockBean JwtTokenProvider             jwtTokenProvider;
+    @MockBean CustomUserDetailsService     customUserDetailsService;
 
     @BeforeEach
     void configureFilterPassthrough() throws ServletException, IOException {
@@ -108,27 +106,28 @@ class AiControllerMaintenancePredictionTest {
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
-    private MaintenancePredictionRequestDTO validBody() {
-        MaintenancePredictionRequestDTO req = new MaintenancePredictionRequestDTO();
-        req.setVehicleId(3L);
+    private MechanicAssignmentRequestDTO validBody() {
+        MechanicAssignmentRequestDTO req = new MechanicAssignmentRequestDTO();
+        req.setJobCardId(7L);
         return req;
     }
 
-    private MaintenancePredictionResponseDTO successResponse() {
-        return MaintenancePredictionResponseDTO.builder()
-                .vehicleId(3L)
-                .summary("Routine service due soon")
-                .predictedItems(List.of(new MaintenancePredictionResponseDTO.MaintenanceItemDTO(
-                        "Engine oil and filter change", "MEDIUM", 55000, null, "Due soon")))
-                .confidence(new BigDecimal("0.78"))
+    private MechanicAssignmentResponseDTO successResponse() {
+        return MechanicAssignmentResponseDTO.builder()
+                .jobCardId(7L)
+                .recommendedMechanicId(4L)
+                .recommendedMechanicEmployeeCode("MEC-004")
+                .recommendedMechanicName("Ravi Kumar")
+                .rationale("Lowest current open workload among active mechanics.")
+                .confidence(new BigDecimal("0.71"))
                 .humanReviewRequired(true)
+                .assignmentPersisted(false)
                 .providerUnavailable(false)
-                .dataLimitations(List.of("The system has no maintenance schedule or service-interval table."))
-                .serviceHistorySummary(
-                        new MaintenancePredictionResponseDTO.ServiceHistorySummaryDTO(3, 3,
-                                java.time.LocalDateTime.of(2025, 11, 2, 10, 0), 42000))
-                .disclaimer("This maintenance prediction is AI-generated and is advisory only. It is NOT a "
-                        + "service schedule and NOT a safety instruction.")
+                .dataLimitations(List.of("No mechanic rating, availability schedule or attendance data is available."))
+                .candidatePoolSummary(
+                        new MechanicAssignmentResponseDTO.CandidatePoolSummaryDTO(3, "RECEIVED", false))
+                .disclaimer("This mechanic assignment is AI-generated and is a RECOMMENDATION ONLY. "
+                        + "No assignment has been made.")
                 .build();
     }
 
@@ -138,43 +137,42 @@ class AiControllerMaintenancePredictionTest {
     @WithMockUser(roles = "SERVICE_ADVISOR")
     @DisplayName("CT1 — valid request, SERVICE_ADVISOR → 200, humanReviewRequired=true")
     void ct1_validRequest_serviceAdvisor_returns200() throws Exception {
-        when(maintenancePredictionService.predict(any())).thenReturn(successResponse());
+        when(mechanicAssignmentService.recommend(any())).thenReturn(successResponse());
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.vehicleId").value(3))
+                .andExpect(jsonPath("$.data.jobCardId").value(7))
+                .andExpect(jsonPath("$.data.recommendedMechanicId").value(4))
                 .andExpect(jsonPath("$.data.humanReviewRequired").value(true))
-                .andExpect(jsonPath("$.data.providerUnavailable").value(false))
-                .andExpect(jsonPath("$.data.confidence").value(0.78))
-                .andExpect(jsonPath("$.data.predictedItems.length()").value(1))
-                .andExpect(jsonPath("$.data.predictedItems[0].priority").value("MEDIUM"))
-                .andExpect(jsonPath("$.data.serviceHistorySummary.completedJobCards").value(3))
+                .andExpect(jsonPath("$.data.assignmentPersisted").value(false))
+                .andExpect(jsonPath("$.data.confidence").value(0.71))
+                .andExpect(jsonPath("$.data.candidatePoolSummary.activeCandidateCount").value(3))
                 .andExpect(jsonPath("$.data.disclaimer")
-                        .value(org.hamcrest.Matchers.containsString("NOT a service schedule")));
+                        .value(org.hamcrest.Matchers.containsString("RECOMMENDATION ONLY")));
     }
 
     @Test
-    @WithMockUser(roles = "MECHANIC")
-    @DisplayName("CT2 — valid request, MECHANIC → 200")
-    void ct2_validRequest_mechanic_returns200() throws Exception {
-        when(maintenancePredictionService.predict(any())).thenReturn(successResponse());
+    @WithMockUser(roles = "MANAGER")
+    @DisplayName("CT2 — valid request, MANAGER → 200")
+    void ct2_validRequest_manager_returns200() throws Exception {
+        when(mechanicAssignmentService.recommend(any())).thenReturn(successResponse());
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(validBody())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.summary").value("Routine service due soon"));
+                .andExpect(jsonPath("$.data.recommendedMechanicName").value("Ravi Kumar"));
     }
 
-    // ── CT3/CT4: Validation → 400 ────────────────────────────────────────
+    // ── CT3/CT4/CT5: Validation and not-found ────────────────────────────
 
     @Test
     @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT3 — missing vehicleId → 400 VALIDATION_ERROR")
-    void ct3_missingVehicleId_returns400() throws Exception {
-        MaintenancePredictionRequestDTO req = new MaintenancePredictionRequestDTO();
+    @DisplayName("CT3 — missing jobCardId → 400 VALIDATION_ERROR")
+    void ct3_missingJobCardId_returns400() throws Exception {
+        MechanicAssignmentRequestDTO req = new MechanicAssignmentRequestDTO();
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -185,60 +183,10 @@ class AiControllerMaintenancePredictionTest {
 
     @Test
     @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT4 — non-positive vehicleId → 400 VALIDATION_ERROR")
-    void ct4_nonPositiveVehicleId_returns400() throws Exception {
-        MaintenancePredictionRequestDTO req = validBody();
-        req.setVehicleId(0L);
-
-        mockMvc.perform(post(URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(req)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
-    }
-
-    // ── CT5: Anonymous → 401 ─────────────────────────────────────────────
-
-    @Test
-    @WithAnonymousUser
-    @DisplayName("CT5 — anonymous request → 401")
-    void ct5_anonymous_returns401() throws Exception {
-        mockMvc.perform(post(URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(validBody())))
-                .andExpect(status().isUnauthorized());
-    }
-
-    // ── CT6/CT7: Insufficient role → 403 ─────────────────────────────────
-
-    @Test
-    @WithMockUser(roles = "INVENTORY_MANAGER")
-    @DisplayName("CT6 — INVENTORY_MANAGER role is not permitted → 403")
-    void ct6_inventoryManager_returns403() throws Exception {
-        mockMvc.perform(post(URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(validBody())))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    @WithMockUser(roles = "CUSTOMER")
-    @DisplayName("CT7 — CUSTOMER role is not permitted → 403")
-    void ct7_customerRole_returns403() throws Exception {
-        mockMvc.perform(post(URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(validBody())))
-                .andExpect(status().isForbidden());
-    }
-
-    // ── CT8: Vehicle not found → 404 ──────────────────────────────────────
-
-    @Test
-    @WithMockUser(roles = "SERVICE_ADVISOR")
-    @DisplayName("CT8 — vehicle not found → 404 NOT_FOUND")
-    void ct8_vehicleNotFound_returns404() throws Exception {
-        when(maintenancePredictionService.predict(any()))
-                .thenThrow(new ResourceNotFoundException("Vehicle not found: 99"));
+    @DisplayName("CT4 — job card not found → 404 NOT_FOUND")
+    void ct4_jobCardNotFound_returns404() throws Exception {
+        when(mechanicAssignmentService.recommend(any()))
+                .thenThrow(new ResourceNotFoundException("JobCard not found: 99"));
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -247,26 +195,76 @@ class AiControllerMaintenancePredictionTest {
                 .andExpect(jsonPath("$.code").value("NOT_FOUND"));
     }
 
-    // ── CT9: Provider unavailable → 200, nothing fabricated ──────────────
+    @Test
+    @WithMockUser(roles = "SERVICE_ADVISOR")
+    @DisplayName("CT5 — inactive candidate → 409 BUSINESS_RULE_VIOLATION")
+    void ct5_inactiveCandidate_returns409() throws Exception {
+        when(mechanicAssignmentService.recommend(any()))
+                .thenThrow(new BusinessRuleException("Mechanic 9 is not active and cannot be assigned work."));
+
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(validBody())))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("BUSINESS_RULE_VIOLATION"));
+    }
+
+    // ── CT6: Anonymous → 401 ─────────────────────────────────────────────
+
+    @Test
+    @WithAnonymousUser
+    @DisplayName("CT6 — anonymous request → 401")
+    void ct6_anonymous_returns401() throws Exception {
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(validBody())))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // ── CT7/CT8: Insufficient role → 403 ─────────────────────────────────
+
+    @Test
+    @WithMockUser(roles = "MECHANIC")
+    @DisplayName("CT7 — MECHANIC role is not permitted → 403")
+    void ct7_mechanicRole_returns403() throws Exception {
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(validBody())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "CUSTOMER")
+    @DisplayName("CT8 — CUSTOMER role is not permitted → 403")
+    void ct8_customerRole_returns403() throws Exception {
+        mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(validBody())))
+                .andExpect(status().isForbidden());
+    }
+
+    // ── CT9/CT10: No recommendation, and no assignment persisted ──────────
 
     @Test
     @WithMockUser(roles = "MANAGER")
-    @DisplayName("CT9 — providerUnavailable → 200, empty items, no summary fabricated")
-    void ct9_providerUnavailable_noFabrication() throws Exception {
-        MaintenancePredictionResponseDTO unavailable = MaintenancePredictionResponseDTO.builder()
-                .vehicleId(3L)
-                .summary(null)
-                .predictedItems(List.of())
+    @DisplayName("CT9 — provider unavailable → 200, no mechanic recommended")
+    void ct9_providerUnavailable_noRecommendation() throws Exception {
+        MechanicAssignmentResponseDTO unavailable = MechanicAssignmentResponseDTO.builder()
+                .jobCardId(7L)
+                .recommendedMechanicId(null)
+                .recommendedMechanicName(null)
+                .rationale(null)
                 .confidence(null)
                 .humanReviewRequired(true)
+                .assignmentPersisted(false)
                 .providerUnavailable(true)
-                .dataLimitations(List.of("The AI provider is unavailable, so no maintenance prediction "
-                        + "could be produced. Please perform a manual inspection."))
-                .serviceHistorySummary(
-                        new MaintenancePredictionResponseDTO.ServiceHistorySummaryDTO(2, 1, null, 42000))
-                .disclaimer("This maintenance prediction is AI-generated and is advisory only.")
+                .dataLimitations(List.of("The AI provider is unavailable, so no mechanic could be "
+                        + "recommended. Please assign the work manually."))
+                .candidatePoolSummary(
+                        new MechanicAssignmentResponseDTO.CandidatePoolSummaryDTO(2, "RECEIVED", false))
+                .disclaimer("This mechanic assignment is AI-generated and is a RECOMMENDATION ONLY.")
                 .build();
-        when(maintenancePredictionService.predict(any())).thenReturn(unavailable);
+        when(mechanicAssignmentService.recommend(any())).thenReturn(unavailable);
 
         mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -274,20 +272,33 @@ class AiControllerMaintenancePredictionTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.providerUnavailable").value(true))
                 .andExpect(jsonPath("$.data.humanReviewRequired").value(true))
-                .andExpect(jsonPath("$.data.predictedItems.length()").value(0))
-                .andExpect(jsonPath("$.data.summary").doesNotExist())
-                .andExpect(jsonPath("$.data.confidence").doesNotExist())
-                // History is still factual even with no provider.
-                .andExpect(jsonPath("$.data.serviceHistorySummary.totalJobCards").value(2));
+                .andExpect(jsonPath("$.data.recommendedMechanicId").doesNotExist())
+                .andExpect(jsonPath("$.data.confidence").doesNotExist());
     }
 
-    // ── CT10: No sensitive information leakage ────────────────────────────
+    @Test
+    @WithMockUser(roles = "SERVICE_ADVISOR")
+    @DisplayName("CT10 — a recommendation never reports a persisted assignment")
+    void ct10_assignmentPersisted_isAlwaysFalse() throws Exception {
+        when(mechanicAssignmentService.recommend(any())).thenReturn(successResponse());
+
+        String body = mockMvc.perform(post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(validBody())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // The response explicitly declares that no assignment was made.
+        assertThat(body).contains("\"assignmentPersisted\":false");
+    }
+
+    // ── CT11: No sensitive information leakage ────────────────────────────
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    @DisplayName("CT10 — response body leaks no API key, token or provider internals")
-    void ct10_noSensitiveInformationLeakage() throws Exception {
-        when(maintenancePredictionService.predict(any()))
+    @DisplayName("CT11 — response body leaks no API key or provider internals")
+    void ct11_noSensitiveInformationLeakage() throws Exception {
+        when(mechanicAssignmentService.recommend(any()))
                 .thenThrow(new RuntimeException("Connection failed for key sk-live-TOPSECRET"));
 
         String body = mockMvc.perform(post(URL)

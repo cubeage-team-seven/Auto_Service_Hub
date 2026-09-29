@@ -25,6 +25,12 @@ public interface JobCardRepository extends JpaRepository<JobCard, Long>, JpaSpec
     long countByMechanicIdAndStatusAndAssignedDateBetween(Long mechanicId, String status,
                                                           LocalDateTime from, LocalDateTime to);
 
+    // ── FR-AI-17: Current open workload for a mechanic ─────────────────────
+    // Counts the job cards a mechanic currently holds, i.e. those in any status
+    // other than the terminal DELIVERED state. This is the only workload signal
+    // the current data model supports — there is no capacity or shift data.
+    long countByMechanicIdAndStatusNot(Long mechanicId, String excludedStatus);
+
     // ── FR-CRM-3: Chronological service history per customer ──────────────
     List<JobCard> findByCustomerIdOrderByAssignedDateDesc(Long customerId);
 
