@@ -5,7 +5,12 @@ import com.autoservicehub.ai.AiOrchestrationService;
 import com.autoservicehub.ai.AiRequest;
 import com.autoservicehub.ai.AiResult;
 import com.autoservicehub.dto.ApiResponse;
+import com.autoservicehub.dto.JobCardResponseDTO;
+import com.autoservicehub.dto.MechanicAssignmentConfirmationRequestDTO;
+import com.autoservicehub.service.JobCardService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class AiController {
 
     private final AiOrchestrationService aiOrchestrationService;
+    private final JobCardService jobCardService;
 
     @PostMapping("/diagnosis")
     @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER')")
@@ -54,6 +60,14 @@ public class AiController {
     public ApiResponse<AiResult> mechanicAssignment(@RequestBody AiRequest request) {
         request.setFeatureType(AiFeatureType.MECHANIC_ASSIGNMENT);
         return ApiResponse.ok(aiOrchestrationService.process(request));
+    }
+
+    @PostMapping("/mechanic-assignment/confirm")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @org.springframework.web.bind.annotation.ResponseStatus(HttpStatus.OK)
+    public ApiResponse<JobCardResponseDTO> confirmMechanicAssignment(
+            @Valid @RequestBody MechanicAssignmentConfirmationRequestDTO request) {
+        return ApiResponse.ok("Assignment confirmed", jobCardService.assignMechanics(request.getJobCardId(), request.getMechanicIds()));
     }
 
     @PostMapping("/parts-prediction")

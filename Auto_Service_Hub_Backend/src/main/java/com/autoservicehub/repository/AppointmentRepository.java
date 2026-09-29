@@ -1,8 +1,13 @@
+
 package com.autoservicehub.repository;
 
 import com.autoservicehub.entity.Appointment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -10,14 +15,42 @@ import java.util.List;
 
 /**
  * Spring Data JPA repository for Appointment.
- * Extends JpaSpecificationExecutor for dynamic filters (SRS 9, 17).
+ * Supports dynamic filtering, customer appointments,
+ * advisor visibility, and bay-conflict checking.
  */
 @Repository
-public interface AppointmentRepository extends JpaRepository<Appointment, Long>, JpaSpecificationExecutor<Appointment> {
+public interface AppointmentRepository
+        extends JpaRepository<Appointment, Long>,
+                JpaSpecificationExecutor<Appointment> {
 
-    // ── Existing dashboard query ───────────────────────────────────────────
+    // Existing dashboard query
     long countByAppointmentAtBetween(LocalDateTime from, LocalDateTime to);
 
-    // ── FR-CRM-7: All appointments for a customer, newest first ──────────
+    // All appointments for a customer, newest first
     List<Appointment> findByCustomerIdOrderByAppointmentAtDesc(Long customerId);
+
+    // Appointments visible to an advisor, including unassigned appointments
+    @Query("select a from Appointment a left join a.assignedAdvisor advisor " +
+            "where advisor.id = :advisorId or advisor is null")
+    Page<Appointment> findVisibleToAdvisor(
+            @Param("advisorId") Long advisorId,
+            Pageable pageable);
+
+    // Count appointments assigned to an advisor within a time range
+    @Query("select count(a) from Appointment a where a.assignedAdvisor.id = :advisorId " +
+            "and a.appointmentAt >= :from and a.appointmentAt < :to")
+    long countForAdvisorBetween(
+            @Param("advisorId") Long advisorId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to);
+
+    // Check whether a bay is already booked at the specified appointment time
+    @Query("select case when count(a) > 0 then true else false end from Appointment a " +
+            "where a.appointmentAt = :appointmentAt and lower(a.bay) = lower(:bay) " +
+            "and upper(coalesce(a.status, '')) not in ('CANCELLED', 'CANCELED') " +
+            "and (:excludedId is null or a.id <> :excludedId)")
+    boolean existsBayConflict(
+            @Param("appointmentAt") LocalDateTime appointmentAt,
+            @Param("bay") String bay,
+            @Param("excludedId") Long excludedId);
 }
