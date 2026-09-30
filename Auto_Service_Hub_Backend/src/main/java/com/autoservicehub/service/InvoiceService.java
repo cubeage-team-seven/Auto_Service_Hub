@@ -19,4 +19,16 @@ public interface InvoiceService {
     Page<InvoiceResponseDTO> list(Pageable pageable);
 
     void delete(Long id);
+
+    /**
+     * Invoices raised against one job card, newest first.
+     */
+    Page<InvoiceResponseDTO> listByJobCard(Long jobCardId, Pageable pageable);
+
+    /**
+     * Amount still owed on an invoice: its total minus its successful payments.
+     *
+     * @throws com.autoservicehub.exception.ResourceNotFoundException unknown invoice
+     */
+    java.math.BigDecimal getOutstandingAmount(Long id);
 }

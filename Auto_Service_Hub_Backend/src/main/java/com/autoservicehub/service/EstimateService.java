@@ -19,4 +19,9 @@ public interface EstimateService {
     Page<EstimateResponseDTO> list(Pageable pageable);
 
     void delete(Long id);
+
+    /**
+     * Estimates raised against one job card, newest first.
+     */
+    Page<EstimateResponseDTO> listByJobCard(Long jobCardId, Pageable pageable);
 }
