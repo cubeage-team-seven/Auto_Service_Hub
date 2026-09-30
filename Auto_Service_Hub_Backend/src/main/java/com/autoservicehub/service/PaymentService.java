@@ -18,5 +18,13 @@ public interface PaymentService {
 
     Page<PaymentResponseDTO> list(Pageable pageable);
 
+    /**
+     * Payments recorded against one invoice, oldest first, so the order the
+     * customer paid in is preserved.
+     *
+     * @throws com.autoservicehub.exception.ResourceNotFoundException unknown invoice
+     */
+    Page<PaymentResponseDTO> listByInvoice(Long invoiceId, Pageable pageable);
+
     void delete(Long id);
 }

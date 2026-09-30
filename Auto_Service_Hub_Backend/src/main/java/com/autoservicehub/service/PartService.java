@@ -19,4 +19,13 @@ public interface PartService {
     Page<PartResponseDTO> list(Pageable pageable);
 
     void delete(Long id);
+
+    /**
+     * Parts whose stock has fallen to or below their own minimum
+     * ({@code stockQty <= minStock}), worst first.
+     */
+    Page<PartResponseDTO> listLowStock(Pageable pageable);
+
+    /** Number of parts at or below their own minimum. */
+    long countLowStock();
 }
