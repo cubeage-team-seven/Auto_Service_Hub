@@ -1,4 +1,3 @@
-
 package com.autoservicehub.repository;
 
 import com.autoservicehub.entity.Appointment;
@@ -13,21 +12,23 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Spring Data JPA repository for Appointment.
- * Supports dynamic filtering, customer appointments,
- * advisor visibility, and bay-conflict checking.
- */
 @Repository
 public interface AppointmentRepository
         extends JpaRepository<Appointment, Long>,
                 JpaSpecificationExecutor<Appointment> {
 
     // Existing dashboard query
-    long countByAppointmentAtBetween(LocalDateTime from, LocalDateTime to);
+    long countByAppointmentAtBetween(
+            LocalDateTime from,
+            LocalDateTime to);
 
-    // All appointments for a customer, newest first
-    List<Appointment> findByCustomerIdOrderByAppointmentAtDesc(Long customerId);
+    // Customer appointments, newest first
+    List<Appointment> findByCustomerIdOrderByAppointmentAtDesc(
+            Long customerId);
+
+    // AI maintenance prediction: appointments for a vehicle
+    List<Appointment> findByVehicleIdOrderByAppointmentAtDesc(
+            Long vehicleId);
 
     // Appointments visible to an advisor, including unassigned appointments
     @Query("select a from Appointment a left join a.assignedAdvisor advisor " +

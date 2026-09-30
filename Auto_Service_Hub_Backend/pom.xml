@@ -196,6 +196,26 @@
             </configuration>
         </plugin>
 
+        <!--
+            Activate the "test" Spring profile for the whole test run so that
+            src/test/.../application-test.yml is loaded. The real
+            application.yml is git-ignored (it holds credentials), so the test
+            context would otherwise fail to resolve app.jwt.* and
+            app.cors.* and would have no DataSource.
+
+            application-test.yml points at an in-memory H2 database and uses a
+            throwaway, non-secret JWT key — it is safe to commit.
+        -->
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+                <systemPropertyVariables>
+                    <spring.profiles.active>test</spring.profiles.active>
+                </systemPropertyVariables>
+            </configuration>
+        </plugin>
+
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>

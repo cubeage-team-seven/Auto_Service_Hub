@@ -9,6 +9,11 @@ import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.security.CustomUserDetailsService;
 import com.autoservicehub.security.JwtAuthenticationFilter;
 import com.autoservicehub.security.JwtTokenProvider;
+import com.autoservicehub.service.DamageDetectionService;
+import com.autoservicehub.service.MaintenancePredictionService;
+import com.autoservicehub.service.MechanicAssignmentService;
+import com.autoservicehub.service.RepairCostEstimationService;
+import com.autoservicehub.service.SparePartsPredictionService;
 import com.autoservicehub.service.VehicleDiagnosisService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -91,7 +96,19 @@ class AiControllerDiagnosisTest {
     @Autowired MockMvc      mockMvc;
     @Autowired ObjectMapper mapper;
 
+    @MockBean DamageDetectionService       damageDetectionService;
+    @MockBean SparePartsPredictionService sparePartsPredictionService;
     @MockBean VehicleDiagnosisService  vehicleDiagnosisService;
+    // AiController now also serves Repair Cost Estimation (FR-AI-05..08), so its
+    // dependency must be mocked here for the slice context to build. The
+    // diagnosis tests below are unaffected.
+    @MockBean RepairCostEstimationService repairCostEstimationService;
+    // AiController also serves Maintenance Prediction (FR-AI-09..12); its
+    // dependency must be mocked for the slice context to build.
+    @MockBean MaintenancePredictionService maintenancePredictionService;
+    // AiController also serves Mechanic Assignment (FR-AI-17..20); its
+    // dependency must be mocked for the slice context to build.
+    @MockBean MechanicAssignmentService    mechanicAssignmentService;
     @MockBean AiOrchestrationService   aiOrchestrationService;
     @MockBean JwtAuthenticationFilter  jwtAuthenticationFilter;
     @MockBean JwtTokenProvider         jwtTokenProvider;
