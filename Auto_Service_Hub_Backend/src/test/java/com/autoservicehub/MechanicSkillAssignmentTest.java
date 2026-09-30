@@ -88,7 +88,8 @@ class MechanicSkillAssignmentTest {
                 statusHistoryRepository,
                 auditLogRepository,
                 new MechanicAccessService(userRepository),
-                new ServiceAdvisorAccessService(userRepository)
+                new ServiceAdvisorAccessService(userRepository),
+                org.mockito.Mockito.mock(com.autoservicehub.service.DeliveryGateService.class)
         );
 
         ReflectionTestUtils.setField(

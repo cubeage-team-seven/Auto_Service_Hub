@@ -7,6 +7,7 @@ import com.autoservicehub.entity.*;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.*;
+import com.autoservicehub.service.DeliveryGateService;
 import com.autoservicehub.service.JobCardService;
 import com.autoservicehub.service.MechanicAccessService;
 import com.autoservicehub.service.ServiceAdvisorAccessService;
@@ -43,6 +44,12 @@ public class JobCardServiceImpl implements JobCardService {
     private final MechanicAccessService accessService;
     private final ServiceAdvisorAccessService advisorAccessService;
 
+    /**
+     * SRS 12 BR-02 delivery gate. Read-only: decides whether a job card may move to
+     * DELIVERED, and never mutates state.
+     */
+    private final DeliveryGateService deliveryGateService;
+
     @Value("${app.mechanics.skill-enforcement:true}")
     private boolean skillEnforcementEnabled;
 
@@ -61,7 +68,25 @@ public class JobCardServiceImpl implements JobCardService {
 
     @Override
     public JobCardResponseDTO update(Long id, JobCardRequestDTO request) {
-        JobCard existing = repository.findById(id)
+        // Pessimistic write lock on the SAME job_cards row that
+        // QualityCheckServiceImpl.record() locks, so the two paths serialise.
+        //
+        // Why here and not inside the gate: the lock must be taken before the gate
+        // reads tasks and quality checks, otherwise a QC FAIL committed after that
+        // read would not be seen and the vehicle could still be delivered. Loading
+        // the card with FOR UPDATE also makes this read see the latest committed row
+        // instead of a REPEATABLE READ snapshot.
+        //
+        // Lock ordering: both paths take the job_cards row first and exclusively.
+        // The gate's task/QC reads are non-locking aggregates and never take another
+        // lock, so there is no ordering inversion and no deadlock potential.
+        //
+        // This is applied to the single load in update() rather than being made
+        // conditional on the target status, so that no future path through update()
+        // can reach DELIVERED without holding the lock. update() is a low-frequency
+        // human-initiated operation, so the extra serialisation is not a throughput
+        // concern. getById() is read-only and deliberately keeps the plain findById.
+        JobCard existing = repository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException("JobCard not found: " + id));
         advisorAccessService.assertCanAccess(existing);
         accessService.assertCanAccess(existing);
@@ -271,6 +296,19 @@ public class JobCardServiceImpl implements JobCardService {
         }
         if (!currentStage.equals(nextStage)) {
             String previousStatus = jobCard.getStatus();
+
+            // ── SRS 12 BR-02 delivery gate ────────────────────────────────────
+            // Reached only AFTER the transition has been validated above, so an
+            // invalid transition still reports the transition problem rather than a
+            // QC problem. nextStage is the canonical form, so the DELIVERED alias
+            // path is covered too. The gate is a read-only evaluation: it takes no
+            // lock and mutates nothing, so it introduces no lock-ordering
+            // interaction with the job-card pessimistic lock used when recording a
+            // quality check.
+            if ("DELIVERED".equals(nextStage)) {
+                deliveryGateService.assertCanDeliver(jobCard);
+            }
+
             jobCard.setStatus(next);
             recordStatusChange(jobCard, previousStatus, next);
             if ("IN_REPAIR".equals(nextStage) && jobCard.getStartedDate() == null) {

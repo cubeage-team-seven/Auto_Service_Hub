@@ -59,6 +59,7 @@ import com.autoservicehub.service.impl.FollowupServiceImpl;
 import com.autoservicehub.service.impl.InspectionServiceImpl;
 import com.autoservicehub.service.impl.PaymentServiceImpl;
 import com.autoservicehub.service.impl.VehicleServiceImpl;
+import com.autoservicehub.service.DeliveryGateService;
 import com.autoservicehub.service.MechanicAccessService;
 import com.autoservicehub.service.impl.JobCardServiceImpl;
 import com.autoservicehub.service.ServiceAdvisorAccessService;
@@ -194,7 +195,8 @@ class ServiceAdvisorModuleTest {
         JobCardServiceImpl service = new JobCardServiceImpl(jobCards, customers, vehicles,
             mock(MechanicRepository.class), appointments, mock(MechanicSkillRepository.class),
             mock(JobCardStatusHistoryRepository.class), mock(AuditLogRepository.class),
-            new MechanicAccessService(users), new ServiceAdvisorAccessService(users));
+            new MechanicAccessService(users), new ServiceAdvisorAccessService(users),
+            mock(DeliveryGateService.class));
 
         assertThrows(AccessDeniedException.class, () -> service.getById(7L));
         }
@@ -214,13 +216,14 @@ class ServiceAdvisorModuleTest {
         JobCard jobCard = new JobCard();
         jobCard.setId(8L);
         jobCard.setAppointment(assignedAppointment);
-        when(jobCards.findById(8L)).thenReturn(Optional.of(jobCard));
+        when(jobCards.findByIdForUpdate(8L)).thenReturn(Optional.of(jobCard));
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
                 "advisor-a", "not-used", List.of(new SimpleGrantedAuthority("ROLE_SERVICE_ADVISOR"))));
         JobCardServiceImpl service = new JobCardServiceImpl(jobCards, customers, vehicles,
                 mock(MechanicRepository.class), appointments, mock(MechanicSkillRepository.class),
                 mock(JobCardStatusHistoryRepository.class), mock(AuditLogRepository.class),
-                new MechanicAccessService(users), new ServiceAdvisorAccessService(users));
+                new MechanicAccessService(users), new ServiceAdvisorAccessService(users),
+                mock(DeliveryGateService.class));
         JobCardRequestDTO request = new JobCardRequestDTO();
         request.setAppointmentId(99L);
 
@@ -458,7 +461,7 @@ void customerOptionalFieldsRoundTripThroughService() {
         JobCard existing = new JobCard();
         existing.setId(12L);
         existing.setStatus("RECEIVED");
-        when(jobCards.findById(12L)).thenReturn(Optional.of(existing));
+        when(jobCards.findByIdForUpdate(12L)).thenReturn(Optional.of(existing));
         when(customers.findById(1L)).thenReturn(Optional.of(customer));
         when(vehicles.findById(2L)).thenReturn(Optional.of(vehicle));
         JobCardServiceImpl service = jobCardService(jobCards, customers, vehicles);
@@ -648,6 +651,6 @@ void customerOptionalFieldsRoundTripThroughService() {
         return new JobCardServiceImpl(jobCards, customers, vehicles, mock(MechanicRepository.class), appointments,
                 mock(MechanicSkillRepository.class), mock(JobCardStatusHistoryRepository.class),
                 mock(AuditLogRepository.class), new MechanicAccessService(users),
-                new ServiceAdvisorAccessService(users));
+                new ServiceAdvisorAccessService(users), mock(DeliveryGateService.class));
     }
 }

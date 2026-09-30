@@ -16,6 +16,7 @@ import com.autoservicehub.repository.JobTaskRepository;
 import com.autoservicehub.repository.MechanicRepository;
 import com.autoservicehub.repository.MechanicSkillRepository;
 import com.autoservicehub.repository.UserRepository;
+import com.autoservicehub.service.DeliveryGateService;
 import com.autoservicehub.repository.VehicleRepository;
 import com.autoservicehub.service.MechanicAccessService;
 import com.autoservicehub.service.ServiceAdvisorAccessService;
@@ -41,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
@@ -69,7 +71,8 @@ class MechanicAssignmentAuthorizationTest {
         MechanicAccessService accessService = new MechanicAccessService(userRepository);
         jobCardService = new JobCardServiceImpl(jobCardRepository, customerRepository, vehicleRepository,
                 mechanicRepository, appointmentRepository, mechanicSkillRepository, statusHistoryRepository,
-                auditLogRepository, accessService, new ServiceAdvisorAccessService(userRepository));
+                auditLogRepository, accessService, new ServiceAdvisorAccessService(userRepository),
+                mock(DeliveryGateService.class));
         jobTaskService = new JobTaskServiceImpl(jobTaskRepository, jobCardRepository, mechanicRepository,
             accessService, new ServiceAdvisorAccessService(userRepository));
 
@@ -100,7 +103,10 @@ class MechanicAssignmentAuthorizationTest {
     @Test
     void mechanicCannotModifyAnotherMechanicsJobCard() {
         JobCard jobCard = assignedCard(40L, mechanicB);
-        when(jobCardRepository.findById(40L)).thenReturn(Optional.of(jobCard));
+        // update() loads the job card with the pessimistic lock, so the stub must
+        // match the production call, otherwise the test would fail for the wrong
+        // reason (ResourceNotFound instead of AccessDenied).
+        when(jobCardRepository.findByIdForUpdate(40L)).thenReturn(Optional.of(jobCard));
 
         assertThrows(AccessDeniedException.class, () -> jobCardService.update(40L, new JobCardRequestDTO()));
         verify(jobCardRepository, never()).save(any(JobCard.class));

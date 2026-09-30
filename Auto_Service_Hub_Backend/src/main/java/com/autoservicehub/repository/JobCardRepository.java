@@ -1,10 +1,12 @@
 package com.autoservicehub.repository;
 
 import com.autoservicehub.entity.JobCard;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -19,6 +21,21 @@ import java.util.Optional;
  */
 @Repository
 public interface JobCardRepository extends JpaRepository<JobCard, Long>, JpaSpecificationExecutor<JobCard> {
+
+    // ── Phase 3 / SRS BR-02: QC attempt-number sequencing ────────────────────
+    /**
+     * Pessimistic write lock on the job-card row, so concurrent quality-check
+     * submissions for the same job card serialise and cannot compute the same
+     * attempt number. Mirrors the existing
+     * {@code MechanicRepository.findByIdForUpdate} convention.
+     *
+     * <p>Callers must invoke this inside an active transaction (the lock is held
+     * until that transaction commits or rolls back), and must acquire it before any
+     * other job-card write in the same transaction to keep the lock order stable.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select jc from JobCard jc where jc.id = :id")
+    Optional<JobCard> findByIdForUpdate(@Param("id") Long id);
 
     // ── Existing dashboard/report queries ──────────────────────────────────
     long countByStatus(String status);
