@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-
 /**
  * Maps to the 'notifications' table (SRS section 8.2 High-Level Entities).
  */
@@ -26,6 +25,6 @@ public class Notification extends BaseEntity {
     private String message;
     @Column(name = "status")
     private String status;
-    @Column(name = "read")
+    @Column(name = "`read`")
     private Boolean read;
 }

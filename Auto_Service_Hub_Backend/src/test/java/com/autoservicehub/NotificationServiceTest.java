@@ -13,9 +13,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import jakarta.persistence.Column;
+
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -42,8 +46,8 @@ class NotificationServiceTest {
 
         service.sendInApp(12L, "Appointment", "Your appointment was scheduled.");
 
-        verify(notifications).save(org.mockito.ArgumentMatchers.argThat(notification ->
-                notification.getRecipient().getId().equals(12L)
+        verify(notifications).save(
+                org.mockito.ArgumentMatchers.argThat(notification -> notification.getRecipient().getId().equals(12L)
                         && "IN_APP".equals(notification.getChannel())
                         && Boolean.FALSE.equals(notification.getRead())));
     }
@@ -63,5 +67,22 @@ class NotificationServiceTest {
 
         assertThrows(ResourceNotFoundException.class, () -> service.markMineRead(55L));
         verify(notifications, never()).save(any(Notification.class));
+    }
+
+    /**
+     * Regression guard: {@code READ} is a reserved word in MySQL 8. Without
+     * explicit
+     * backtick quoting, Hibernate emits {@code add column read bit}, which MySQL
+     * rejects, so the {@code notifications.read} column is never created. The H2
+     * test datasource does not reserve {@code READ}, so the suite would otherwise
+     * pass while the MySQL schema silently stays broken.
+     */
+    @Test
+    void readFlagColumnIsQuotedForMysqlReservedWord() throws NoSuchFieldException {
+        Field field = Notification.class.getDeclaredField("read");
+        Column column = field.getAnnotation(Column.class);
+
+        assertEquals("`read`", column.name(),
+                "The 'read' column must stay backtick-quoted because READ is reserved in MySQL 8");
     }
 }

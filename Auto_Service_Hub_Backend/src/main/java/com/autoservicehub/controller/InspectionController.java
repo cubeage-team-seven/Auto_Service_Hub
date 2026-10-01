@@ -15,7 +15,8 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Vehicle Inspection (SRS 4.4)
  * Base path: /api/v1/inspections
- * All endpoints require a valid JWT and are further restricted by role (SRS 13).
+ * All endpoints require a valid JWT and are further restricted by role (SRS
+ * 13).
  */
 @RestController
 @RequestMapping("/api/v1/inspections")
@@ -34,7 +35,7 @@ public class InspectionController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
     public ApiResponse<InspectionResponseDTO> update(@PathVariable Long id,
-                                                    @Valid @RequestBody InspectionRequestDTO request) {
+            @Valid @RequestBody InspectionRequestDTO request) {
         return ApiResponse.ok("Updated", service.update(id, request));
     }
 
