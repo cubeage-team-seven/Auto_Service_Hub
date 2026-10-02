@@ -1,5 +1,6 @@
 package com.autoservicehub.controller;
 
+import com.autoservicehub.dto.AiInsightsReportDTO;
 import com.autoservicehub.dto.ApiResponse;
 import com.autoservicehub.dto.CustomerGrowthReportDTO;
 import com.autoservicehub.dto.DailyWorkshopReportDTO;
@@ -33,8 +34,10 @@ import java.util.List;
  * <p>A reversed or missing range is rejected by the service as a
  * {@code BusinessRuleException} → 409, through the project's existing handler.
  *
- * <p>PDF/Excel export (FR-REP-8) and the AI Insights endpoint are NOT implemented
- * yet.
+ * <p>PDF/Excel export (FR-REP-8) lives in {@code ReportExportController}, which
+ * shares this controller's role guards per report so that exporting is never
+ * more permissive than reading. The AI Insights endpoint (FR-REP-9) is a
+ * read-only report over stored insights.
  *
  * <p>Role guards follow the existing convention: revenue, profit and growth are
  * management/billing data; parts usage is visible to inventory; mechanic
@@ -125,6 +128,26 @@ public class ReportController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return ApiResponse.ok(reportService.getProfitAnalysisReport(
+                filter(null, from, to, null, null, null, null, null)));
+    }
+
+    /**
+     * FR-REP-9: AI insight results generated in the window, newest first.
+     *
+     * <p>Read-only. This reports what the AI features already stored in
+     * {@code ai_insights}; it generates nothing and calls no provider.
+     *
+     * <p>Restricted to management and service advisors: the output is advisory AI
+     * output about customers' vehicles, and SRS BR-09 requires a human to review
+     * it before anything is acted on, so it is not exposed to roles that would act
+     * on it unsupervised — mechanics, inventory and billing staff included.
+     */
+    @GetMapping("/ai-insights")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    public ApiResponse<AiInsightsReportDTO> aiInsights(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return ApiResponse.ok(reportService.getAiInsightsReport(
                 filter(null, from, to, null, null, null, null, null)));
     }
 

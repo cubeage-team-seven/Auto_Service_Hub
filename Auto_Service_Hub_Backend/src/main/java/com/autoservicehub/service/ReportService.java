@@ -1,5 +1,6 @@
 package com.autoservicehub.service;
 
+import com.autoservicehub.dto.AiInsightsReportDTO;
 import com.autoservicehub.dto.CustomerGrowthReportDTO;
 import com.autoservicehub.dto.DailyWorkshopReportDTO;
 import com.autoservicehub.dto.DashboardSummaryDTO;
@@ -15,8 +16,8 @@ import java.util.List;
  * Dashboard &amp; Reports (SRS 4.11, 17).
  *
  * <p>Filters by date range, mechanic, vehicle, service and status per FR-REP-7,
- * carried on {@link ReportFilterDTO}. Export is not handled here (FR-REP-8) and
- * is not implemented yet.
+ * carried on {@link ReportFilterDTO}. Export is not handled here (FR-REP-8); it
+ * renders these same report results in {@code ReportExportService}.
  *
  * <p>Every report is built from stored rows. Where the schema cannot support a
  * metric the report says so explicitly rather than substituting an estimate —
@@ -43,4 +44,12 @@ public interface ReportService {
 
     /** FR-REP-4: revenue and the cost that genuinely exists, plus stated limits. */
     ProfitAnalysisReportDTO getProfitAnalysisReport(ReportFilterDTO filter);
+
+    /**
+     * FR-REP-9: AI insight results generated in the window, newest first.
+     *
+     * <p>A read-only view of what the AI features already stored. It generates
+     * nothing and calls no provider.
+     */
+    AiInsightsReportDTO getAiInsightsReport(ReportFilterDTO filter);
 }

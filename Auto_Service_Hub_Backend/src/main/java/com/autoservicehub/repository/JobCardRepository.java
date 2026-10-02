@@ -2,6 +2,7 @@ package com.autoservicehub.repository;
 
 import com.autoservicehub.entity.JobCard;
 import com.autoservicehub.projection.MechanicJobCountProjection;
+import com.autoservicehub.projection.MechanicTurnaroundProjection;
 import com.autoservicehub.projection.StatusCountProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -22,7 +23,25 @@ public interface JobCardRepository extends JpaRepository<JobCard, Long>, JpaSpec
 
     // ── Existing dashboard/report queries ──────────────────────────────────
     long countByStatus(String status);
-    long countByAssignedDateBetween(LocalDateTime from, LocalDateTime to);
+
+    /**
+     * Job cards assigned inside a window, counted with the half-open convention
+     * {@code [from, to)} used by every other report query in this repository.
+     *
+     * <p>Written as explicit JPQL rather than a derived {@code Between} method on
+     * purpose. Spring Data's {@code Between} is inclusive of <em>both</em> bounds,
+     * so a job assigned at exactly {@code to} — for the dashboard that is exactly
+     * midnight tonight — was counted in the current day's total. Callers already
+     * pass an exclusive upper bound ({@code ReportFilterDTO#toDateTimeExclusive()}),
+     * so the derived form silently contradicted them.
+     *
+     * <p>The signature is unchanged, so every caller keeps working; only the
+     * boundary handling is corrected.
+     */
+    @Query("SELECT COUNT(j.id) FROM JobCard j "
+         + "WHERE j.assignedDate >= :from AND j.assignedDate < :to")
+    long countByAssignedDateBetween(@Param("from") LocalDateTime from,
+                                    @Param("to")   LocalDateTime to);
     long countByStatusAndAssignedDateBetween(String status, LocalDateTime from, LocalDateTime to);
     long countByMechanicIdAndStatusAndAssignedDateBetween(Long mechanicId, String status,
                                                           LocalDateTime from, LocalDateTime to);
@@ -218,6 +237,33 @@ public interface JobCardRepository extends JpaRepository<JobCard, Long>, JpaSpec
            "GROUP BY m.id, m.name, m.employeeCode " +
            "ORDER BY COUNT(j.id) DESC, m.name ASC")
     List<MechanicJobCountProjection> countJobsGroupedByMechanic(
+            @Param("from")           LocalDateTime from,
+            @Param("to")             LocalDateTime to,
+            @Param("mechanicId")     Long         mechanicId,
+            @Param("completedStatus") String       completedStatus);
+
+    /**
+     * FR-MECH-5: the dates of every completed job in the window, for deriving
+     * mechanic turnaround time.
+     *
+     * <p>Restricted to the terminal delivered state and to rows that actually
+     * carry both dates: an open or cancelled job has no completion to measure, and
+     * a missing date would have to be guessed at.
+     *
+     * <p>The two timestamps are returned rather than a pre-computed difference so
+     * the arithmetic happens in Java with ChronoUnit, which is exact and portable
+     * across the databases this project runs on. No new time-tracking table is
+     * involved; the job card's own dates are the whole basis.
+     */
+    @Query("SELECT j.mechanic.id AS mechanicId, j.assignedDate AS assignedDate, "
+         + "       j.completedDate AS completedDate "
+         + "FROM JobCard j "
+         + "WHERE j.mechanic IS NOT NULL "
+         + "  AND j.assignedDate IS NOT NULL AND j.completedDate IS NOT NULL "
+         + "  AND UPPER(j.status) = UPPER(:completedStatus) "
+         + "  AND j.assignedDate >= :from AND j.assignedDate < :to "
+         + "  AND (:mechanicId IS NULL OR j.mechanic.id = :mechanicId)")
+    List<MechanicTurnaroundProjection> findCompletedTurnaroundInPeriod(
             @Param("from")           LocalDateTime from,
             @Param("to")             LocalDateTime to,
             @Param("mechanicId")     Long         mechanicId,

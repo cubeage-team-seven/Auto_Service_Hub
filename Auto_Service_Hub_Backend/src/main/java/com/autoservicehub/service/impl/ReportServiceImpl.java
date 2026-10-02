@@ -6,9 +6,12 @@ import com.autoservicehub.projection.DailyRevenueProjection;
 import com.autoservicehub.projection.DateCountProjection;
 import com.autoservicehub.projection.InvoiceStatusTotalProjection;
 import com.autoservicehub.projection.MechanicJobCountProjection;
+import com.autoservicehub.projection.MechanicTurnaroundProjection;
 import com.autoservicehub.projection.PartUsageProjection;
 import com.autoservicehub.projection.PaymentModeTotalProjection;
 import com.autoservicehub.projection.StatusCountProjection;
+import com.autoservicehub.entity.AiInsight;
+import com.autoservicehub.repository.AiInsightRepository;
 import com.autoservicehub.repository.AppointmentRepository;
 import com.autoservicehub.repository.CustomerRepository;
 import com.autoservicehub.repository.FeedbackRepository;
@@ -21,11 +24,13 @@ import com.autoservicehub.repository.StockMovementRepository;
 import com.autoservicehub.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,6 +62,9 @@ public class ReportServiceImpl implements ReportService {
     /** The only stock movement meaning parts left the shelf for a customer. */
     public static final String MOVEMENT_OUT = "OUT";
 
+    /** Report name used in AI Insights validation messages. */
+    private static final String REPORT_AI_INSIGHTS = "AI Insights report";
+
     private final JobCardRepository       jobCardRepository;
     private final InvoiceRepository       invoiceRepository;
     private final PaymentRepository       paymentRepository;
@@ -66,6 +74,7 @@ public class ReportServiceImpl implements ReportService {
     private final CustomerRepository      customerRepository;
     private final MechanicRepository      mechanicRepository;
     private final FeedbackRepository      feedbackRepository;
+    private final AiInsightRepository     aiInsightRepository;
 
     @Override
     public DashboardSummaryDTO getDashboardSummary() {
@@ -254,6 +263,13 @@ public class ReportServiceImpl implements ReportService {
         List<MechanicJobCountProjection> rows = jobCardRepository.countJobsGroupedByMechanic(
                 from, to, f.getMechanicId(), STATUS_DELIVERED);
 
+        // One query for the whole window rather than one per mechanic, so the cost
+        // does not grow with the size of the workshop.
+        List<MechanicTurnaroundProjection> turnaroundRows =
+                jobCardRepository.findCompletedTurnaroundInPeriod(
+                        from, to, f.getMechanicId(), STATUS_DELIVERED);
+        Map<Long, List<Long>> turnaroundByMechanic = groupTurnaroundDays(turnaroundRows);
+
         List<MechanicPerformanceReportDTO> result = new ArrayList<>();
         for (MechanicJobCountProjection row : rows) {
             MechanicPerformanceReportDTO dto = new MechanicPerformanceReportDTO();
@@ -278,12 +294,54 @@ public class ReportServiceImpl implements ReportService {
             dto.setRatingCount(feedbackRepository.countByJobCardMechanicId(row.getMechanicId()));
             dto.setAverageCustomerRating(
                     feedbackRepository.findAverageRatingByMechanicId(row.getMechanicId()));
+
+            // FR-MECH-5: mean elapsed days per completed job. Null, not zero, when
+            // the mechanic completed nothing — "no jobs finished" is not "instant".
+            dto.setAverageTurnaroundDays(
+                    averageTurnaroundDays(turnaroundByMechanic.get(row.getMechanicId())));
+
             dto.setUnsupportedMetrics(
                     "Hours worked, shifts, capacity and utilisation are not stored "
-                    + "anywhere in this schema and are not reported.");
+                    + "anywhere in this schema and are not reported. "
+                    + "Average turnaround is elapsed calendar time between job-card "
+                    + "dates, not effort, so it needs no time-tracking table.");
             result.add(dto);
         }
         return result;
+    }
+
+    /**
+     * Groups each completed job's elapsed days by mechanic (FR-MECH-5).
+     *
+     * <p>Whole days are used rather than a fractional value: a turnaround figure
+     * is read as "how many days", and a part-day average implies precision the
+     * stored timestamps do not carry. The query already excludes jobs without
+     * both dates and without a mechanic.
+     */
+    private Map<Long, List<Long>> groupTurnaroundDays(List<MechanicTurnaroundProjection> rows) {
+        Map<Long, List<Long>> byMechanic = new LinkedHashMap<>();
+        for (MechanicTurnaroundProjection row : rows) {
+            long days = ChronoUnit.DAYS.between(row.getAssignedDate(), row.getCompletedDate());
+            // A completion recorded before assignment would be a data fault, not a
+            // negative turnaround; it is dropped rather than skewing the average.
+            if (days < 0) {
+                continue;
+            }
+            byMechanic.computeIfAbsent(row.getMechanicId(), k -> new ArrayList<>()).add(days);
+        }
+        return byMechanic;
+    }
+
+    /** Mean turnaround in days, or null when this mechanic completed nothing. */
+    private Double averageTurnaroundDays(List<Long> days) {
+        if (days == null || days.isEmpty()) {
+            return null;
+        }
+        long total = 0;
+        for (Long d : days) {
+            total += d;
+        }
+        return (double) total / days.size();
     }
 
     // ── FR-REP-3: parts usage ──────────────────────────────────────────────
@@ -470,6 +528,57 @@ public class ReportServiceImpl implements ReportService {
                 + "the period versus parts consumed in it — so their difference is not a margin.",
                 "InvoiceItem has no link to Part (only free-text description), so revenue "
                 + "cannot be attributed to the specific parts a customer was charged for."));
+        return dto;
+    }
+
+    // ── FR-REP-9: AI Insights report ───────────────────────────────────────────
+
+    @Override
+    @Transactional(readOnly = true)
+    public AiInsightsReportDTO getAiInsightsReport(ReportFilterDTO filter) {
+        ReportFilterDTO f = requireRange(filter, REPORT_AI_INSIGHTS);
+
+        AiInsightsReportDTO dto = new AiInsightsReportDTO();
+        // The DTO reports the window as timestamps while the filter carries plain
+        // dates, so the boundary is converted with the same day-start rule the
+        // query uses: the inclusive start of `from`, and the start of `to` itself
+        // (not the exclusive end), so the echoed range is the dates the caller
+        // asked for rather than the internal query bound.
+        dto.setFrom(f.getFrom().atStartOfDay());
+        dto.setTo(f.getTo().atStartOfDay());
+
+        List<AiInsight> rows = aiInsightRepository.findCreatedInPeriod(
+                f.fromDateTime(), f.toDateTimeExclusive());
+
+        List<AiInsightDTO> insights = new ArrayList<>();
+        for (AiInsight row : rows) {
+            insights.add(toInsightDto(row));
+        }
+        dto.setInsights(insights);
+        // Empty is a legitimate answer — no AI feature ran in the window — so it
+        // is reported as such rather than as an error or an empty envelope that a
+        // client has to interpret.
+        dto.setEmpty(insights.isEmpty());
+
+        return dto;
+    }
+
+    /**
+     * Maps a stored insight to its DTO.
+     *
+     * <p>{@code resultJson} is passed through exactly as stored. It is the
+     * provider's own output, and re-parsing or reshaping it here would risk
+     * misrepresenting what the provider actually said — which for an advisory
+     * feature is the one thing that must not happen.
+     */
+    private AiInsightDTO toInsightDto(AiInsight row) {
+        AiInsightDTO dto = new AiInsightDTO();
+        dto.setId(row.getId());
+        dto.setFeatureType(row.getFeatureType());
+        dto.setInputRef(row.getInputRef());
+        dto.setResultJson(row.getResultJson());
+        dto.setConfidence(row.getConfidence());
+        dto.setCreatedAt(row.getCreatedAt());
         return dto;
     }
 

@@ -1,6 +1,7 @@
 package com.autoservicehub.service;
 
 import com.autoservicehub.dto.*;
+import com.autoservicehub.entity.AiInsight;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.projection.*;
 import com.autoservicehub.repository.*;
@@ -58,6 +59,7 @@ class ReportServiceImplTest {
     @Mock CustomerRepository      customerRepository;
     @Mock MechanicRepository      mechanicRepository;
     @Mock FeedbackRepository      feedbackRepository;
+    @Mock AiInsightRepository     aiInsightRepository;
 
     @InjectMocks ReportServiceImpl service;
 
@@ -436,6 +438,102 @@ class ReportServiceImplTest {
 
             assertThat(rows.get(0).getUnsupportedMetrics()).contains("Hours worked");
         }
+
+        // ── FR-MECH-5: turnaround time ──────────────────────────────────────
+
+        private MechanicTurnaroundProjection turnaround(
+                Long mechanicId, LocalDateTime assigned, LocalDateTime completed) {
+            return new MechanicTurnaroundProjection() {
+                @Override public Long getMechanicId()   { return mechanicId; }
+                @Override public LocalDateTime getAssignedDate()  { return assigned; }
+                @Override public LocalDateTime getCompletedDate() { return completed; }
+            };
+        }
+
+        @Test
+        @DisplayName("RS40 average turnaround is the mean elapsed days over completed jobs")
+        void reportsAverageTurnaround() {
+            when(jobCardRepository.countJobsGroupedByMechanic(any(), any(), any(), any()))
+                    .thenReturn(List.of(mechanicRow(1L, "Anil", "MECH-1", 3L, 3L)));
+            when(jobCardRepository.findCompletedTurnaroundInPeriod(any(), any(), any(), any()))
+                    .thenReturn(List.of(
+                            turnaround(1L, DAY.atTime(9, 0), DAY.plusDays(2).atTime(9, 0)),
+                            turnaround(1L, DAY.atTime(9, 0), DAY.plusDays(4).atTime(9, 0))));
+            when(invoiceRepository.sumTotalByMechanicAndJobStatus(any(), any(), any(), any()))
+                    .thenReturn(BigDecimal.ZERO);
+
+            // (2 + 4) / 2 = 3 days
+            assertThat(service.getMechanicPerformanceReport(filter()).get(0).getAverageTurnaroundDays())
+                    .isEqualTo(3.0d);
+        }
+
+        @Test
+        @DisplayName("RS41 turnaround is null when the mechanic completed nothing")
+        void turnaroundIsNullWithoutCompletedJobs() {
+            when(jobCardRepository.countJobsGroupedByMechanic(any(), any(), any(), any()))
+                    .thenReturn(List.of(mechanicRow(1L, "Anil", "MECH-1", 2L, 0L)));
+            when(jobCardRepository.findCompletedTurnaroundInPeriod(any(), any(), any(), any()))
+                    .thenReturn(List.of());
+            when(invoiceRepository.sumTotalByMechanicAndJobStatus(any(), any(), any(), any()))
+                    .thenReturn(BigDecimal.ZERO);
+
+            // "No jobs finished" is not "finished instantly", so this is null not 0.
+            assertThat(service.getMechanicPerformanceReport(filter()).get(0).getAverageTurnaroundDays())
+                    .isNull();
+        }
+
+        @Test
+        @DisplayName("RS42 a single completed job gives its own elapsed days")
+        void singleCompletedJobTurnaround() {
+            when(jobCardRepository.countJobsGroupedByMechanic(any(), any(), any(), any()))
+                    .thenReturn(List.of(mechanicRow(1L, "Anil", "MECH-1", 1L, 1L)));
+            when(jobCardRepository.findCompletedTurnaroundInPeriod(any(), any(), any(), any()))
+                    .thenReturn(List.of(turnaround(1L, DAY.atTime(9, 0), DAY.atTime(17, 0))));
+            when(invoiceRepository.sumTotalByMechanicAndJobStatus(any(), any(), any(), any()))
+                    .thenReturn(BigDecimal.ZERO);
+
+            // Same-day job: elapsed whole days is 0.
+            assertThat(service.getMechanicPerformanceReport(filter()).get(0).getAverageTurnaroundDays())
+                    .isEqualTo(0.0d);
+        }
+
+        @Test
+        @DisplayName("RS43 turnaround is reported per mechanic, not pooled")
+        void turnaroundIsPerMechanic() {
+            when(jobCardRepository.countJobsGroupedByMechanic(any(), any(), any(), any()))
+                    .thenReturn(List.of(
+                            mechanicRow(1L, "Anil", "MECH-1", 1L, 1L),
+                            mechanicRow(2L, "Sur", "MECH-2", 1L, 1L)));
+            when(jobCardRepository.findCompletedTurnaroundInPeriod(any(), any(), any(), any()))
+                    .thenReturn(List.of(
+                            turnaround(1L, DAY.atTime(9, 0), DAY.plusDays(6).atTime(9, 0)),
+                            turnaround(2L, DAY.atTime(9, 0), DAY.plusDays(1).atTime(9, 0))));
+            when(invoiceRepository.sumTotalByMechanicAndJobStatus(any(), any(), any(), any()))
+                    .thenReturn(BigDecimal.ZERO);
+
+            List<MechanicPerformanceReportDTO> rows = service.getMechanicPerformanceReport(filter());
+
+            assertThat(rows.get(0).getAverageTurnaroundDays()).isEqualTo(6.0d);
+            assertThat(rows.get(1).getAverageTurnaroundDays()).isEqualTo(1.0d);
+        }
+
+        @Test
+        @DisplayName("RS44 an inverted date pair is dropped rather than skewing the average")
+        void negativeTurnaroundIsIgnored() {
+            when(jobCardRepository.countJobsGroupedByMechanic(any(), any(), any(), any()))
+                    .thenReturn(List.of(mechanicRow(1L, "Anil", "MECH-1", 2L, 2L)));
+            when(jobCardRepository.findCompletedTurnaroundInPeriod(any(), any(), any(), any()))
+                    .thenReturn(List.of(
+                            turnaround(1L, DAY.atTime(9, 0), DAY.plusDays(4).atTime(9, 0)),
+                            // A data fault: completed before it was assigned.
+                            turnaround(1L, DAY.atTime(9, 0), DAY.minusDays(3).atTime(9, 0))));
+            when(invoiceRepository.sumTotalByMechanicAndJobStatus(any(), any(), any(), any()))
+                    .thenReturn(BigDecimal.ZERO);
+
+            // Only the well-formed 4 days contributes.
+            assertThat(service.getMechanicPerformanceReport(filter()).get(0).getAverageTurnaroundDays())
+                    .isEqualTo(4.0d);
+        }
     }
 
     // ── FR-REP-3: parts usage ──────────────────────────────────────────────
@@ -722,6 +820,108 @@ class ReportServiceImplTest {
             when(invoiceRepository.countByInvoiceDateBetween(any(), any())).thenReturn(0L);
 
             assertThat(service.getRevenuePaymentReport(filter())).isNotNull();
+        }
+    }
+
+    // ── FR-REP-9: AI Insights report ─────────────────────────────────────────
+
+    @Nested
+    @DisplayName("AI Insights (FR-REP-9)")
+    class AiInsights {
+
+        private AiInsight row(long id, String featureType, LocalDateTime createdAt) {
+            AiInsight i = new AiInsight();
+            i.setId(id);
+            i.setFeatureType(featureType);
+            i.setInputRef("subject-" + id);
+            i.setResultJson("{\"predictedItems\":[]}");
+            i.setConfidence(new BigDecimal("0.80"));
+            i.setCreatedAt(createdAt);
+            return i;
+        }
+
+        @Test
+        @DisplayName("RS37 stored insights are returned, newest first")
+        void returnsStoredInsights() {
+            when(aiInsightRepository.findCreatedInPeriod(any(), any())).thenReturn(List.of(
+                    row(2L, "MAINTENANCE_PREDICTION", DAY.atTime(9, 0)),
+                    row(1L, "DAMAGE_DETECTION",    DAY.atTime(7, 0))));
+
+            AiInsightsReportDTO dto = service.getAiInsightsReport(filter());
+
+            assertThat(dto.isEmpty()).isFalse();
+            assertThat(dto.getFrom()).isEqualTo(DAY.atStartOfDay());
+            assertThat(dto.getTo()).isEqualTo(DAY.atStartOfDay());
+            assertThat(dto.getInsights()).extracting(AiInsightDTO::getId).containsExactly(2L, 1L);
+            assertThat(dto.getInsights()).extracting(AiInsightDTO::getFeatureType)
+                    .containsExactly("MAINTENANCE_PREDICTION", "DAMAGE_DETECTION");
+        }
+
+        @Test
+        @DisplayName("RS38 the window passed to the repository is half-open [from, to+1day)")
+        void usesHalfOpenWindow() {
+            when(aiInsightRepository.findCreatedInPeriod(any(), any())).thenReturn(List.of());
+
+            service.getAiInsightsReport(filter());
+
+            verify(aiInsightRepository).findCreatedInPeriod(FROM, TO);
+        }
+
+        @Test
+        @DisplayName("RS39 no insights is reported as empty, not as an error")
+        void emptyIsNotAnError() {
+            when(aiInsightRepository.findCreatedInPeriod(any(), any())).thenReturn(List.of());
+
+            AiInsightsReportDTO dto = service.getAiInsightsReport(filter());
+
+            assertThat(dto.isEmpty()).isTrue();
+            assertThat(dto.getInsights()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("RS40 resultJson is passed through exactly as the provider stored it")
+        void resultJsonIsNotReshaped() {
+            // The stored text is deliberately not valid-looking structured data, so
+            // any re-parsing or reformatting by the service would show up here.
+            AiInsight i = row(1L, "VEHICLE_DIAGNOSIS", DAY.atStartOfDay());
+            i.setResultJson("  not-json at all {  ");
+            when(aiInsightRepository.findCreatedInPeriod(any(), any())).thenReturn(List.of(i));
+
+            AiInsightsReportDTO dto = service.getAiInsightsReport(filter());
+
+            assertThat(dto.getInsights().get(0).getResultJson()).isEqualTo("  not-json at all {  ");
+        }
+
+        @Test
+        @DisplayName("RS41 confidence and createdAt are carried onto the DTO")
+        void mapsConfidenceAndTimestamp() {
+            LocalDateTime when1 = DAY.atTime(10, 0);
+            when(aiInsightRepository.findCreatedInPeriod(any(), any()))
+                    .thenReturn(List.of(row(1L, "PARTS_PREDICTION", when1)));
+
+            AiInsightDTO dto = service.getAiInsightsReport(filter()).getInsights().get(0);
+
+            assertThat(dto.getConfidence()).isEqualByComparingTo("0.80");
+            assertThat(dto.getCreatedAt()).isEqualTo(when1);
+            assertThat(dto.getInputRef()).isEqualTo("subject-1");
+        }
+
+        @Test
+        @DisplayName("RS42 a missing or reversed range is rejected, as for every report")
+        void validatesRange() {
+            assertThatThrownBy(() -> service.getAiInsightsReport(new ReportFilterDTO()))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessageContaining("requires both from and to");
+
+            assertThatThrownBy(() -> service.getAiInsightsReport(null))
+                    .isInstanceOf(BusinessRuleException.class);
+
+            ReportFilterDTO reversed = new ReportFilterDTO();
+            reversed.setFrom(DAY.plusDays(1));
+            reversed.setTo(DAY);
+            assertThatThrownBy(() -> service.getAiInsightsReport(reversed))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessageContaining("date range is invalid");
         }
     }
 }

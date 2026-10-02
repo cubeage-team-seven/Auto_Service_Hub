@@ -84,7 +84,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * no MODE, no NON_RESERVED_KEYS, no quoted identifiers, no global dialect change.
  */
 @DataJpaTest(properties = {
-        "spring.datasource.url=jdbc:h2:mem:report-repo-test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
+        "spring.datasource.url=jdbc:h2:mem:report-repo-test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;NON_KEYWORDS=YEAR",
         "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect"
@@ -232,816 +232,808 @@ class ReportRepositoryQueriesTest {
 
     // ── Parts usage (FR-REP-3) ────────────────────────────────────────────
 
-    @Nested
-    @DisplayName("Parts usage")
-    class PartsUsage {
 
-        @Test
-        @DisplayName("RQ1 only OUT movements count as consumption")
-        void onlyOutMovementsAreCounted() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
-            Part brake = givenPart("BRK-1", "Brake Pad", "500.00");
+    @Test
+    @DisplayName("RQ1 only OUT movements count as consumption")
+    void onlyOutMovementsAreCounted() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
+        Part brake = givenPart("BRK-1", "Brake Pad", "500.00");
 
-            givenMovement(brake, jc, OUT, 4);
-            givenMovement(brake, jc, OUT, 2);
-            // Neither of these is consumption.
-            givenMovement(brake, null, IN, 50);
-            givenMovement(brake, null, ADJUSTMENT, 3);
-            em.flush();
-            em.clear();
+        givenMovement(brake, jc, OUT, 4);
+        givenMovement(brake, jc, OUT, 2);
+        // Neither of these is consumption.
+        givenMovement(brake, null, IN, 50);
+        givenMovement(brake, null, ADJUSTMENT, 3);
+        em.flush();
+        em.clear();
 
-            List<PartUsageProjection> usage =
-                    movements.sumUsageGroupedByPart(OUT, todayFrom(), todayTo());
+        List<PartUsageProjection> usage =
+                movements.sumUsageGroupedByPart(OUT, todayFrom(), todayTo());
 
-            assertThat(usage).hasSize(1);
-            PartUsageProjection row = usage.get(0);
-            assertThat(row.getSku()).isEqualTo("BRK-1");
-            assertThat(row.getQuantity()).isEqualTo(6L);
-            assertThat(row.getMovementCount()).isEqualTo(2L);
-        }
-
-        @Test
-        @DisplayName("RQ2 the OUT total ignores IN and ADJUSTMENT quantities")
-        void outTotalExcludesOtherTypes() {
-            Part brake = givenPart("BRK-1", "Brake Pad", "500.00");
-            givenMovement(brake, null, OUT, 4);
-            givenMovement(brake, null, IN, 100);
-            givenMovement(brake, null, ADJUSTMENT, 7);
-            em.flush();
-
-            assertThat(movements.sumQuantityByTypeAndCreatedAtBetween(OUT, todayFrom(), todayTo()))
-                    .isEqualTo(4L);
-            assertThat(movements.countByMovementTypeAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(
-                    OUT, todayFrom(), todayTo())).isEqualTo(1L);
-        }
-
-        @Test
-        @DisplayName("RQ3 consumption can be scoped to one job card")
-        void usageForOneJobCard() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            JobCard first  = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
-            JobCard second = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(11));
-            Part brake = givenPart("BRK-1", "Brake Pad", "500.00");
-
-            givenMovement(brake, first, OUT, 4);
-            givenMovement(brake, second, OUT, 9);
-            em.flush();
-            em.clear();
-
-            List<PartUsageProjection> usage = movements
-                    .sumUsageGroupedByPartForJobCard(OUT, first.getId(), todayFrom(), todayTo());
-
-            assertThat(usage).hasSize(1);
-            assertThat(usage.get(0).getQuantity()).isEqualTo(4L);
-        }
-
-        @Test
-        @DisplayName("RQ4 consumption can be scoped to one mechanic via the job card")
-        void usageForOneMechanic() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic anil = givenMechanic("Anil", "MECH-1");
-            Mechanic sur  = givenMechanic("Sur", "MECH-2");
-            JobCard anilJob = givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
-            JobCard surJob  = givenJobCard(c, v, sur,  DELIVERED, "SERVICE", from().plusHours(11));
-            Part brake = givenPart("BRK-1", "Brake Pad", "500.00");
-
-            givenMovement(brake, anilJob, OUT, 4);
-            givenMovement(brake, surJob,  OUT, 8);
-            em.flush();
-            em.clear();
-
-            List<PartUsageProjection> anilUsage = movements
-                    .sumUsageGroupedByPartForMechanic(OUT, anil.getId(), todayFrom(), todayTo());
-
-            assertThat(anilUsage).hasSize(1);
-            assertThat(anilUsage.get(0).getQuantity()).isEqualTo(4L);
-        }
-
-        @Test
-        @DisplayName("RQ5 the estimated parts cost uses the part's own purchase price")
-        void estimatedCostUsesPurchasePrice() {
-            Part brake = givenPart("BRK-1", "Brake Pad", "500.00");
-            givenMovement(brake, null, OUT, 4);
-            em.flush();
-
-            // 4 x 500.00
-            assertThat(movements.sumEstimatedCostByTypeAndCreatedAtBetween(
-                    OUT, todayFrom(), todayTo())).isEqualByComparingTo("2000.00");
-        }
-
-        @Test
-        @DisplayName("RQ6 a part with no purchase price is skipped, not counted as free")
-        void partWithoutPurchasePriceIsExcludedFromCost() {
-            Part unknown = givenPart("MYS-1", "Mystery Part", null);
-            givenMovement(unknown, null, OUT, 5);
-            em.flush();
-
-            // The quantity is real and reported…
-            assertThat(movements.sumQuantityByTypeAndCreatedAtBetween(OUT, todayFrom(), todayTo()))
-                    .isEqualTo(5L);
-            // …but no cost is invented for it.
-            assertThat(movements.sumEstimatedCostByTypeAndCreatedAtBetween(
-                    OUT, todayFrom(), todayTo())).isEqualByComparingTo("0");
-        }
-
-        @Test
-        @DisplayName("RQ7 no OUT movements yields an empty result, not null")
-        void noMovementsYieldsEmptyList() {
-            em.flush();
-
-            assertThat(movements.sumUsageGroupedByPart(OUT, todayFrom(), todayTo())).isEmpty();
-            assertThat(movements.sumQuantityByTypeAndCreatedAtBetween(
-                    OUT, todayFrom(), todayTo())).isZero();
-        }
+        assertThat(usage).hasSize(1);
+        PartUsageProjection row = usage.get(0);
+        assertThat(row.getSku()).isEqualTo("BRK-1");
+        assertThat(row.getQuantity()).isEqualTo(6L);
+        assertThat(row.getMovementCount()).isEqualTo(2L);
     }
+
+    @Test
+    @DisplayName("RQ2 the OUT total ignores IN and ADJUSTMENT quantities")
+    void outTotalExcludesOtherTypes() {
+        Part brake = givenPart("BRK-1", "Brake Pad", "500.00");
+        givenMovement(brake, null, OUT, 4);
+        givenMovement(brake, null, IN, 100);
+        givenMovement(brake, null, ADJUSTMENT, 7);
+        em.flush();
+
+        assertThat(movements.sumQuantityByTypeAndCreatedAtBetween(OUT, todayFrom(), todayTo()))
+                .isEqualTo(4L);
+        assertThat(movements.countByMovementTypeAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+                OUT, todayFrom(), todayTo())).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("RQ3 consumption can be scoped to one job card")
+    void usageForOneJobCard() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        JobCard first  = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
+        JobCard second = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(11));
+        Part brake = givenPart("BRK-1", "Brake Pad", "500.00");
+
+        givenMovement(brake, first, OUT, 4);
+        givenMovement(brake, second, OUT, 9);
+        em.flush();
+        em.clear();
+
+        List<PartUsageProjection> usage = movements
+                .sumUsageGroupedByPartForJobCard(OUT, first.getId(), todayFrom(), todayTo());
+
+        assertThat(usage).hasSize(1);
+        assertThat(usage.get(0).getQuantity()).isEqualTo(4L);
+    }
+
+    @Test
+    @DisplayName("RQ4 consumption can be scoped to one mechanic via the job card")
+    void usageForOneMechanic() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic anil = givenMechanic("Anil", "MECH-1");
+        Mechanic sur  = givenMechanic("Sur", "MECH-2");
+        JobCard anilJob = givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
+        JobCard surJob  = givenJobCard(c, v, sur,  DELIVERED, "SERVICE", from().plusHours(11));
+        Part brake = givenPart("BRK-1", "Brake Pad", "500.00");
+
+        givenMovement(brake, anilJob, OUT, 4);
+        givenMovement(brake, surJob,  OUT, 8);
+        em.flush();
+        em.clear();
+
+        List<PartUsageProjection> anilUsage = movements
+                .sumUsageGroupedByPartForMechanic(OUT, anil.getId(), todayFrom(), todayTo());
+
+        assertThat(anilUsage).hasSize(1);
+        assertThat(anilUsage.get(0).getQuantity()).isEqualTo(4L);
+    }
+
+    @Test
+    @DisplayName("RQ5 the estimated parts cost uses the part's own purchase price")
+    void estimatedCostUsesPurchasePrice() {
+        Part brake = givenPart("BRK-1", "Brake Pad", "500.00");
+        givenMovement(brake, null, OUT, 4);
+        em.flush();
+
+        // 4 x 500.00
+        assertThat(movements.sumEstimatedCostByTypeAndCreatedAtBetween(
+                OUT, todayFrom(), todayTo())).isEqualByComparingTo("2000.00");
+    }
+
+    @Test
+    @DisplayName("RQ6 a part with no purchase price is skipped, not counted as free")
+    void partWithoutPurchasePriceIsExcludedFromCost() {
+        Part unknown = givenPart("MYS-1", "Mystery Part", null);
+        givenMovement(unknown, null, OUT, 5);
+        em.flush();
+
+        // The quantity is real and reported…
+        assertThat(movements.sumQuantityByTypeAndCreatedAtBetween(OUT, todayFrom(), todayTo()))
+                .isEqualTo(5L);
+        // …but no cost is invented for it.
+        assertThat(movements.sumEstimatedCostByTypeAndCreatedAtBetween(
+                OUT, todayFrom(), todayTo())).isEqualByComparingTo("0");
+    }
+
+    @Test
+    @DisplayName("RQ7 no OUT movements yields an empty result, not null")
+    void noMovementsYieldsEmptyList() {
+        em.flush();
+
+        assertThat(movements.sumUsageGroupedByPart(OUT, todayFrom(), todayTo())).isEmpty();
+        assertThat(movements.sumQuantityByTypeAndCreatedAtBetween(
+                OUT, todayFrom(), todayTo())).isZero();
+    }
+
 
     // ── Status breakdown and the report filters (FR-REP-1, FR-REP-7) ──────
 
-    @Nested
-    @DisplayName("Status breakdown and filters")
-    class StatusAndFilters {
 
-        /** Three jobs on DAY across two statuses. */
-        private void givenMixedJobs() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            givenJobCard(c, v, m, DELIVERED,   "SERVICE", from().plusHours(9));
-            givenJobCard(c, v, m, DELIVERED,   "SERVICE", from().plusHours(10));
-            givenJobCard(c, v, m, "IN_REPAIR", "SERVICE", from().plusHours(11));
-            em.flush();
-        }
-
-        @Test
-        @DisplayName("RQ8 the status breakdown counts each status in the window")
-        void statusBreakdownCountsEachStatus() {
-            givenMixedJobs();
-
-            List<StatusCountProjection> rows = jobCards.countGroupedByStatus(from(), to());
-
-            assertThat(rows).hasSize(2);
-            assertThat(rows).extracting(StatusCountProjection::getStatus)
-                    .containsExactly("DELIVERED", "IN_REPAIR");
-            assertThat(rows).extracting(StatusCountProjection::getStatusCount)
-                    .containsExactly(2L, 1L);
-        }
-
-        @Test
-        @DisplayName("RQ9 the breakdown totals equal the overall job count")
-        void breakdownTotalsMatchTheWhole() {
-            givenMixedJobs();
-
-            long summed = jobCards.countGroupedByStatus(from(), to()).stream()
-                    .mapToLong(StatusCountProjection::getStatusCount).sum();
-
-            assertThat(summed).isEqualTo(jobCards.countByAssignedDateBetween(from(), to()));
-        }
-
-        @Test
-        @DisplayName("RQ10 the date window excludes jobs on either side of it")
-        void dateWindowExcludesOutsideJobs() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            givenJobCard(c, v, m, DELIVERED, "SERVICE", from().minusDays(1).plusHours(9));
-            givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
-            givenJobCard(c, v, m, DELIVERED, "SERVICE", to().plusDays(1));
-            em.flush();
-
-            assertThat(jobCards.countByAssignedDateBetween(from(), to())).isEqualTo(1L);
-        }
-
-        @Test
-        @DisplayName("RQ11 jobs exactly on the boundary belong to the right day")
-        void boundaryJobsAreHandledByTheHalfOpenWindow() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            givenJobCard(c, v, m, DELIVERED, "SERVICE", from());   // 00:00:00, included
-            givenJobCard(c, v, m, DELIVERED, "SERVICE", to());     // next 00:00, excluded
-            em.flush();
-
-            assertThat(jobCards.countByAssignedDateBetween(from(), to())).isEqualTo(1L);
-            assertThat(jobCards.countByAssignedDateBetween(to(), to().plusDays(1))).isEqualTo(1L);
-        }
-
-        @Test
-        @DisplayName("RQ12 the non-delivered count is the complement of completed")
-        void nonDeliveredIsComplementOfDelivered() {
-            givenMixedJobs();
-
-            long total = jobCards.countByAssignedDateBetween(from(), to());
-            long delivered = jobCards.countByStatusAndAssignedDateBetween(DELIVERED, from(), to());
-            long notDelivered = jobCards.countByAssignedDateRangeAndStatusNot(
-                    from(), to(), DELIVERED);
-
-            assertThat(delivered).isEqualTo(2L);
-            assertThat(notDelivered).isEqualTo(1L);
-            assertThat(delivered + notDelivered).isEqualTo(total);
-        }
-
-        @Test
-        @DisplayName("RQ13 the status filter narrows the result set")
-        void statusFilterNarrowsResults() {
-            givenMixedJobs();
-
-            List<JobCard> onlyDelivered = jobCards.findForReport(
-                    from(), to(), null, null, null, DELIVERED);
-
-            assertThat(onlyDelivered).hasSize(2);
-            assertThat(onlyDelivered).allMatch(j -> DELIVERED.equals(j.getStatus()));
-        }
-
-        @Test
-        @DisplayName("RQ14 the service filter matches case-insensitively")
-        void serviceFilterIsCaseInsensitive() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            givenJobCard(c, v, m, DELIVERED, "SERVICE",     from().plusHours(9));
-            givenJobCard(c, v, m, DELIVERED, "body_repair", from().plusHours(10));
-            em.flush();
-
-            assertThat(jobCards.findForReport(from(), to(), null, null, "service", null)).hasSize(1);
-            assertThat(jobCards.findForReport(from(), to(), null, null, "BODY_REPAIR", null)).hasSize(1);
-            assertThat(jobCards.findForReport(from(), to(), null, null, "TYRES", null)).isEmpty();
-        }
-
-        @Test
-        @DisplayName("RQ15 the mechanic filter returns only that mechanic's jobs")
-        void mechanicFilterNarrowsResults() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic anil = givenMechanic("Anil", "MECH-1");
-            Mechanic sur  = givenMechanic("Sur", "MECH-2");
-            givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
-            givenJobCard(c, v, sur,  DELIVERED, "SERVICE", from().plusHours(10));
-            em.flush();
-
-            List<JobCard> anilJobs = jobCards.findForReport(
-                    from(), to(), anil.getId(), null, null, null);
-
-            assertThat(anilJobs).hasSize(1);
-            assertThat(anilJobs.get(0).getMechanic().getId()).isEqualTo(anil.getId());
-        }
-
-        @Test
-        @DisplayName("RQ16 the vehicle filter returns only that vehicle's jobs")
-        void vehicleFilterNarrowsResults() {
-            Customer ravi = givenCustomer("Ravi");
-            Customer neha = givenCustomer("Neha");
-            Vehicle raviCar = givenVehicle(ravi);
-            Vehicle nehaCar = givenVehicle(neha);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            givenJobCard(ravi, raviCar, m, DELIVERED, "SERVICE", from().plusHours(9));
-            givenJobCard(neha, nehaCar, m, DELIVERED, "SERVICE", from().plusHours(10));
-            em.flush();
-
-            List<JobCard> raviJobs = jobCards.findForReport(
-                    from(), to(), null, raviCar.getId(), null, null);
-
-            assertThat(raviJobs).hasSize(1);
-            assertThat(raviJobs.get(0).getVehicle().getId()).isEqualTo(raviCar.getId());
-        }
-
-        @Test
-        @DisplayName("RQ17 combined filters intersect rather than union")
-        void combinedFiltersIntersect() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic anil = givenMechanic("Anil", "MECH-1");
-            Mechanic sur  = givenMechanic("Sur", "MECH-2");
-            givenJobCard(c, v, anil, DELIVERED,   "SERVICE",     from().plusHours(9));
-            givenJobCard(c, v, anil, "IN_REPAIR", "SERVICE",     from().plusHours(10));
-            givenJobCard(c, v, sur,  DELIVERED,   "SERVICE",     from().plusHours(11));
-            givenJobCard(c, v, sur,  DELIVERED,   "body_repair", from().plusHours(12));
-            em.flush();
-
-            List<JobCard> matching = jobCards.findForReport(
-                    from(), to(), anil.getId(), v.getId(), "SERVICE", DELIVERED);
-
-            assertThat(matching).hasSize(1);
-            assertThat(matching.get(0).getMechanic().getId()).isEqualTo(anil.getId());
-        }
-
-        @Test
-        @DisplayName("RQ18 an empty window returns empty lists, never null")
-        void emptyWindowReturnsEmptyResults() {
-            em.flush();
-
-            assertThat(jobCards.findForReport(from(), to(), null, null, null, null)).isEmpty();
-            assertThat(jobCards.countForReport(from(), to(), null, null, null, null)).isZero();
-            assertThat(jobCards.countGroupedByStatus(from(), to())).isEmpty();
-            assertThat(jobCards.countByAssignedDateRange(from(), to())).isZero();
-        }
-
-        @Test
-        @DisplayName("RQ19 the filter dropdown sources list real values only")
-        void distinctValueSourcesExcludeNulls() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            givenJobCard(c, v, m, DELIVERED, "SERVICE", from());
-            givenJobCard(c, v, m, "IN_REPAIR", "TYRES", from().plusHours(1));
-            em.flush();
-
-            assertThat(jobCards.findDistinctServiceTypes()).containsExactly("SERVICE", "TYRES");
-            assertThat(jobCards.findDistinctStatuses()).containsExactly("IN_REPAIR", "DELIVERED");
-        }
+    /** Three jobs on DAY across two statuses. */
+    private void givenMixedJobs() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        givenJobCard(c, v, m, DELIVERED,   "SERVICE", from().plusHours(9));
+        givenJobCard(c, v, m, DELIVERED,   "SERVICE", from().plusHours(10));
+        givenJobCard(c, v, m, "IN_REPAIR", "SERVICE", from().plusHours(11));
+        em.flush();
     }
+
+    @Test
+    @DisplayName("RQ8 the status breakdown counts each status in the window")
+    void statusBreakdownCountsEachStatus() {
+        givenMixedJobs();
+
+        List<StatusCountProjection> rows = jobCards.countGroupedByStatus(from(), to());
+
+        assertThat(rows).hasSize(2);
+        assertThat(rows).extracting(StatusCountProjection::getStatus)
+                .containsExactly("DELIVERED", "IN_REPAIR");
+        assertThat(rows).extracting(StatusCountProjection::getStatusCount)
+                .containsExactly(2L, 1L);
+    }
+
+    @Test
+    @DisplayName("RQ9 the breakdown totals equal the overall job count")
+    void breakdownTotalsMatchTheWhole() {
+        givenMixedJobs();
+
+        long summed = jobCards.countGroupedByStatus(from(), to()).stream()
+                .mapToLong(StatusCountProjection::getStatusCount).sum();
+
+        assertThat(summed).isEqualTo(jobCards.countByAssignedDateBetween(from(), to()));
+    }
+
+    @Test
+    @DisplayName("RQ10 the date window excludes jobs on either side of it")
+    void dateWindowExcludesOutsideJobs() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        givenJobCard(c, v, m, DELIVERED, "SERVICE", from().minusDays(1).plusHours(9));
+        givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
+        givenJobCard(c, v, m, DELIVERED, "SERVICE", to().plusDays(1));
+        em.flush();
+
+        assertThat(jobCards.countByAssignedDateBetween(from(), to())).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("RQ11 a job on the exclusive upper boundary is excluded, and starts the next window")
+    void boundaryJobsAreHandledByTheHalfOpenWindow() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        givenJobCard(c, v, m, DELIVERED, "SERVICE", from());   // 00:00:00, included
+        givenJobCard(c, v, m, DELIVERED, "SERVICE", to());     // next 00:00, excluded
+        em.flush();
+
+        // Regression guard for the half-open window. Spring Data's derived
+        // Between is inclusive of both bounds, which counted the job at exactly
+        // `to()` in this window as well; the second assertion proves the same row
+        // is not lost, merely attributed to the window that starts at it.
+        assertThat(jobCards.countByAssignedDateBetween(from(), to())).isEqualTo(1L);
+        assertThat(jobCards.countByAssignedDateBetween(to(), to().plusDays(1))).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("RQ12 the non-delivered count is the complement of completed")
+    void nonDeliveredIsComplementOfDelivered() {
+        givenMixedJobs();
+
+        long total = jobCards.countByAssignedDateBetween(from(), to());
+        long delivered = jobCards.countByStatusAndAssignedDateBetween(DELIVERED, from(), to());
+        long notDelivered = jobCards.countByAssignedDateRangeAndStatusNot(
+                from(), to(), DELIVERED);
+
+        assertThat(delivered).isEqualTo(2L);
+        assertThat(notDelivered).isEqualTo(1L);
+        assertThat(delivered + notDelivered).isEqualTo(total);
+    }
+
+    @Test
+    @DisplayName("RQ13 the status filter narrows the result set")
+    void statusFilterNarrowsResults() {
+        givenMixedJobs();
+
+        List<JobCard> onlyDelivered = jobCards.findForReport(
+                from(), to(), null, null, null, DELIVERED);
+
+        assertThat(onlyDelivered).hasSize(2);
+        assertThat(onlyDelivered).allMatch(j -> DELIVERED.equals(j.getStatus()));
+    }
+
+    @Test
+    @DisplayName("RQ14 the service filter matches case-insensitively")
+    void serviceFilterIsCaseInsensitive() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        givenJobCard(c, v, m, DELIVERED, "SERVICE",     from().plusHours(9));
+        givenJobCard(c, v, m, DELIVERED, "body_repair", from().plusHours(10));
+        em.flush();
+
+        assertThat(jobCards.findForReport(from(), to(), null, null, "service", null)).hasSize(1);
+        assertThat(jobCards.findForReport(from(), to(), null, null, "BODY_REPAIR", null)).hasSize(1);
+        assertThat(jobCards.findForReport(from(), to(), null, null, "TYRES", null)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("RQ15 the mechanic filter returns only that mechanic's jobs")
+    void mechanicFilterNarrowsResults() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic anil = givenMechanic("Anil", "MECH-1");
+        Mechanic sur  = givenMechanic("Sur", "MECH-2");
+        givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
+        givenJobCard(c, v, sur,  DELIVERED, "SERVICE", from().plusHours(10));
+        em.flush();
+
+        List<JobCard> anilJobs = jobCards.findForReport(
+                from(), to(), anil.getId(), null, null, null);
+
+        assertThat(anilJobs).hasSize(1);
+        assertThat(anilJobs.get(0).getMechanic().getId()).isEqualTo(anil.getId());
+    }
+
+    @Test
+    @DisplayName("RQ16 the vehicle filter returns only that vehicle's jobs")
+    void vehicleFilterNarrowsResults() {
+        Customer ravi = givenCustomer("Ravi");
+        Customer neha = givenCustomer("Neha");
+        Vehicle raviCar = givenVehicle(ravi);
+        Vehicle nehaCar = givenVehicle(neha);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        givenJobCard(ravi, raviCar, m, DELIVERED, "SERVICE", from().plusHours(9));
+        givenJobCard(neha, nehaCar, m, DELIVERED, "SERVICE", from().plusHours(10));
+        em.flush();
+
+        List<JobCard> raviJobs = jobCards.findForReport(
+                from(), to(), null, raviCar.getId(), null, null);
+
+        assertThat(raviJobs).hasSize(1);
+        assertThat(raviJobs.get(0).getVehicle().getId()).isEqualTo(raviCar.getId());
+    }
+
+    @Test
+    @DisplayName("RQ17 combined filters intersect rather than union")
+    void combinedFiltersIntersect() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic anil = givenMechanic("Anil", "MECH-1");
+        Mechanic sur  = givenMechanic("Sur", "MECH-2");
+        givenJobCard(c, v, anil, DELIVERED,   "SERVICE",     from().plusHours(9));
+        givenJobCard(c, v, anil, "IN_REPAIR", "SERVICE",     from().plusHours(10));
+        givenJobCard(c, v, sur,  DELIVERED,   "SERVICE",     from().plusHours(11));
+        givenJobCard(c, v, sur,  DELIVERED,   "body_repair", from().plusHours(12));
+        em.flush();
+
+        List<JobCard> matching = jobCards.findForReport(
+                from(), to(), anil.getId(), v.getId(), "SERVICE", DELIVERED);
+
+        assertThat(matching).hasSize(1);
+        assertThat(matching.get(0).getMechanic().getId()).isEqualTo(anil.getId());
+    }
+
+    @Test
+    @DisplayName("RQ18 an empty window returns empty lists, never null")
+    void emptyWindowReturnsEmptyResults() {
+        em.flush();
+
+        assertThat(jobCards.findForReport(from(), to(), null, null, null, null)).isEmpty();
+        assertThat(jobCards.countForReport(from(), to(), null, null, null, null)).isZero();
+        assertThat(jobCards.countGroupedByStatus(from(), to())).isEmpty();
+        assertThat(jobCards.countByAssignedDateRange(from(), to())).isZero();
+    }
+
+    @Test
+    @DisplayName("RQ19 the filter dropdown sources list real values only")
+    void distinctValueSourcesExcludeNulls() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        givenJobCard(c, v, m, DELIVERED, "SERVICE", from());
+        givenJobCard(c, v, m, "IN_REPAIR", "TYRES", from().plusHours(1));
+        em.flush();
+
+        assertThat(jobCards.findDistinctServiceTypes()).containsExactly("SERVICE", "TYRES");
+        assertThat(jobCards.    // Both queries sort ascending, so statuses come back alphabetically — DELIVERED
+    // before IN_REPAIR. The previous expectation had them the other way round,
+    // which the query's own ORDER BY never produced.
+findDistinctStatuses()).containsExactly("DELIVERED", "IN_REPAIR");
+    }
+
 
     // ── Mechanic performance (FR-REP-2) ───────────────────────────────────
 
-    @Nested
-    @DisplayName("Mechanic performance")
-    class MechanicPerformance {
 
-        @Test
-        @DisplayName("RQ20 the mechanic projection maps employeeCode as a String")
-        void employeeCodeMapsAsString() {
-            Mechanic anil = givenMechanic("Anil", "MECH-001");
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
-            em.flush();
-            em.clear();
+    @Test
+    @DisplayName("RQ20 the mechanic projection maps employeeCode as a String")
+    void employeeCodeMapsAsString() {
+        Mechanic anil = givenMechanic("Anil", "MECH-001");
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
+        em.flush();
+        em.clear();
 
-            MechanicJobCountProjection row = jobCards
-                    .countJobsGroupedByMechanic(from(), to(), null, DELIVERED).stream()
-                    .filter(r -> r.getMechanicId().equals(anil.getId()))
-                    .findFirst().orElseThrow();
+        MechanicJobCountProjection row = jobCards
+                .countJobsGroupedByMechanic(from(), to(), null, DELIVERED).stream()
+                .filter(r -> r.getMechanicId().equals(anil.getId()))
+                .findFirst().orElseThrow();
 
-            // The column holds a String like 'MECH-001'. Declaring this accessor as
-            // Long would compile but fail to map at runtime.
-            assertThat(row.getEmployeeCode()).isEqualTo("MECH-001");
-            assertThat(row.getMechanicName()).isEqualTo("Anil");
-            assertThat(row.getAssignedJobs()).isEqualTo(1L);
-            assertThat(row.getCompletedJobs()).isEqualTo(1L);
-        }
-
-        @Test
-        @DisplayName("RQ21 assigned and completed counts are reported separately")
-        void assignedAndCompletedAreDistinct() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic anil = givenMechanic("Anil", "MECH-1");
-            givenJobCard(c, v, anil, DELIVERED,   "SERVICE", from().plusHours(9));
-            givenJobCard(c, v, anil, DELIVERED,   "SERVICE", from().plusHours(10));
-            givenJobCard(c, v, anil, "IN_REPAIR", "SERVICE", from().plusHours(11));
-            em.flush();
-            em.clear();
-
-            MechanicJobCountProjection row = jobCards
-                    .countJobsGroupedByMechanic(from(), to(), anil.getId(), DELIVERED).get(0);
-
-            assertThat(row.getAssignedJobs()).isEqualTo(3L);
-            assertThat(row.getCompletedJobs()).isEqualTo(2L);
-        }
-
-        @Test
-        @DisplayName("RQ22 a mechanic with no jobs still appears, with zero counts")
-        void idleMechanicAppearsWithZeroCounts() {
-            Mechanic idle = givenMechanic("Sur", "MECH-2");
-            em.flush();
-            em.clear();
-
-            MechanicJobCountProjection row = jobCards
-                    .countJobsGroupedByMechanic(from(), to(), null, DELIVERED).stream()
-                    .filter(r -> r.getMechanicId().equals(idle.getId()))
-                    .findFirst().orElseThrow();
-
-            // Being omitted would read as "not measured" rather than "did nothing".
-            assertThat(row.getAssignedJobs()).isZero();
-            assertThat(row.getCompletedJobs()).isZero();
-        }
-
-        @Test
-        @DisplayName("RQ23 the mechanic filter restricts the aggregation to one mechanic")
-        void mechanicFilterRestrictsAggregation() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic anil = givenMechanic("Anil", "MECH-1");
-            Mechanic sur  = givenMechanic("Sur", "MECH-2");
-            givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
-            givenJobCard(c, v, sur,  DELIVERED, "SERVICE", from().plusHours(10));
-            em.flush();
-            em.clear();
-
-            List<MechanicJobCountProjection> rows =
-                    jobCards.countJobsGroupedByMechanic(from(), to(), anil.getId(), DELIVERED);
-
-            assertThat(rows).hasSize(1);
-            assertThat(rows.get(0).getMechanicId()).isEqualTo(anil.getId());
-        }
-
-        @Test
-        @DisplayName("RQ24 jobs outside the window are not attributed to the mechanic")
-        void mechanicAggregationRespectsTheWindow() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic anil = givenMechanic("Anil", "MECH-1");
-            givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().minusDays(2));
-            em.flush();
-            em.clear();
-
-            MechanicJobCountProjection row = jobCards
-                    .countJobsGroupedByMechanic(from(), to(), anil.getId(), DELIVERED).get(0);
-
-            assertThat(row.getAssignedJobs()).isZero();
-        }
-
-        @Test
-        @DisplayName("RQ25 a mechanic's average rating is null, not zero, when unrated")
-        void averageRatingIsNullWhenUnrated() {
-            Mechanic anil = givenMechanic("Anil", "MECH-1");
-            em.flush();
-            em.clear();
-
-            // "Nobody rated me" must not look like "rated zero".
-            assertThat(feedback.findAverageRatingByMechanicId(anil.getId())).isNull();
-            assertThat(feedback.countByJobCardMechanicId(anil.getId())).isZero();
-        }
-
-        @Test
-        @DisplayName("RQ26 customer ratings are attributed via the job card")
-        void ratingsComeFromFeedback() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic anil = givenMechanic("Anil", "MECH-1");
-            JobCard jc = givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
-            em.flush();
-
-            feedback.save(givenFeedback(c, jc, 5));
-            feedback.save(givenFeedback(c, jc, 2));
-            em.flush();
-            em.clear();
-
-            assertThat(feedback.findAverageRatingByMechanicId(anil.getId())).isEqualTo(3.5);
-            assertThat(feedback.countByJobCardMechanicId(anil.getId())).isEqualTo(2L);
-            assertThat(feedback.findAverageRatingByMechanicIdAndDateRange(
-                    anil.getId(), from(), to())).isEqualTo(3.5);
-        }
+        // The column holds a String like 'MECH-001'. Declaring this accessor as
+        // Long would compile but fail to map at runtime.
+        assertThat(row.getEmployeeCode()).isEqualTo("MECH-001");
+        assertThat(row.getMechanicName()).isEqualTo("Anil");
+        assertThat(row.getAssignedJobs()).isEqualTo(1L);
+        assertThat(row.getCompletedJobs()).isEqualTo(1L);
     }
+
+    @Test
+    @DisplayName("RQ21 assigned and completed counts are reported separately")
+    void assignedAndCompletedAreDistinct() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic anil = givenMechanic("Anil", "MECH-1");
+        givenJobCard(c, v, anil, DELIVERED,   "SERVICE", from().plusHours(9));
+        givenJobCard(c, v, anil, DELIVERED,   "SERVICE", from().plusHours(10));
+        givenJobCard(c, v, anil, "IN_REPAIR", "SERVICE", from().plusHours(11));
+        em.flush();
+        em.clear();
+
+        MechanicJobCountProjection row = jobCards
+                .countJobsGroupedByMechanic(from(), to(), anil.getId(), DELIVERED).get(0);
+
+        assertThat(row.getAssignedJobs()).isEqualTo(3L);
+        assertThat(row.getCompletedJobs()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("RQ22 a mechanic with no jobs still appears, with zero counts")
+    void idleMechanicAppearsWithZeroCounts() {
+        Mechanic idle = givenMechanic("Sur", "MECH-2");
+        em.flush();
+        em.clear();
+
+        MechanicJobCountProjection row = jobCards
+                .countJobsGroupedByMechanic(from(), to(), null, DELIVERED).stream()
+                .filter(r -> r.getMechanicId().equals(idle.getId()))
+                .findFirst().orElseThrow();
+
+        // Being omitted would read as "not measured" rather than "did nothing".
+        assertThat(row.getAssignedJobs()).isZero();
+        assertThat(row.getCompletedJobs()).isZero();
+    }
+
+    @Test
+    @DisplayName("RQ23 the mechanic filter restricts the aggregation to one mechanic")
+    void mechanicFilterRestrictsAggregation() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic anil = givenMechanic("Anil", "MECH-1");
+        Mechanic sur  = givenMechanic("Sur", "MECH-2");
+        givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
+        givenJobCard(c, v, sur,  DELIVERED, "SERVICE", from().plusHours(10));
+        em.flush();
+        em.clear();
+
+        List<MechanicJobCountProjection> rows =
+                jobCards.countJobsGroupedByMechanic(from(), to(), anil.getId(), DELIVERED);
+
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).getMechanicId()).isEqualTo(anil.getId());
+    }
+
+    @Test
+    @DisplayName("RQ24 jobs outside the window are not attributed to the mechanic")
+    void mechanicAggregationRespectsTheWindow() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic anil = givenMechanic("Anil", "MECH-1");
+        givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().minusDays(2));
+        em.flush();
+        em.clear();
+
+        MechanicJobCountProjection row = jobCards
+                .countJobsGroupedByMechanic(from(), to(), anil.getId(), DELIVERED).get(0);
+
+        assertThat(row.getAssignedJobs()).isZero();
+    }
+
+    @Test
+    @DisplayName("RQ25 a mechanic's average rating is null, not zero, when unrated")
+    void averageRatingIsNullWhenUnrated() {
+        Mechanic anil = givenMechanic("Anil", "MECH-1");
+        em.flush();
+        em.clear();
+
+        // "Nobody rated me" must not look like "rated zero".
+        assertThat(feedback.findAverageRatingByMechanicId(anil.getId())).isNull();
+        assertThat(feedback.countByJobCardMechanicId(anil.getId())).isZero();
+    }
+
+    @Test
+    @DisplayName("RQ26 customer ratings are attributed via the job card")
+    void ratingsComeFromFeedback() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic anil = givenMechanic("Anil", "MECH-1");
+        JobCard jc = givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
+        em.flush();
+
+        feedback.save(givenFeedback(c, jc, 5));
+        feedback.save(givenFeedback(c, jc, 2));
+        em.flush();
+        em.clear();
+
+        assertThat(feedback.findAverageRatingByMechanicId(anil.getId())).isEqualTo(3.5);
+        assertThat(feedback.countByJobCardMechanicId(anil.getId())).isEqualTo(2L);
+        assertThat(feedback.findAverageRatingByMechanicIdAndDateRange(
+                anil.getId(), from(), to())).isEqualTo(3.5);
+    }
+
 
     // ── Revenue and payments (FR-REP-4) ───────────────────────────────────
 
-    @Nested
-    @DisplayName("Revenue and payments")
-    class RevenueAndPayments {
 
-        @Test
-        @DisplayName("RQ27 revenue totals are summed over the invoice date range")
-        void revenueTotalsOverRange() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
-            givenInvoice(jc, "PAID",   DAY,            "1000.00");
-            givenInvoice(jc, "UNPAID", DAY,            "500.00");
-            givenInvoice(jc, "PAID",   DAY.plusDays(5), "200.00");
-            em.flush();
+    @Test
+    @DisplayName("RQ27 revenue totals are summed over the invoice date range")
+    void revenueTotalsOverRange() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
+        givenInvoice(jc, "PAID",   DAY,            "1000.00");
+        givenInvoice(jc, "UNPAID", DAY,            "500.00");
+        givenInvoice(jc, "PAID",   DAY.plusDays(5), "200.00");
+        em.flush();
 
-            assertThat(invoices.sumTotalByInvoiceDateBetween(DAY, DAY))
-                    .isEqualByComparingTo("1500.00");
-            assertThat(invoices.countByInvoiceDateBetween(DAY, DAY)).isEqualTo(2L);
-            assertThat(invoices.sumTotalByInvoiceDateBetween(DAY, DAY.plusDays(7)))
-                    .isEqualByComparingTo("1700.00");
-        }
-
-        @Test
-        @DisplayName("RQ28 the invoice-status breakdown reports count and value per status")
-        void invoiceStatusBreakdown() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
-            givenInvoice(jc, "PAID",   DAY, "1000.00");
-            givenInvoice(jc, "PAID",   DAY, "500.00");
-            givenInvoice(jc, "UNPAID", DAY, "250.00");
-            em.flush();
-            em.clear();
-
-            List<InvoiceStatusTotalProjection> rows =
-                    invoices.countAndTotalGroupedByStatus(DAY, DAY);
-
-            assertThat(rows).hasSize(2);
-            InvoiceStatusTotalProjection paid = rows.stream()
-                    .filter(r -> "PAID".equals(r.getStatus())).findFirst().orElseThrow();
-            assertThat(paid.getInvoiceCount()).isEqualTo(2L);
-            assertThat(paid.getTotal()).isEqualByComparingTo("1500.00");
-        }
-
-        @Test
-        @DisplayName("RQ29 the daily revenue trend groups by invoice date")
-        void dailyRevenueTrend() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
-            givenInvoice(jc, "PAID", DAY,            "1000.00");
-            givenInvoice(jc, "PAID", DAY,            "500.00");
-            givenInvoice(jc, "PAID", DAY.plusDays(1), "250.00");
-            em.flush();
-            em.clear();
-
-            List<DailyRevenueProjection> rows =
-                    invoices.sumGroupedByInvoiceDate(DAY, DAY.plusDays(1));
-
-            assertThat(rows).hasSize(2);
-            DailyRevenueProjection first = rows.get(0);
-            assertThat(first.getInvoiceDate()).isEqualTo(DAY);
-            assertThat(first.getInvoiceCount()).isEqualTo(2L);
-            assertThat(first.getTotal()).isEqualByComparingTo("1500.00");
-        }
-
-        @Test
-        @DisplayName("RQ30 only SUCCESS payments count as collected")
-        void onlySuccessfulPaymentsCount() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
-            Invoice inv = givenInvoice(jc, "PARTIALLY_PAID", DAY, "1000.00");
-
-            givenPayment(inv, SUCCESS,    "400.00", from().plusHours(10), "CASH");
-            givenPayment(inv, SUCCESS,    "200.00", from().plusHours(11), "CARD");
-            givenPayment(inv, "FAILED",   "999.00", from().plusHours(12), "CASH");
-            givenPayment(inv, "REFUNDED", "500.00", from().plusHours(13), "CARD");
-            em.flush();
-
-            assertThat(payments.sumAmountByStatusAndPaidAtBetween(SUCCESS, from(), to()))
-                    .isEqualByComparingTo("600.00");
-            assertThat(payments.countByStatusIgnoreCaseAndPaidAtGreaterThanEqualAndPaidAtLessThan(
-                    SUCCESS, from(), to())).isEqualTo(2L);
-        }
-
-        @Test
-        @DisplayName("RQ31 payment status matching is case-insensitive")
-        void paymentStatusMatchingIsCaseInsensitive() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
-            Invoice inv = givenInvoice(jc, "PAID", DAY, "1000.00");
-            givenPayment(inv, "success", "300.00", from().plusHours(10), "CASH");
-            em.flush();
-
-            assertThat(payments.sumAmountByStatusAndPaidAtBetween(SUCCESS, from(), to()))
-                    .isEqualByComparingTo("300.00");
-        }
-
-        @Test
-        @DisplayName("RQ32 payments outside the window are excluded")
-        void paymentsRespectTheWindow() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
-            Invoice inv = givenInvoice(jc, "PAID", DAY, "1000.00");
-            givenPayment(inv, SUCCESS, "400.00", from().minusDays(1), "CASH");
-            givenPayment(inv, SUCCESS, "600.00", from().plusHours(10), "CASH");
-            em.flush();
-
-            assertThat(payments.sumAmountByStatusAndPaidAtBetween(SUCCESS, from(), to()))
-                    .isEqualByComparingTo("600.00");
-        }
-
-        @Test
-        @DisplayName("RQ33 payments can be grouped by mode")
-        void paymentsGroupedByMode() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
-            Invoice inv = givenInvoice(jc, "PAID", DAY, "1000.00");
-            givenPayment(inv, SUCCESS, "700.00", from().plusHours(10), "CASH");
-            givenPayment(inv, SUCCESS, "300.00", from().plusHours(11), "CARD");
-            em.flush();
-            em.clear();
-
-            List<PaymentModeTotalProjection> rows = payments.sumGroupedByMode(SUCCESS, from(), to());
-
-            assertThat(rows).hasSize(2);
-            PaymentModeTotalProjection cash = rows.stream()
-                    .filter(r -> "CASH".equals(r.getMode())).findFirst().orElseThrow();
-            assertThat(cash.getPaymentCount()).isEqualTo(1L);
-            assertThat(cash.getTotal()).isEqualByComparingTo("700.00");
-        }
-
-        @Test
-        @DisplayName("RQ34 no payments yields zero and empty lists, never null")
-        void noPaymentsYieldsZero() {
-            em.flush();
-
-            assertThat(payments.sumAmountByStatusAndPaidAtBetween(SUCCESS, from(), to()))
-                    .isEqualByComparingTo("0");
-            assertThat(payments.sumGroupedByMode(SUCCESS, from(), to())).isEmpty();
-        }
-
-        @Test
-        @DisplayName("RQ35 revenue can be filtered by job status and mechanic")
-        void revenueRespectsJobFilters() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic anil = givenMechanic("Anil", "MECH-1");
-            Mechanic sur  = givenMechanic("Sur", "MECH-2");
-            JobCard anilDone = givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
-            JobCard surOpen  = givenJobCard(c, v, sur,  "IN_REPAIR", "SERVICE", from().plusHours(10));
-            givenInvoice(anilDone, "PAID", DAY, "1000.00");
-            givenInvoice(surOpen,  "PAID", DAY, "800.00");
-            em.flush();
-
-            assertThat(invoices.sumTotalByDateRangeWithJobFilters(DAY, DAY, DELIVERED, null, null))
-                    .isEqualByComparingTo("1000.00");
-            assertThat(invoices.sumTotalByDateRangeWithJobFilters(DAY, DAY, null, sur.getId(), null))
-                    .isEqualByComparingTo("800.00");
-            assertThat(invoices.countByDateRangeWithJobFilters(DAY, DAY, null, anil.getId(), null))
-                    .isEqualTo(1L);
-            assertThat(invoices.findByDateRangeWithJobFilters(DAY, DAY, DELIVERED, null, null))
-                    .hasSize(1);
-        }
-
-        @Test
-        @DisplayName("RQ36 the daily workshop revenue is keyed off the job's assigned date")
-        void dailyWorkshopRevenueUsesAssignedDate() {
-            Customer c = givenCustomer("Ravi");
-            Vehicle v = givenVehicle(c);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            JobCard onDay = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
-            JobCard other = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().minusDays(3));
-            givenInvoice(onDay, "PAID", DAY.plusDays(1), "1000.00");
-            givenInvoice(other, "PAID", DAY.plusDays(1), "500.00");
-            em.flush();
-
-            assertThat(invoices.sumTotalByJobAssignedDateBetween(from(), to()))
-                    .isEqualByComparingTo("1000.00");
-        }
+        assertThat(invoices.sumTotalByInvoiceDateBetween(DAY, DAY))
+                .isEqualByComparingTo("1500.00");
+        assertThat(invoices.countByInvoiceDateBetween(DAY, DAY)).isEqualTo(2L);
+        assertThat(invoices.sumTotalByInvoiceDateBetween(DAY, DAY.plusDays(7)))
+                .isEqualByComparingTo("1700.00");
     }
+
+    @Test
+    @DisplayName("RQ28 the invoice-status breakdown reports count and value per status")
+    void invoiceStatusBreakdown() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
+        givenInvoice(jc, "PAID",   DAY, "1000.00");
+        givenInvoice(jc, "PAID",   DAY, "500.00");
+        givenInvoice(jc, "UNPAID", DAY, "250.00");
+        em.flush();
+        em.clear();
+
+        List<InvoiceStatusTotalProjection> rows =
+                invoices.countAndTotalGroupedByStatus(DAY, DAY);
+
+        assertThat(rows).hasSize(2);
+        InvoiceStatusTotalProjection paid = rows.stream()
+                .filter(r -> "PAID".equals(r.getStatus())).findFirst().orElseThrow();
+        assertThat(paid.getInvoiceCount()).isEqualTo(2L);
+        assertThat(paid.getTotal()).isEqualByComparingTo("1500.00");
+    }
+
+    @Test
+    @DisplayName("RQ29 the daily revenue trend groups by invoice date")
+    void dailyRevenueTrend() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
+        givenInvoice(jc, "PAID", DAY,            "1000.00");
+        givenInvoice(jc, "PAID", DAY,            "500.00");
+        givenInvoice(jc, "PAID", DAY.plusDays(1), "250.00");
+        em.flush();
+        em.clear();
+
+        List<DailyRevenueProjection> rows =
+                invoices.sumGroupedByInvoiceDate(DAY, DAY.plusDays(1));
+
+        assertThat(rows).hasSize(2);
+        DailyRevenueProjection first = rows.get(0);
+        assertThat(first.getInvoiceDate()).isEqualTo(DAY);
+        assertThat(first.getInvoiceCount()).isEqualTo(2L);
+        assertThat(first.getTotal()).isEqualByComparingTo("1500.00");
+    }
+
+    @Test
+    @DisplayName("RQ30 only SUCCESS payments count as collected")
+    void onlySuccessfulPaymentsCount() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
+        Invoice inv = givenInvoice(jc, "PARTIALLY_PAID", DAY, "1000.00");
+
+        givenPayment(inv, SUCCESS,    "400.00", from().plusHours(10), "CASH");
+        givenPayment(inv, SUCCESS,    "200.00", from().plusHours(11), "CARD");
+        givenPayment(inv, "FAILED",   "999.00", from().plusHours(12), "CASH");
+        givenPayment(inv, "REFUNDED", "500.00", from().plusHours(13), "CARD");
+        em.flush();
+
+        assertThat(payments.sumAmountByStatusAndPaidAtBetween(SUCCESS, from(), to()))
+                .isEqualByComparingTo("600.00");
+        assertThat(payments.countByStatusIgnoreCaseAndPaidAtGreaterThanEqualAndPaidAtLessThan(
+                SUCCESS, from(), to())).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("RQ31 payment status matching is case-insensitive")
+    void paymentStatusMatchingIsCaseInsensitive() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
+        Invoice inv = givenInvoice(jc, "PAID", DAY, "1000.00");
+        givenPayment(inv, "success", "300.00", from().plusHours(10), "CASH");
+        em.flush();
+
+        assertThat(payments.sumAmountByStatusAndPaidAtBetween(SUCCESS, from(), to()))
+                .isEqualByComparingTo("300.00");
+    }
+
+    @Test
+    @DisplayName("RQ32 payments outside the window are excluded")
+    void paymentsRespectTheWindow() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
+        Invoice inv = givenInvoice(jc, "PAID", DAY, "1000.00");
+        givenPayment(inv, SUCCESS, "400.00", from().minusDays(1), "CASH");
+        givenPayment(inv, SUCCESS, "600.00", from().plusHours(10), "CASH");
+        em.flush();
+
+        assertThat(payments.sumAmountByStatusAndPaidAtBetween(SUCCESS, from(), to()))
+                .isEqualByComparingTo("600.00");
+    }
+
+    @Test
+    @DisplayName("RQ33 payments can be grouped by mode")
+    void paymentsGroupedByMode() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        JobCard jc = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
+        Invoice inv = givenInvoice(jc, "PAID", DAY, "1000.00");
+        givenPayment(inv, SUCCESS, "700.00", from().plusHours(10), "CASH");
+        givenPayment(inv, SUCCESS, "300.00", from().plusHours(11), "CARD");
+        em.flush();
+        em.clear();
+
+        List<PaymentModeTotalProjection> rows = payments.sumGroupedByMode(SUCCESS, from(), to());
+
+        assertThat(rows).hasSize(2);
+        PaymentModeTotalProjection cash = rows.stream()
+                .filter(r -> "CASH".equals(r.getMode())).findFirst().orElseThrow();
+        assertThat(cash.getPaymentCount()).isEqualTo(1L);
+        assertThat(cash.getTotal()).isEqualByComparingTo("700.00");
+    }
+
+    @Test
+    @DisplayName("RQ34 no payments yields zero and empty lists, never null")
+    void noPaymentsYieldsZero() {
+        em.flush();
+
+        assertThat(payments.sumAmountByStatusAndPaidAtBetween(SUCCESS, from(), to()))
+                .isEqualByComparingTo("0");
+        assertThat(payments.sumGroupedByMode(SUCCESS, from(), to())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("RQ35 revenue can be filtered by job status and mechanic")
+    void revenueRespectsJobFilters() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic anil = givenMechanic("Anil", "MECH-1");
+        Mechanic sur  = givenMechanic("Sur", "MECH-2");
+        JobCard anilDone = givenJobCard(c, v, anil, DELIVERED, "SERVICE", from().plusHours(9));
+        JobCard surOpen  = givenJobCard(c, v, sur,  "IN_REPAIR", "SERVICE", from().plusHours(10));
+        givenInvoice(anilDone, "PAID", DAY, "1000.00");
+        givenInvoice(surOpen,  "PAID", DAY, "800.00");
+        em.flush();
+
+        assertThat(invoices.sumTotalByDateRangeWithJobFilters(DAY, DAY, DELIVERED, null, null))
+                .isEqualByComparingTo("1000.00");
+        assertThat(invoices.sumTotalByDateRangeWithJobFilters(DAY, DAY, null, sur.getId(), null))
+                .isEqualByComparingTo("800.00");
+        assertThat(invoices.countByDateRangeWithJobFilters(DAY, DAY, null, anil.getId(), null))
+                .isEqualTo(1L);
+        assertThat(invoices.findByDateRangeWithJobFilters(DAY, DAY, DELIVERED, null, null))
+                .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("RQ36 the daily workshop revenue is keyed off the job's assigned date")
+    void dailyWorkshopRevenueUsesAssignedDate() {
+        Customer c = givenCustomer("Ravi");
+        Vehicle v = givenVehicle(c);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        JobCard onDay = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().plusHours(9));
+        JobCard other = givenJobCard(c, v, m, DELIVERED, "SERVICE", from().minusDays(3));
+        givenInvoice(onDay, "PAID", DAY.plusDays(1), "1000.00");
+        givenInvoice(other, "PAID", DAY.plusDays(1), "500.00");
+        em.flush();
+
+        assertThat(invoices.sumTotalByJobAssignedDateBetween(from(), to()))
+                .isEqualByComparingTo("1000.00");
+    }
+
 
     // ── Customer growth and repeat customers (FR-REP-5) ───────────────────
 
-    @Nested
-    @DisplayName("Customer growth")
-    class CustomerGrowth {
 
-        @Test
-        @DisplayName("RQ37 new customers are counted by their registration date")
-        void newCustomersCountedInWindow() {
-            // created_at is stamped at persist time, so these land today.
-            givenCustomer("Ravi");
-            givenCustomer("Neha");
-            em.flush();
+    @Test
+    @DisplayName("RQ37 new customers are counted by their registration date")
+    void newCustomersCountedInWindow() {
+        // created_at is stamped at persist time, so these land today.
+        givenCustomer("Ravi");
+        givenCustomer("Neha");
+        em.flush();
 
-            assertThat(customers.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
-                    todayFrom(), todayTo())).isEqualTo(2L);
-            // A window that closed before today cannot see them.
-            assertThat(customers.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
-                    todayFrom().minusYears(1), todayFrom())).isZero();
-        }
-
-        @Test
-        @DisplayName("RQ38 customers on record are counted up to the end of the window")
-        void totalCustomersAtEndOfPeriod() {
-            givenCustomer("Ravi");
-            givenCustomer("Neha");
-            em.flush();
-
-            assertThat(customers.countByCreatedAtLessThan(todayTo())).isEqualTo(2L);
-            assertThat(customers.countByCreatedAtLessThan(todayFrom())).isZero();
-        }
-
-        @Test
-        @DisplayName("RQ39 the new-customer time series sums to the headline count")
-        void newCustomerSeriesSumsToHeadline() {
-            givenCustomer("Ravi");
-            givenCustomer("Neha");
-            givenCustomer("Amit");
-            em.flush();
-
-            List<DateCountProjection> series =
-                    customers.countNewCustomersGroupedByCreatedAt(todayFrom(), todayTo());
-
-            long summed = series.stream().mapToLong(DateCountProjection::getRowCount).sum();
-            assertThat(summed).isEqualTo(
-                    customers.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
-                            todayFrom(), todayTo()));
-            assertThat(series).allSatisfy(r -> assertThat(r.getCreatedAt()).isNotNull());
-        }
-
-        @Test
-        @DisplayName("RQ40 served customers are counted distinctly, not per job")
-        void servedCustomersAreDistinct() {
-            Customer ravi = givenCustomer("Ravi");
-            Vehicle car = givenVehicle(ravi);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            // One customer, three jobs.
-            givenJobCard(ravi, car, m, DELIVERED, "SERVICE", from().plusHours(9));
-            givenJobCard(ravi, car, m, DELIVERED, "SERVICE", from().plusHours(10));
-            givenJobCard(ravi, car, m, DELIVERED, "SERVICE", from().plusHours(11));
-            em.flush();
-
-            assertThat(jobCards.countDistinctCustomersWithJobs(from(), to())).isEqualTo(1L);
-            assertThat(jobCards.countByAssignedDateRange(from(), to())).isEqualTo(3L);
-        }
-
-        @Test
-        @DisplayName("RQ41 a job with no customer does not inflate the served count")
-        void jobsWithoutACustomerAreIgnored() {
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            givenJobCard(null, null, m, DELIVERED, "SERVICE", from().plusHours(9));
-            em.flush();
-
-            assertThat(jobCards.countDistinctCustomersWithJobs(from(), to())).isZero();
-            // The job itself is still counted, because it is a real job.
-            assertThat(jobCards.countByAssignedDateRange(from(), to())).isEqualTo(1L);
-        }
-
-        /**
-         * Repeat customers require BOTH a customer that existed before the window
-         * AND a job inside it.
-         *
-         * <p>{@code created_at} is stamped at persist time and cannot be
-         * back-dated, so today's window is the one in which a customer's
-         * {@code created_at} genuinely falls inside it — which is exactly what
-         * makes the two halves of the filter separable here.
-         */
-        @Test
-        @DisplayName("RQ42 an in-window customer counts as new, not as repeat")
-        void inWindowCustomerIsNewNotRepeat() {
-            Customer ravi = givenCustomer("Ravi");
-            Vehicle raviCar = givenVehicle(ravi);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            givenJobCard(ravi, raviCar, m, DELIVERED, "SERVICE", from().plusHours(9));
-            // Signed up today but never came back.
-            givenCustomer("Neha");
-            em.flush();
-
-            // Both customers are inside the window, so both are new business…
-            assertThat(customers.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
-                    todayFrom(), todayTo())).isEqualTo(2L);
-            // …and neither existed before it, so neither is repeat business.
-            assertThat(jobCards.countRepeatCustomersInPeriod(todayFrom(), todayTo())).isZero();
-        }
-
-        /**
-         * The counterpart: with the window moved into the future, a customer
-         * created today genuinely pre-exists it, and a job dated inside that
-         * window makes them repeat business.
-         *
-         * <p>Without this the repeat query is only ever observed returning zero,
-         * which would equally be true if it were simply broken.
-         */
-        @Test
-        @DisplayName("RQ42b a customer created before the window and returning in it is repeat")
-        void customerReturningInAFutureWindowCountsAsRepeat() {
-            Customer ravi = givenCustomer("Ravi");
-            Vehicle raviCar = givenVehicle(ravi);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-
-            LocalDateTime futureFrom = todayTo().plusDays(1);
-            givenJobCard(ravi, raviCar, m, DELIVERED, "SERVICE", futureFrom.plusHours(9));
-            em.flush();
-
-            // created_at is today, which is before tomorrow's window opens.
-            assertThat(jobCards.countRepeatCustomersInPeriod(
-                    futureFrom, futureFrom.plusDays(1))).isEqualTo(1L);
-
-            // A window with no job in it still returns nothing, so the count above
-            // is driven by the job and not by the customer merely existing.
-            assertThat(jobCards.countRepeatCustomersInPeriod(
-                    futureFrom.plusDays(10), futureFrom.plusDays(11))).isZero();
-        }
-
-        @Test
-        @DisplayName("RQ43 a returning customer with no job in the window is not repeat")
-        void repeatCustomersNeedAJobInTheWindow() {
-            Customer ravi = givenCustomer("Ravi");
-            Vehicle car = givenVehicle(ravi);
-            Mechanic m = givenMechanic("Anil", "MECH-1");
-            // Job is OUTSIDE the window.
-            givenJobCard(ravi, car, m, DELIVERED, "SERVICE", from().minusDays(5));
-            em.flush();
-
-            assertThat(jobCards.countDistinctCustomersWithJobs(from(), to())).isZero();
-            assertThat(jobCards.countRepeatCustomersInPeriod(from(), to())).isZero();
-        }
-
-        @Test
-        @DisplayName("RQ44 no customers and no jobs yields zeroes, never null")
-        void emptyGrowthFigures() {
-            em.flush();
-
-            assertThat(customers.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
-                    from(), to())).isZero();
-            assertThat(customers.countNewCustomersGroupedByCreatedAt(from(), to())).isEmpty();
-            assertThat(jobCards.countDistinctCustomersWithJobs(from(), to())).isZero();
-            assertThat(jobCards.countRepeatCustomersInPeriod(from(), to())).isZero();
-        }
+        assertThat(customers.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+                todayFrom(), todayTo())).isEqualTo(2L);
+        // A window that closed before today cannot see them.
+        assertThat(customers.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+                todayFrom().minusYears(1), todayFrom())).isZero();
     }
+
+    @Test
+    @DisplayName("RQ38 customers on record are counted up to the end of the window")
+    void totalCustomersAtEndOfPeriod() {
+        givenCustomer("Ravi");
+        givenCustomer("Neha");
+        em.flush();
+
+        assertThat(customers.countByCreatedAtLessThan(todayTo())).isEqualTo(2L);
+        assertThat(customers.countByCreatedAtLessThan(todayFrom())).isZero();
+    }
+
+    @Test
+    @DisplayName("RQ39 the new-customer time series sums to the headline count")
+    void newCustomerSeriesSumsToHeadline() {
+        givenCustomer("Ravi");
+        givenCustomer("Neha");
+        givenCustomer("Amit");
+        em.flush();
+
+        List<DateCountProjection> series =
+                customers.countNewCustomersGroupedByCreatedAt(todayFrom(), todayTo());
+
+        long summed = series.stream().mapToLong(DateCountProjection::getRowCount).sum();
+        assertThat(summed).isEqualTo(
+                customers.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+                        todayFrom(), todayTo()));
+        assertThat(series).allSatisfy(r -> assertThat(r.getCreatedAt()).isNotNull());
+    }
+
+    @Test
+    @DisplayName("RQ40 served customers are counted distinctly, not per job")
+    void servedCustomersAreDistinct() {
+        Customer ravi = givenCustomer("Ravi");
+        Vehicle car = givenVehicle(ravi);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        // One customer, three jobs.
+        givenJobCard(ravi, car, m, DELIVERED, "SERVICE", from().plusHours(9));
+        givenJobCard(ravi, car, m, DELIVERED, "SERVICE", from().plusHours(10));
+        givenJobCard(ravi, car, m, DELIVERED, "SERVICE", from().plusHours(11));
+        em.flush();
+
+        assertThat(jobCards.countDistinctCustomersWithJobs(from(), to())).isEqualTo(1L);
+        assertThat(jobCards.countByAssignedDateRange(from(), to())).isEqualTo(3L);
+    }
+
+    @Test
+    @DisplayName("RQ41 a job with no customer does not inflate the served count")
+    void jobsWithoutACustomerAreIgnored() {
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        givenJobCard(null, null, m, DELIVERED, "SERVICE", from().plusHours(9));
+        em.flush();
+
+        assertThat(jobCards.countDistinctCustomersWithJobs(from(), to())).isZero();
+        // The job itself is still counted, because it is a real job.
+        assertThat(jobCards.countByAssignedDateRange(from(), to())).isEqualTo(1L);
+    }
+
+    /**
+     * Repeat customers require BOTH a customer that existed before the window
+     * AND a job inside it.
+     *
+     * <p>{@code created_at} is stamped at persist time and cannot be
+     * back-dated, so today's window is the one in which a customer's
+     * {@code created_at} genuinely falls inside it — which is exactly what
+     * makes the two halves of the filter separable here.
+     */
+    @Test
+    @DisplayName("RQ42 an in-window customer counts as new, not as repeat")
+    void inWindowCustomerIsNewNotRepeat() {
+        Customer ravi = givenCustomer("Ravi");
+        Vehicle raviCar = givenVehicle(ravi);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        givenJobCard(ravi, raviCar, m, DELIVERED, "SERVICE", from().plusHours(9));
+        // Signed up today but never came back.
+        givenCustomer("Neha");
+        em.flush();
+
+        // Both customers are inside the window, so both are new business…
+        assertThat(customers.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+                todayFrom(), todayTo())).isEqualTo(2L);
+        // …and neither existed before it, so neither is repeat business.
+        assertThat(jobCards.countRepeatCustomersInPeriod(todayFrom(), todayTo())).isZero();
+    }
+
+    /**
+     * The counterpart: with the window moved into the future, a customer
+     * created today genuinely pre-exists it, and a job dated inside that
+     * window makes them repeat business.
+     *
+     * <p>Without this the repeat query is only ever observed returning zero,
+     * which would equally be true if it were simply broken.
+     */
+    @Test
+    @DisplayName("RQ42b a customer created before the window and returning in it is repeat")
+    void customerReturningInAFutureWindowCountsAsRepeat() {
+        Customer ravi = givenCustomer("Ravi");
+        Vehicle raviCar = givenVehicle(ravi);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+
+        LocalDateTime futureFrom = todayTo().plusDays(1);
+        givenJobCard(ravi, raviCar, m, DELIVERED, "SERVICE", futureFrom.plusHours(9));
+        em.flush();
+
+        // created_at is today, which is before tomorrow's window opens.
+        assertThat(jobCards.countRepeatCustomersInPeriod(
+                futureFrom, futureFrom.plusDays(1))).isEqualTo(1L);
+
+        // A window with no job in it still returns nothing, so the count above
+        // is driven by the job and not by the customer merely existing.
+        assertThat(jobCards.countRepeatCustomersInPeriod(
+                futureFrom.plusDays(10), futureFrom.plusDays(11))).isZero();
+    }
+
+    @Test
+    @DisplayName("RQ43 a returning customer with no job in the window is not repeat")
+    void repeatCustomersNeedAJobInTheWindow() {
+        Customer ravi = givenCustomer("Ravi");
+        Vehicle car = givenVehicle(ravi);
+        Mechanic m = givenMechanic("Anil", "MECH-1");
+        // Job is OUTSIDE the window.
+        givenJobCard(ravi, car, m, DELIVERED, "SERVICE", from().minusDays(5));
+        em.flush();
+
+        assertThat(jobCards.countDistinctCustomersWithJobs(from(), to())).isZero();
+        assertThat(jobCards.countRepeatCustomersInPeriod(from(), to())).isZero();
+    }
+
+    @Test
+    @DisplayName("RQ44 no customers and no jobs yields zeroes, never null")
+    void emptyGrowthFigures() {
+        em.flush();
+
+        assertThat(customers.countByCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+                from(), to())).isZero();
+        assertThat(customers.countNewCustomersGroupedByCreatedAt(from(), to())).isEmpty();
+        assertThat(jobCards.countDistinctCustomersWithJobs(from(), to())).isZero();
+        assertThat(jobCards.countRepeatCustomersInPeriod(from(), to())).isZero();
+    }
+
 }

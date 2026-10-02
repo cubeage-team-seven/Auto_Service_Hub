@@ -18,6 +18,7 @@ import com.autoservicehub.repository.PaymentRepository;
 import com.autoservicehub.service.impl.EstimateServiceImpl;
 import com.autoservicehub.service.impl.InvoiceServiceImpl;
 import com.autoservicehub.service.impl.PaymentServiceImpl;
+import com.autoservicehub.service.impl.AuditServiceImpl;
 import com.autoservicehub.util.BillingCalculator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,7 +51,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * from one context drops the schema for all of them.
  */
 @DataJpaTest(properties = {
-        "spring.datasource.url=jdbc:h2:mem:billing-test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
+        "spring.datasource.url=jdbc:h2:mem:billing-test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;NON_KEYWORDS=YEAR",
         "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect"
@@ -58,7 +59,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 // BillingCalculator is a @Component in util, which @DataJpaTest does not scan,
 // so it is imported explicitly alongside the services under test.
-@Import({BillingCalculator.class, EstimateServiceImpl.class, InvoiceServiceImpl.class, PaymentServiceImpl.class})
+@Import({ AuditServiceImpl.class, BillingCalculator.class, EstimateServiceImpl.class, InvoiceServiceImpl.class, PaymentServiceImpl.class})
 class BillingPersistenceTest {
 
     @Autowired EstimateServiceImpl     estimateService;

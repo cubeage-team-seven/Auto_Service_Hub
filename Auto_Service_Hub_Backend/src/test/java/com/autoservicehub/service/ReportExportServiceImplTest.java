@@ -5,6 +5,7 @@ import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.service.impl.ReportExportServiceImpl;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -47,7 +48,19 @@ class ReportExportServiceImplTest {
 
     @Mock ReportService reportService;
 
-    @InjectMocks ReportExportServiceImpl exportService;
+    ReportExportServiceImpl exportService;
+
+    /**
+     * Built by hand rather than by {@code @InjectMocks} because the real
+     * {@link com.autoservicehub.service.impl.ExportRenderer} is needed here: these
+     * tests assert on the actual PDF and workbook bytes, so a mocked renderer
+     * returning null would test nothing.
+     */
+    @BeforeEach
+    void buildServiceWithRealRenderer() {
+        exportService = new ReportExportServiceImpl(
+                reportService, new com.autoservicehub.service.impl.ExportRenderer());
+    }
 
     private static final LocalDate DAY = LocalDate.of(2026, 3, 10);
 

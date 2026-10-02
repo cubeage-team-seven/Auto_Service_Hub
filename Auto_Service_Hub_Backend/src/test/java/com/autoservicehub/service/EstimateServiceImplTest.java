@@ -63,6 +63,7 @@ class EstimateServiceImplTest {
     @Mock EstimateRepository     repository;
     @Mock EstimateItemRepository itemRepository;
     @Mock JobCardRepository      jobCardRepository;
+    @Mock AuditService auditService;
 
     /** Real calculator, so the money rules under test are the production ones. */
     @Spy

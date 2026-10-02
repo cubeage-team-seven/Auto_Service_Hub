@@ -58,7 +58,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * P10 notifications are scoped to their owner
  */
 @DataJpaTest(properties = {
-        "spring.datasource.url=jdbc:h2:mem:followup-test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
+        "spring.datasource.url=jdbc:h2:mem:followup-test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;NON_KEYWORDS=YEAR",
         "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect"

@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -30,8 +31,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -405,5 +408,89 @@ class ReportControllerTest {
                .andExpect(status().isUnauthorized());
         mockMvc.perform(get(BASE + "/mechanic-performance").param("from", FROM).param("to", TO))
                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get(BASE + "/ai-insights").param("from", FROM).param("to", TO))
+               .andExpect(status().isUnauthorized());
+    }
+
+    // ── FR-REP-9: AI Insights endpoint ────────────────────────────────────────
+
+    private AiInsightsReportDTO aiInsights(boolean empty) {
+        AiInsightDTO insight = new AiInsightDTO();
+        insight.setId(7L);
+        insight.setFeatureType("MAINTENANCE_PREDICTION");
+        insight.setInputRef("subject-7");
+        insight.setResultJson("{\"predictedItems\":[]}");
+        insight.setConfidence(new BigDecimal("0.80"));
+        insight.setCreatedAt(LocalDateTime.of(2026, 3, 10, 9, 0));
+
+        AiInsightsReportDTO dto = new AiInsightsReportDTO();
+        dto.setFrom(LocalDateTime.of(2026, 3, 1, 0, 0));
+        dto.setTo(LocalDateTime.of(2026, 3, 31, 0, 0));
+        dto.setEmpty(empty);
+        if (!empty) {
+            dto.setInsights(List.of(insight));
+        }
+        return dto;
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    @DisplayName("RC17 the AI Insights report returns stored insights")
+    void aiInsightsReturnsStoredInsights() throws Exception {
+        when(service.getAiInsightsReport(any())).thenReturn(aiInsights(false));
+
+        mockMvc.perform(get(BASE + "/ai-insights").param("from", FROM).param("to", TO))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.data.empty").value(false))
+               .andExpect(jsonPath("$.data.insights[0].id").value(7))
+               .andExpect(jsonPath("$.data.insights[0].featureType").value("MAINTENANCE_PREDICTION"))
+               .andExpect(jsonPath("$.data.insights[0].confidence").value(0.80));
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    @DisplayName("RC18 the AI Insights report passes the date range to the service")
+    void aiInsightsPassesRange() throws Exception {
+        when(service.getAiInsightsReport(any())).thenReturn(aiInsights(false));
+
+        mockMvc.perform(get(BASE + "/ai-insights").param("from", FROM).param("to", TO))
+               .andExpect(status().isOk());
+
+        ArgumentCaptor<ReportFilterDTO> captor = ArgumentCaptor.forClass(ReportFilterDTO.class);
+        verify(service).getAiInsightsReport(captor.capture());
+        assertThat(captor.getValue().getFrom()).isEqualTo(LocalDate.of(2026, 3, 1));
+        assertThat(captor.getValue().getTo()).isEqualTo(LocalDate.of(2026, 3, 31));
+    }
+
+    @Test
+    @WithMockUser(roles = "SERVICE_ADVISOR")
+    @DisplayName("RC19 no insights is a 200 with empty=true, not an error")
+    void aiInsightsEmptyIsOk() throws Exception {
+        when(service.getAiInsightsReport(any())).thenReturn(aiInsights(true));
+
+        mockMvc.perform(get(BASE + "/ai-insights").param("from", FROM).param("to", TO))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.data.empty").value(true))
+               .andExpect(jsonPath("$.data.insights").isEmpty());
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    @DisplayName("RC20 a reversed range is a 409 through the existing handler")
+    void aiInsightsRejectsReversedRange() throws Exception {
+        when(service.getAiInsightsReport(any()))
+                .thenThrow(new BusinessRuleException("AI Insights report date range is invalid: "
+                        + "from date cannot be after to date."));
+
+        mockMvc.perform(get(BASE + "/ai-insights").param("from", TO).param("to", FROM))
+               .andExpect(status().isConflict());
+    }
+
+    @Test
+    @WithMockUser(roles = "MECHANIC")
+    @DisplayName("RC21 a MECHANIC may not read AI insights")
+    void mechanicCannotReadAiInsights() throws Exception {
+        mockMvc.perform(get(BASE + "/ai-insights").param("from", FROM).param("to", TO))
+               .andExpect(status().isForbidden());
     }
 }

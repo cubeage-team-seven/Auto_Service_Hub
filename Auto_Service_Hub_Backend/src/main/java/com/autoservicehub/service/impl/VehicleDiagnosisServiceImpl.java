@@ -82,10 +82,8 @@ public class VehicleDiagnosisServiceImpl implements VehicleDiagnosisService {
         boolean providerUnavailable = false;
         try {
             result = aiOrchestrationService.process(aiRequest);
-            // The NoopAiProviderClient signals unavailability via a zero-confidence
-            // result with requiresHumanConfirmation=true and a known summary message.
-            // NoopAiProviderClient signals unavailability:
-            // confidence == 0 AND requiresHumanConfirmation == true
+            // NoopAiProviderClient signals unavailability as
+            // confidence == 0 AND requiresHumanConfirmation == true.
             if (result.getConfidence() != null
                     && result.getConfidence().compareTo(BigDecimal.ZERO) == 0
                     && result.isRequiresHumanConfirmation()) {

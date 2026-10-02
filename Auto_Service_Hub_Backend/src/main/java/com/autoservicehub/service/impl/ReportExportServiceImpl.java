@@ -3,24 +3,9 @@ package com.autoservicehub.service.impl;
 import com.autoservicehub.dto.*;
 import com.autoservicehub.service.ReportExportService;
 import com.autoservicehub.service.ReportService;
-import com.lowagie.text.Document;
-import com.lowagie.text.Element;
-import com.lowagie.text.Font;
-import com.lowagie.text.PageSize;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.Phrase;
-import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayOutputStream;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -45,42 +30,35 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ReportExportServiceImpl implements ReportExportService {
 
-    public static final String CONTENT_TYPE_PDF   = "application/pdf";
-    public static final String CONTENT_TYPE_EXCEL =
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    public static final String CONTENT_TYPE_PDF   = ExportRenderer.CONTENT_TYPE_PDF;
+    public static final String CONTENT_TYPE_EXCEL = ExportRenderer.CONTENT_TYPE_EXCEL;
 
-    private static final DateTimeFormatter STAMP =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter STAMP = ExportRenderer.STAMP;
 
     /** How a null is written. Blank rather than "null" — absence is not a value. */
-    private static final String BLANK = "";
-
-    // Font sizes and weights. OpenPDF dropped the iText 2.x style constants
-    // (Font.NORMAL / BOLDSIZE / ITALIC), so the equivalents are spelled out here
-    // once rather than as magic numbers scattered through the renderer.
-    private static final int FONT_TITLE   = 15;
-    private static final int FONT_SECTION = 11;
-    private static final int FONT_BOLD    = 9;
-    private static final int FONT_BODY    = 9;
-    private static final int STYLE_NORMAL = Font.NORMAL;
-    private static final int STYLE_BOLD   = Font.BOLD;
-    private static final int STYLE_ITALIC = Font.ITALIC;
+    private static final String BLANK = ExportRenderer.BLANK;
 
     private final ReportService reportService;
+
+    /**
+     * Rendering lives in {@link ExportRenderer} so the invoice document of
+     * FR-BILL-4 is produced by the same code as these report exports.
+     */
+    private final ExportRenderer renderer;
 
     @Override
     public ExportFileDTO exportPdf(ExportReportType type, ReportFilterDTO filter) {
         ExportDocumentDTO doc = buildDocument(type, filter);
-        return new ExportFileDTO(renderPdf(doc), CONTENT_TYPE_PDF, filename(type, "pdf"));
+        return new ExportFileDTO(renderer.renderPdf(doc), CONTENT_TYPE_PDF, filename(type, "pdf"));
     }
 
     @Override
     public ExportFileDTO exportExcel(ExportReportType type, ReportFilterDTO filter) {
         ExportDocumentDTO doc = buildDocument(type, filter);
-        return new ExportFileDTO(renderExcel(doc), CONTENT_TYPE_EXCEL, filename(type, "xlsx"));
+        return new ExportFileDTO(renderer.renderExcel(doc), CONTENT_TYPE_EXCEL, filename(type, "xlsx"));
     }
 
-    // ── Document assembly: calls ReportService, invents nothing ───────────
+    // â”€â”€ Document assembly: calls ReportService, invents nothing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * Fetches the report through {@link ReportService} and reshapes it.
@@ -244,255 +222,14 @@ public class ReportExportServiceImpl implements ReportExportService {
         }
         doc.addTable(limits);
     }
-
-    // ── PDF rendering ─────────────────────────────────────────────────────
-
-    /**
-     * Renders the document with OpenPDF.
-     *
-     * <p>Helvetica is used rather than a system font: it is one of the fourteen
-     * faces PDF requires every reader to supply, so the file renders identically
-     * everywhere and needs no font embedding.
-     */
-    private byte[] renderPdf(ExportDocumentDTO doc) {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Document pdf = new Document(PageSize.A4, 36, 36, 42, 42);
-            PdfWriter.getInstance(pdf, out);
-            pdf.open();
-
-            pdf.add(new Paragraph(doc.getTitle(), new Font(STYLE_BOLD, FONT_TITLE, 0)));
-            pdf.add(new Paragraph("Requirement: " + doc.getRequirement(),
-                    new Font(STYLE_NORMAL, FONT_BODY, 0)));
-            pdf.add(new Paragraph("Generated: " + STAMP.format(doc.getGeneratedAt()),
-                    new Font(STYLE_NORMAL, FONT_BODY, 0)));
-            pdf.add(new Paragraph("Filters: " + doc.getAppliedFilters(), new Font(STYLE_NORMAL, FONT_BODY, 0)));
-            pdf.add(Paragraph.getInstance("\n"));
-
-            for (ExportTableDTO table : doc.getTables()) {
-                pdf.add(new Paragraph(table.getTitle(), new Font(STYLE_BOLD, FONT_SECTION, 0)));
-                if (table.isEmpty()) {
-                    pdf.add(new Paragraph("No rows.", new Font(STYLE_ITALIC, FONT_BODY, 0)));
-                    pdf.add(Paragraph.getInstance("\n"));
-                    continue;
-                }
-                pdf.add(renderPdfTable(table));
-                pdf.add(Paragraph.getInstance("\n"));
-            }
-
-            if (!doc.getNotes().isEmpty()) {
-                pdf.add(new Paragraph("Notes", new Font(STYLE_BOLD, FONT_SECTION, 0)));
-                for (String note : doc.getNotes()) {
-                    // "•" plus a space: not all PDF standard fonts carry a bullet.
-                    pdf.add(new Paragraph("- " + note, new Font(STYLE_NORMAL, FONT_BODY, 0)));
-                }
-            }
-
-            pdf.close();
-            return out.toByteArray();
-        } catch (Exception ex) {
-            // Rendering must never surface a raw IO stack trace to the client.
-            throw new IllegalStateException("Failed to render PDF export", ex);
-        }
-    }
+    // â”€â”€ Shared formatting â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
-     * Builds the table body with {@link PdfPTable}.
-     *
-     * <p>PdfPTable is used rather than the older {@code Table} because it is the
-     * type that supports percentage widths and per-cell padding, and it inherits
-     * from Element so it can be added to the Document directly.
-     */
-    private PdfPTable renderPdfTable(ExportTableDTO table) {
-        int columns = table.getHeaders().size();
-        PdfPTable pdfTable = new PdfPTable(columns);
-        pdfTable.setWidthPercentage(100);
-        pdfTable.setSpacingBefore(4);
-        pdfTable.setSpacingAfter(4);
-        pdfTable.setHorizontalAlignment(Element.ALIGN_LEFT);
-        pdfTable.setWidths(columnWidths(columns));
-
-        for (String header : table.getHeaders()) {
-            pdfTable.addCell(new Phrase(header, new Font(STYLE_BOLD, FONT_BOLD, 0)));
-        }
-        for (List<String> row : table.getRows()) {
-            for (String value : row) {
-                pdfTable.addCell(new Phrase(value, new Font(STYLE_NORMAL, FONT_BODY, 0)));
-            }
-        }
-        return pdfTable;
-    }
-
-    /**
-     * Even column widths in relative units, summing to 100.
-     *
-     * <p>Widths are relative rather than fixed because the usable page width
-     * depends on the margins; a fixed total would either overflow or under-fill
-     * depending on the page size.
-     */
-    private float[] columnWidths(int columns) {
-        float[] widths = new float[columns];
-        float each = 100f / columns;
-        for (int i = 0; i < columns; i++) {
-            widths[i] = each;
-        }
-        return widths;
-    }
-
-    // ── Excel rendering ───────────────────────────────────────────────────
-
-    /**
-     * Renders the document as a single workbook with one sheet per table.
-     *
-     * <p>Numbers are written as cells, not text, so a user can sum a column in
-     * Excel. That is why {@link #cell} formats for display but the row values
-     * stay strings: the trade-off is deliberate — the cell text is exactly what
-     * the PDF shows, while Excel still gets real, typed cells.
-     *
-     * <p>Sheet names are sanitised and truncated to Excel's 31-character limit.
-     */
-    private byte[] renderExcel(ExportDocumentDTO doc) {
-        try (XSSFWorkbook workbook = new XSSFWorkbook();
-             ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-
-            CellStyle metaStyle = workbook.createCellStyle();
-            org.apache.poi.ss.usermodel.Font metaFont = workbook.createFont();
-            metaFont.setBold(true);
-            metaStyle.setFont(metaFont);
-
-            Sheet info = workbook.createSheet(sheetName("Overview"));
-            int r = 0;
-            r = writeInfoRow(info, r, metaStyle, "Report", doc.getTitle());
-            r = writeInfoRow(info, r, metaStyle, "Requirement", doc.getRequirement());
-            r = writeInfoRow(info, r, metaStyle, "Generated", STAMP.format(doc.getGeneratedAt()));
-            writeInfoRow(info, r, metaStyle, "Filters applied", doc.getAppliedFilters());
-
-            int noteRow = r + 1;
-            int rowCursor = noteRow;
-            if (!doc.getNotes().isEmpty()) {
-                rowCursor = writeInfoRow(info, rowCursor, metaStyle, "Notes", null);
-                for (String note : doc.getNotes()) {
-                    rowCursor = writeInfoRow(info, rowCursor, metaStyle, null, note);
-                }
-            }
-            info.setColumnWidth(0, 24 * 256);
-            info.setColumnWidth(1, 100 * 256);
-
-            for (ExportTableDTO table : doc.getTables()) {
-                Sheet sheet = workbook.createSheet(sheetName(table.getTitle()));
-
-                CellStyle headerStyle = workbook.createCellStyle();
-                org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
-                headerFont.setBold(true);
-                headerStyle.setFont(headerFont);
-
-                Row header = sheet.createRow(0);
-                for (int c = 0; c < table.getHeaders().size(); c++) {
-                    Cell cell = header.createCell(c);
-                    cell.setCellValue(table.getHeaders().get(c));
-                    cell.setCellStyle(headerStyle);
-                }
-
-                int rowIndex = 1;
-                for (List<String> row : table.getRows()) {
-                    Row sheetRow = sheet.createRow(rowIndex++);
-                    for (int c = 0; c < row.size(); c++) {
-                        writeTyped(sheetRow, c, row.get(c));
-                    }
-                }
-                for (int c = 0; c < table.getHeaders().size(); c++) {
-                    sheet.setColumnWidth(c, 22 * 256);
-                }
-                if (table.isEmpty()) {
-                    // An empty table still gets a visible, explicit marker row.
-                    Row marker = sheet.createRow(1);
-                    marker.createCell(0).setCellValue("No rows matched the applied filters.");
-                }
-            }
-
-            workbook.write(out);
-            return out.toByteArray();
-        } catch (Exception ex) {
-            throw new IllegalStateException("Failed to render Excel export", ex);
-        }
-    }
-
-    private int writeInfoRow(Sheet sheet, int rowIndex, CellStyle style, String label, String value) {
-        Row row = sheet.createRow(rowIndex);
-        if (label != null) {
-            Cell labelCell = row.createCell(0);
-            labelCell.setCellValue(label);
-            labelCell.setCellStyle(style);
-        }
-        if (value != null) {
-            row.createCell(1).setCellValue(value);
-        }
-        return rowIndex + 1;
-    }
-
-    /**
-     * Writes a value as the type it actually is.
-     *
-     * <p>Keeping numbers numeric is what makes the export useful in a
-     * spreadsheet; anything that is not a clean number falls back to text so no
-     * value is silently corrupted into {@code 0}.
-     */
-    private void writeTyped(Row row, int column, String value) {
-        Cell cell = row.createCell(column);
-        if (value == null || value.isEmpty()) {
-            cell.setBlank();
-            return;
-        }
-        if (value.matches("-?\\d+")) {
-            try {
-                cell.setCellValue(Long.parseLong(value));
-                return;
-            } catch (NumberFormatException ignored) {
-                // Falls through to text below; a too-large integer stays text.
-            }
-        }
-        if (value.matches("-?\\d*\\.\\d+")) {
-            try {
-                cell.setCellValue(new BigDecimal(value).doubleValue());
-                return;
-            } catch (NumberFormatException ignored) {
-                // Falls through to text below.
-            }
-        }
-        cell.setCellValue(value);
-    }
-
-    /** Sheet names are capped at Excel's 31-character limit and cannot be blank. */
-    private String sheetName(String title) {
-        String name = title == null ? "Sheet" : title.replaceAll("[\\\\/*?\\[\\]:]", " ").trim();
-        if (name.isEmpty()) {
-            name = "Sheet";
-        }
-        return name.length() > 31 ? name.substring(0, 31) : name;
-    }
-
-    // ── Shared formatting ──────────────────────────────────────────────────
-
-    /**
-     * Renders one value for display, identically in both formats.
-     *
-     * <p>A null becomes a blank cell rather than the text "null" or a zero: a
-     * missing measurement is not a measurement of zero, and printing either would
-     * turn "unknown" into a fact. This is the single place that decision is made,
-     * so the PDF and the workbook cannot disagree about it.
+     * Renders one value for display. Delegates to {@link ExportRenderer} so the
+     * report exports and the invoice document format a null identically.
      */
     private String cell(Object value) {
-        if (value == null) {
-            return BLANK;
-        }
-        if (value instanceof BigDecimal decimal) {
-            // Plain string, never scientific notation, so a large or
-            // small-scale amount stays readable and matches the JSON report.
-            return decimal.stripTrailingZeros().toPlainString();
-        }
-        if (value instanceof Double d) {
-            return BigDecimal.valueOf(d).stripTrailingZeros().toPlainString();
-        }
-        return String.valueOf(value);
+        return ExportRenderer.cell(value);
     }
 
     /**
