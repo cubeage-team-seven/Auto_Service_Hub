@@ -29,6 +29,20 @@ public class Invoice extends BaseEntity {
     @JoinColumn(name = "job_card_id", nullable = false)
     private JobCard jobCard;
 
+    /**
+     * The estimate this invoice was converted from, or null for one raised
+     * directly.
+     *
+     * <p>The column is UNIQUE, which is what makes "convert an estimate twice"
+     * impossible at the database level rather than only in application code: two
+     * concurrent conversions of the same estimate cannot both commit. Existing
+     * invoices all carry null here, and SQL permits any number of nulls in a
+     * unique column, so no existing record is affected and no backfill is needed.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "estimate_id", unique = true)
+    private Estimate estimate;
+
     /** Sum of the line amounts, calculated server-side. */
     @Column(name = "subtotal")
     private BigDecimal subtotal;

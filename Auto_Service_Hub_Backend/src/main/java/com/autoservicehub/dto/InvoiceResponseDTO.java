@@ -15,6 +15,14 @@ import java.util.List;
 public class InvoiceResponseDTO {
     private Long id;
     private Long jobCardId;
+
+    /**
+     * The estimate this invoice was converted from, or null for one raised
+     * directly. Lets a caller trace an invoice back to the quote it came from,
+     * and shows at a glance that an estimate was already consumed.
+     */
+    private Long estimateId;
+
     private String customerName;
     private String vehicleInfo;
     private BigDecimal subtotal;

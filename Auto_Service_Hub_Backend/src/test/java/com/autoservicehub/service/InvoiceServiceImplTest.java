@@ -1,24 +1,29 @@
 package com.autoservicehub.service;
 
 import com.autoservicehub.dto.InvoiceItemRequestDTO;
+import com.autoservicehub.dto.InvoiceLabourItemRequestDTO;
 import com.autoservicehub.dto.InvoiceRequestDTO;
 import com.autoservicehub.dto.InvoiceResponseDTO;
+import com.autoservicehub.entity.BillingItemCategory;
 import com.autoservicehub.entity.Customer;
 import com.autoservicehub.entity.Invoice;
 import com.autoservicehub.entity.InvoiceItem;
 import com.autoservicehub.entity.JobCard;
+import com.autoservicehub.entity.JobTask;
 import com.autoservicehub.entity.Vehicle;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.InvoiceItemRepository;
 import com.autoservicehub.repository.InvoiceRepository;
 import com.autoservicehub.repository.JobCardRepository;
+import com.autoservicehub.repository.JobTaskRepository;
 import com.autoservicehub.repository.PaymentRepository;
 import com.autoservicehub.service.impl.InvoiceServiceImpl;
 import com.autoservicehub.util.BillingCalculator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -67,7 +72,9 @@ class InvoiceServiceImplTest {
     @Mock InvoiceRepository     repository;
     @Mock InvoiceItemRepository itemRepository;
     @Mock JobCardRepository     jobCardRepository;
+    @Mock JobTaskRepository     jobTaskRepository;
     @Mock PaymentRepository     paymentRepository;
+    @Mock AuditService auditService;
 
     /** Real calculator, so the money rules under test are the production ones. */
     @Spy
@@ -93,6 +100,21 @@ class InvoiceServiceImplTest {
         jc.setCustomer(c);
         jc.setVehicle(v);
         return jc;
+    }
+
+    /** A standalone vehicle, for the cross-vehicle guard. */
+    private Vehicle vehicle(Long id, String registrationNo) {
+        Vehicle v = new Vehicle();
+        v.setId(id);
+        v.setRegistrationNo(registrationNo);
+        v.setModel("Swift VXI");
+        return v;
+    }
+
+    private InvoiceLabourItemRequestDTO labourRequest(Long jobTaskId) {
+        InvoiceLabourItemRequestDTO req = new InvoiceLabourItemRequestDTO();
+        req.setJobTaskId(jobTaskId);
+        return req;
     }
 
     private InvoiceItemRequestDTO item(String description, int qty, String unitPrice) {
@@ -379,5 +401,352 @@ class InvoiceServiceImplTest {
 
         verify(itemRepository).deleteAll(any());
         verify(repository).deleteById(42L);
+    }
+
+    // ── ILB: labour-to-invoice integration (FR-BILL-2) ───────────────────
+    //
+    // The rules are proved against a real database in InvoiceLabourBillingTest.
+    // These cover the paths H2 cannot set up: notably the vehicle mismatch,
+    // because @DataJpaTest cannot create the VEHICLES table at all — Vehicle
+    // declares a column named `year`, an H2 reserved word, which is a
+    // pre-existing limitation this task must not fix by touching Vehicle.
+
+    @Test
+    @DisplayName("ILB1 — addLabourItem generates a LABOUR line from the task")
+    void ilb1_addLabour_generatesLineFromTask() {
+        Invoice invoice = new Invoice();
+        invoice.setId(42L);
+        invoice.setJobCard(jobCard(55L));
+        invoice.setStatus("PENDING");
+        invoice.setDiscount(BigDecimal.ZERO);
+
+        JobTask task = new JobTask();
+        task.setId(7L);
+        task.setJobCard(jobCard(55L));
+        task.setDescription("Replace front brake pads");
+        task.setLabourCost(new BigDecimal("500.00"));
+
+        when(repository.findById(42L)).thenReturn(Optional.of(invoice));
+        when(jobTaskRepository.findById(7L)).thenReturn(Optional.of(task));
+        givenPersisted();
+
+        var response = service.addLabourItem(42L, labourRequest(7L));
+
+        assertThat(response.getSubtotal()).isEqualByComparingTo("500.00");
+        assertThat(response.getItems()).singleElement()
+                .satisfies(item -> {
+                    assertThat(item.getDescription()).isEqualTo("Replace front brake pads");
+                    assertThat(item.getQuantity()).isEqualTo(1);
+                    assertThat(item.getUnitPrice()).isEqualByComparingTo("500.00");
+                    assertThat(item.getLineAmount()).isEqualByComparingTo("500.00");
+                    assertThat(item.getCategory()).isEqualTo(BillingItemCategory.LABOUR);
+                    assertThat(item.getJobTaskId()).isEqualTo(7L);
+                });
+    }
+
+    @Test
+    @DisplayName("ILB2 — a task from another job card is refused")
+    void ilb2_wrongJobCard_refused() {
+        Invoice invoice = new Invoice();
+        invoice.setId(42L);
+        invoice.setJobCard(jobCard(55L));
+        invoice.setStatus("PENDING");
+
+        JobTask foreign = new JobTask();
+        foreign.setId(7L);
+        foreign.setJobCard(jobCard(999L));
+        foreign.setLabourCost(new BigDecimal("900.00"));
+
+        when(repository.findById(42L)).thenReturn(Optional.of(invoice));
+        when(jobTaskRepository.findById(7L)).thenReturn(Optional.of(foreign));
+
+        assertThatThrownBy(() -> service.addLabourItem(42L, labourRequest(7L)))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("cannot be billed on invoice");
+
+        verify(itemRepository, never()).save(any(InvoiceItem.class));
+    }
+
+    /**
+     * A task belonging to a different vehicle belongs to a different customer.
+     * The job-card comparison alone would not catch this if the same job card
+     * id were ever paired with another vehicle, so the vehicle is checked too.
+     */
+    @Test
+    @DisplayName("ILB3 — a task belonging to another vehicle is refused")
+    void ilb3_differentVehicle_refused() {
+        JobCard invoicedJob = jobCard(55L);
+        invoicedJob.setVehicle(vehicle(2L, "MH-12-AB-1234"));
+
+        Invoice invoice = new Invoice();
+        invoice.setId(42L);
+        invoice.setJobCard(invoicedJob);
+        invoice.setStatus("PENDING");
+
+        JobCard otherCar = jobCard(55L);
+        otherCar.setVehicle(vehicle(3L, "MH-12-XY-9999"));
+        JobTask task = new JobTask();
+        task.setId(7L);
+        task.setJobCard(otherCar);
+        task.setLabourCost(new BigDecimal("500.00"));
+
+        when(repository.findById(42L)).thenReturn(Optional.of(invoice));
+        when(jobTaskRepository.findById(7L)).thenReturn(Optional.of(task));
+
+        assertThatThrownBy(() -> service.addLabourItem(42L, labourRequest(7L)))
+                .isInstanceOf(BusinessRuleException.class);
+
+        verify(itemRepository, never()).save(any(InvoiceItem.class));
+    }
+
+    @Test
+    @DisplayName("ILB4 — a task already billed on this invoice is refused")
+    void ilb4_duplicateTask_refused() {
+        Invoice invoice = new Invoice();
+        invoice.setId(42L);
+        invoice.setJobCard(jobCard(55L));
+        invoice.setStatus("PENDING");
+
+        JobTask task = new JobTask();
+        task.setId(7L);
+        task.setJobCard(jobCard(55L));
+        task.setLabourCost(new BigDecimal("500.00"));
+
+        when(repository.findById(42L)).thenReturn(Optional.of(invoice));
+        when(jobTaskRepository.findById(7L)).thenReturn(Optional.of(task));
+        when(itemRepository.existsByInvoiceIdAndJobTaskId(42L, 7L)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.addLabourItem(42L, labourRequest(7L)))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("already been billed");
+
+        verify(itemRepository, never()).save(any(InvoiceItem.class));
+    }
+
+    @Test
+    @DisplayName("ILB5 — labour cannot be added to a PAID invoice")
+    void ilb5_paidInvoice_refused() {
+        Invoice invoice = new Invoice();
+        invoice.setId(42L);
+        invoice.setJobCard(jobCard(55L));
+        invoice.setStatus("PAID");
+
+        when(repository.findById(42L)).thenReturn(Optional.of(invoice));
+
+        assertThatThrownBy(() -> service.addLabourItem(42L, labourRequest(7L)))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("already PAID");
+
+        verify(itemRepository, never()).save(any(InvoiceItem.class));
+    }
+
+    @Test
+    @DisplayName("ILB6 — an unknown task is refused")
+    void ilb6_unknownTask_refused() {
+        Invoice invoice = new Invoice();
+        invoice.setId(42L);
+        invoice.setJobCard(jobCard(55L));
+        invoice.setStatus("PENDING");
+
+        when(repository.findById(42L)).thenReturn(Optional.of(invoice));
+        when(jobTaskRepository.findById(7L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.addLabourItem(42L, labourRequest(7L)))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("JobTask not found: 7");
+    }
+
+    @Test
+    @DisplayName("ILB7 — a negative labour cost on a task is refused")
+    void ilb7_negativeLabour_refused() {
+        Invoice invoice = new Invoice();
+        invoice.setId(42L);
+        invoice.setJobCard(jobCard(55L));
+        invoice.setStatus("PENDING");
+
+        JobTask task = new JobTask();
+        task.setId(7L);
+        task.setJobCard(jobCard(55L));
+        task.setLabourCost(new BigDecimal("-250.00"));
+
+        when(repository.findById(42L)).thenReturn(Optional.of(invoice));
+        when(jobTaskRepository.findById(7L)).thenReturn(Optional.of(task));
+
+        assertThatThrownBy(() -> service.addLabourItem(42L, labourRequest(7L)))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("must not be negative");
+
+        verify(itemRepository, never()).save(any(InvoiceItem.class));
+    }
+
+    /**
+     * The double-count guard on update.
+     *
+     * <p>{@code replaceItems} deletes every line and rewrites the submitted
+     * ones. Task-sourced labour is not in the payload — a client cannot express
+     * it — so without being carried across it would be silently dropped whenever
+     * anyone edited the invoice, and the caller would have no way to restore it.
+     * Carrying it keeps the invoice at parts + exactly the labour already billed.
+     */
+    @Test
+    @DisplayName("ILB8 — updating an invoice carries task labour across instead of dropping it")
+    void ilb8_update_carriesTaskLabourAcross() {
+        Invoice invoice = new Invoice();
+        invoice.setId(42L);
+        invoice.setJobCard(jobCard(55L));
+        invoice.setStatus("PENDING");
+        invoice.setDiscount(BigDecimal.ZERO);
+
+        JobTask task = new JobTask();
+        task.setId(7L);
+        task.setJobCard(jobCard(55L));
+        task.setDescription("Replace front brake pads");
+
+        InvoiceItem carried = new InvoiceItem();
+        carried.setId(90L);
+        carried.setInvoice(invoice);
+        carried.setJobTask(task);
+        carried.setDescription("Replace front brake pads");
+        carried.setQuantity(1);
+        carried.setUnitPrice(new BigDecimal("500.00"));
+        carried.setLineAmount(new BigDecimal("500.00"));
+        carried.setCategory(BillingItemCategory.LABOUR);
+
+        when(repository.findById(42L)).thenReturn(Optional.of(invoice));
+        when(jobCardRepository.findById(55L)).thenReturn(Optional.of(jobCard(55L)));
+        when(itemRepository.findByInvoiceIdAndJobTaskIdIsNotNullOrderByIdAsc(42L))
+                .thenReturn(List.of(carried));
+        givenPersisted();
+
+        InvoiceRequestDTO req = request();
+        req.setItems(List.of(item("Brake pads", 2, "500.00")));
+        service.update(42L, req);
+
+        // The submitted part and the carried labour were both written.
+        ArgumentCaptor<InvoiceItem> captor = ArgumentCaptor.forClass(InvoiceItem.class);
+        verify(itemRepository, org.mockito.Mockito.times(2)).save(captor.capture());
+
+        assertThat(captor.getAllValues()).anySatisfy(i -> {
+            assertThat(i.getJobTask()).isSameAs(task);
+            assertThat(i.getCategory()).isEqualTo(BillingItemCategory.LABOUR);
+            // Recalculated on the way through, not copied from the old row.
+            assertThat(i.getLineAmount()).isEqualByComparingTo("500.00");
+        });
+    }
+
+    @Test
+    @DisplayName("ILB9 — an existing line with no category is reported as PART")
+    void ilb9_legacyNullCategory_reportedAsPart() {
+        Invoice invoice = new Invoice();
+        invoice.setId(42L);
+        invoice.setJobCard(jobCard(55L));
+        invoice.setStatus("PENDING");
+
+        // A row written before the category column existed: the field is null.
+        InvoiceItem legacy = new InvoiceItem();
+        legacy.setId(1L);
+        legacy.setDescription("Brake pads");
+        legacy.setQuantity(2);
+        legacy.setUnitPrice(new BigDecimal("500.00"));
+        legacy.setLineAmount(new BigDecimal("1000.00"));
+
+        when(repository.findById(42L)).thenReturn(Optional.of(invoice));
+        when(itemRepository.findByInvoiceIdOrderByIdAsc(42L)).thenReturn(List.of(legacy));
+        when(paymentRepository.sumAmountByInvoiceIdAndStatus(42L, "SUCCESS"))
+                .thenReturn(BigDecimal.ZERO);
+
+        assertThat(service.getById(42L).getItems()).singleElement()
+                .satisfies(item -> {
+                    assertThat(item.getCategory()).isEqualTo(BillingItemCategory.PART);
+                    assertThat(item.getJobTaskId()).isNull();
+                });
+    }
+
+    // ── FR-BILL-6: closure guards ───────────────────────────────────────────
+
+    @Test
+    @DisplayName("I14 a client cannot mark an invoice PAID directly")
+    void directPaidIsRejected() {
+        when(jobCardRepository.findById(55L)).thenReturn(Optional.of(jobCard(55L)));
+        givenPersisted();
+
+        InvoiceRequestDTO req = request();
+        req.setItems(List.of(item("Brake pads", 1, "500.00")));
+        req.setStatus("PAID");
+
+        // PAID is derived from recorded payments; accepting it from a client would
+        // let an invoice be "settled" with nothing paid against it.
+        assertThatThrownBy(() -> service.create(req))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("derived from recorded payments");
+    }
+
+    @Test
+    @DisplayName("I15 a client cannot mark an invoice PARTIALLY_PAID either")
+    void directPartiallyPaidIsRejected() {
+        when(jobCardRepository.findById(55L)).thenReturn(Optional.of(jobCard(55L)));
+        givenPersisted();
+
+        InvoiceRequestDTO req = request();
+        req.setItems(List.of(item("Brake pads", 1, "500.00")));
+        req.setStatus("PARTIALLY_PAID");
+
+        assertThatThrownBy(() -> service.create(req))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("derived from recorded payments");
+    }
+
+    @Test
+    @DisplayName("I16 an unsupported status is rejected rather than stored")
+    void unknownStatusIsRejected() {
+        when(jobCardRepository.findById(55L)).thenReturn(Optional.of(jobCard(55L)));
+        givenPersisted();
+
+        InvoiceRequestDTO req = request();
+        req.setItems(List.of(item("Brake pads", 1, "500.00")));
+        req.setStatus("SETTLED_SOMHOW");
+
+        assertThatThrownBy(() -> service.create(req))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Unsupported invoice status");
+    }
+
+    @Test
+    @DisplayName("I17 PENDING and CANCELLED remain client-settable")
+    void pendingAndCancelledAreAllowed() {
+        when(jobCardRepository.findById(55L)).thenReturn(Optional.of(jobCard(55L)));
+        givenPersisted();
+        givenNoPayments();
+
+        InvoiceRequestDTO pending = request();
+        pending.setItems(List.of(item("Brake pads", 1, "500.00")));
+        pending.setStatus("PENDING");
+        assertThat(service.create(pending).getStatus()).isEqualTo("PENDING");
+
+        InvoiceRequestDTO cancelled = request();
+        cancelled.setItems(List.of(item("Brake pads", 1, "500.00")));
+        cancelled.setStatus("CANCELLED");
+        assertThat(service.create(cancelled).getStatus()).isEqualTo("CANCELLED");
+    }
+
+    @Test
+    @DisplayName("I18 an update cannot set PAID either")
+    void updateCannotSetPaid() {
+        Invoice existing = new Invoice();
+        existing.setId(42L);
+        existing.setStatus("PENDING");
+        existing.setJobCard(jobCard(55L));
+
+        when(repository.findById(42L)).thenReturn(Optional.of(existing));
+        when(jobCardRepository.findById(55L)).thenReturn(Optional.of(jobCard(55L)));
+        givenPersisted();
+
+        InvoiceRequestDTO req = request();
+        req.setItems(List.of(item("Brake pads", 1, "500.00")));
+        req.setStatus("PAID");
+
+        assertThatThrownBy(() -> service.update(42L, req))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("derived from recorded payments");
     }
 }

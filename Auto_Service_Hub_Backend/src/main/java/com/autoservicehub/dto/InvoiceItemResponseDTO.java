@@ -1,5 +1,6 @@
 package com.autoservicehub.dto;
 
+import com.autoservicehub.entity.BillingItemCategory;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,4 +20,17 @@ public class InvoiceItemResponseDTO {
 
     /** quantity × unitPrice, calculated server-side. */
     private BigDecimal lineAmount;
+
+    /**
+     * PART | LABOUR | PACKAGE | OTHER. A line written before the category
+     * existed is reported as PART.
+     */
+    private BillingItemCategory category;
+
+    /**
+     * The repair task this labour line came from, when it was generated from
+     * real work. Null for a line entered directly. Exposed so a caller can see
+     * which work has already been billed, not just what it cost.
+     */
+    private Long jobTaskId;
 }
