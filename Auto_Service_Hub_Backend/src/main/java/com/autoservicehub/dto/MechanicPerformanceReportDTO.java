@@ -13,8 +13,10 @@ import java.time.LocalDate;
  *
  * <p>What this schema does <em>not</em> contain, and so what this report does
  * not claim: hours worked, shifts, capacity or utilisation. There is no
- * time-tracking table, so productivity per hour cannot be computed and is not
- * estimated here.
+ * time-tracking table, so productivity <em>per hour</em> cannot be computed and is
+ * not estimated here. Turnaround time (FR-MECH-5) is different and is reported:
+ * it is elapsed calendar time between two dates the job card already stores, not
+ * effort, so it needs no such table.
  *
  * <p>Completion rate is completed / assigned, not completed / (completed +
  * open), so it reflects work actually finished in the window and is not skewed
@@ -50,6 +52,19 @@ public class MechanicPerformanceReportDTO {
 
     /** totalRevenue / completedJobs, or zero when nothing completed. */
     private BigDecimal averageRevenuePerJob = BigDecimal.ZERO;
+
+    /**
+     * Mean days from job-card assignment to completion, over this mechanic's
+     * completed jobs in the window (FR-MECH-5, "turnaround time").
+     *
+     * <p>Derived from {@code JobCard.assignedDate} and {@code JobCard.completedDate}
+     * — no time-tracking table. Only jobs that reached the terminal delivered state
+     * contribute, so an open or cancelled job never shortens the average.
+     *
+     * <p>Null when the mechanic completed nothing in the window: there is no
+     * average to report, and {@code 0} would read as "instantly served".
+     */
+    private Double averageTurnaroundDays;
 
     /**
      * Mean customer rating, or null when nobody has rated this mechanic.

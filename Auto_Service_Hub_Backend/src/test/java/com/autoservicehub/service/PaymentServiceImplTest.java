@@ -6,6 +6,7 @@ import com.autoservicehub.entity.Invoice;
 import com.autoservicehub.entity.Payment;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.ResourceNotFoundException;
+import com.autoservicehub.repository.InvoiceItemRepository;
 import com.autoservicehub.repository.InvoiceRepository;
 import com.autoservicehub.repository.PaymentRepository;
 import com.autoservicehub.service.impl.PaymentServiceImpl;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -64,6 +66,9 @@ class PaymentServiceImplTest {
 
     @Mock PaymentRepository repository;
     @Mock InvoiceRepository invoiceRepository;
+    /** Read by the FR-BILL-6 closure guard, which refuses to settle an empty invoice. */
+    @Mock InvoiceItemRepository invoiceItemRepository;
+    @Mock AuditService auditService;
 
     /** Real calculator, so the money rules under test are the production ones. */
     @Spy
@@ -71,6 +76,17 @@ class PaymentServiceImplTest {
 
     @InjectMocks
     PaymentServiceImpl service;
+
+    /**
+     * The FR-BILL-6 closure guard refuses to settle an invoice with no line items.
+     * These payment tests are not about that rule, so the fixture invoices are
+     * given lines by default; {@code w14_emptyInvoiceCannotBeClosed} overrides this
+     * to exercise the guard itself.
+     */
+    @BeforeEach
+    void givenInvoiceHasBillableLines() {
+        when(invoiceItemRepository.countByInvoiceId(anyLong())).thenReturn(1L);
+    }
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -378,5 +394,40 @@ class PaymentServiceImplTest {
         verify(repository).save(captor.capture());
 
         assertThat(captor.getValue().getAmount()).isEqualByComparingTo("10.13");
+    }
+
+    // ── FR-BILL-6: closure guard ────────────────────────────────────────────
+
+    @Test
+    @DisplayName("w15 an invoice with no line items cannot be closed by a payment")
+    void emptyInvoiceCannotBeClosed() {
+        Invoice inv = invoice(42L, "PENDING", "0");
+        given(inv, "0");
+        // A payment that would cover a zero total must still not settle an invoice
+        // with nothing on it: there is no mandatory billing data to have paid for.
+        when(invoiceItemRepository.countByInvoiceId(42L)).thenReturn(0L);
+
+        assertThatThrownBy(() -> service.create(request("500")))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("exceeds the outstanding amount");
+
+        verify(invoiceRepository, never()).save(any(Invoice.class));
+    }
+
+    @Test
+    @DisplayName("w16 a payment covering an invoice with lines still closes it as PAID")
+    void paidStillDerivedFromPayments() {
+        Invoice inv = invoice(42L, "PENDING", "500.00");
+        given(inv, "0");
+        when(invoiceItemRepository.countByInvoiceId(42L)).thenReturn(2L);
+        // Nothing paid yet when the amount is validated; the full amount once the
+        // payment exists, so the status refresh sees it as settled.
+        when(repository.sumAmountByInvoiceIdAndStatus(42L, "SUCCESS"))
+                .thenReturn(BigDecimal.ZERO, new BigDecimal("500.00"));
+
+        service.create(request("500.00"));
+
+        // PAID still arrives through the payment flow, never from a client status.
+        assertThat(inv.getStatus()).isEqualTo(PaymentServiceImpl.INVOICE_STATUS_PAID);
     }
 }

@@ -4,6 +4,7 @@ import com.autoservicehub.dto.EstimateItemRequestDTO;
 import com.autoservicehub.dto.EstimateItemResponseDTO;
 import com.autoservicehub.dto.EstimateRequestDTO;
 import com.autoservicehub.dto.EstimateResponseDTO;
+import com.autoservicehub.entity.AuditAction;
 import com.autoservicehub.entity.Estimate;
 import com.autoservicehub.entity.EstimateItem;
 import com.autoservicehub.entity.JobCard;
@@ -12,7 +13,9 @@ import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.EstimateItemRepository;
 import com.autoservicehub.repository.EstimateRepository;
 import com.autoservicehub.repository.JobCardRepository;
+import com.autoservicehub.service.AuditService;
 import com.autoservicehub.service.EstimateService;
+import com.autoservicehub.service.InvoiceService;
 import com.autoservicehub.util.BillingCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -40,10 +43,25 @@ import java.util.List;
 @Transactional
 public class EstimateServiceImpl implements EstimateService {
 
+    /**
+     * Estimate status meaning "this quote has become an invoice".
+     *
+     * <p>The single definition of that word: {@link #assertNotConverted} freezes
+     * an estimate with this status, and {@code InvoiceServiceImpl} sets it when a
+     * conversion succeeds. One constant, so the freeze and the transition can
+     * never disagree.
+     */
+    public static final String STATUS_CONVERTED = "CONVERTED";
+
     private final EstimateRepository     repository;
     private final EstimateItemRepository itemRepository;
     private final JobCardRepository      jobCardRepository;
+    private final InvoiceService         invoiceService;
     private final BillingCalculator      calculator;
+    private final AuditService          auditService;
+
+    /** Entity name recorded on this module's audit entries. */
+    private static final String AUDIT_ENTITY = "ESTIMATE";
 
     @Override
     public EstimateResponseDTO create(EstimateRequestDTO request) {
@@ -61,7 +79,12 @@ public class EstimateServiceImpl implements EstimateService {
         replaceItems(request.getItems(), saved);
         recalculate(saved);
 
-        return toResponse(saved);
+        EstimateResponseDTO response = toResponse(saved);
+        auditService.recordSuccess(AUDIT_ENTITY, saved.getId(), AuditAction.ESTIMATE_CREATE,
+                "Estimate raised on job card " + request.getJobCardId()
+                        + ": lines " + request.getItems().size()
+                        + ", total " + saved.getTotal());
+        return response;
     }
 
     @Override
@@ -78,7 +101,11 @@ public class EstimateServiceImpl implements EstimateService {
         replaceItems(request.getItems(), existing);
         recalculate(existing);
 
-        return toResponse(repository.save(existing));
+        EstimateResponseDTO response = toResponse(repository.save(existing));
+        auditService.recordSuccess(AUDIT_ENTITY, id, AuditAction.ESTIMATE_UPDATE,
+                "Estimate updated: lines " + request.getItems().size()
+                        + ", total " + response.getTotal());
+        return response;
     }
 
     @Override
@@ -102,7 +129,10 @@ public class EstimateServiceImpl implements EstimateService {
 
         // Lines are owned by the estimate, so they are removed with it.
         itemRepository.deleteAll(itemRepository.findByEstimateIdOrderByIdAsc(id));
+        BigDecimal total = existing.getTotal();
         repository.deleteById(id);
+        auditService.recordSuccess(AUDIT_ENTITY, id, AuditAction.ESTIMATE_DELETE,
+                "Estimate deleted: total " + total);
     }
 
     @Override
@@ -113,6 +143,23 @@ public class EstimateServiceImpl implements EstimateService {
         }
         return repository.findByJobCardIdOrderByCreatedAtDescIdDesc(jobCardId, pageable)
                          .map(this::toResponse);
+    }
+
+    /**
+     * Convert this estimate into an invoice.
+     *
+     * <p>Delegated to {@code InvoiceService}, which owns invoice creation and
+     * therefore all the money calculation. This service keeps only the estimate
+     * side of the transition, so the frozen-estimate rule and the
+     * status-setting rule stay in the same class that already owned them.
+     *
+     * <p>No {@code @Transactional(readOnly = true)} here: the caller's
+     * transaction must be the one that commits the invoice and the estimate's
+     * new status together, or neither.
+     */
+    @Override
+    public com.autoservicehub.dto.InvoiceResponseDTO convertToInvoice(Long id) {
+        return invoiceService.convertFromEstimate(id);
     }
 
     // ── Private helpers ───────────────────────────────────────────────────
@@ -155,6 +202,8 @@ public class EstimateServiceImpl implements EstimateService {
             item.setQuantity(itemRequest.getQuantity());
             item.setUnitPrice(itemRequest.getUnitPrice());
             item.setLineAmount(calculator.lineAmount(itemRequest.getQuantity(), itemRequest.getUnitPrice()));
+            // Null means "not stated", which reads as PART.
+            item.setCategory(itemRequest.getCategory());
             itemRepository.save(item);
         }
     }
@@ -186,7 +235,7 @@ public class EstimateServiceImpl implements EstimateService {
 
     /** An estimate that has become an invoice is a financial record, not a draft. */
     private void assertNotConverted(Estimate estimate) {
-        if ("CONVERTED".equalsIgnoreCase(estimate.getStatus())) {
+        if (STATUS_CONVERTED.equalsIgnoreCase(estimate.getStatus())) {
             throw new BusinessRuleException(
                     "Estimate " + estimate.getId()
                     + " has been converted to an invoice and can no longer be modified or deleted.");
@@ -226,6 +275,11 @@ public class EstimateServiceImpl implements EstimateService {
         dto.setQuantity(item.getQuantity());
         dto.setUnitPrice(item.getUnitPrice());
         dto.setLineAmount(item.getLineAmount());
+        // Null on lines written before the column existed means PART, which is
+        // what every line meant before this column.
+        dto.setCategory(item.getCategory() == null
+                ? com.autoservicehub.entity.BillingItemCategory.PART
+                : item.getCategory());
         return dto;
     }
 }

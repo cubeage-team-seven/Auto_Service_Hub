@@ -10,6 +10,7 @@ import com.autoservicehub.security.CustomUserDetailsService;
 import com.autoservicehub.security.JwtAuthenticationFilter;
 import com.autoservicehub.security.JwtTokenProvider;
 import com.autoservicehub.service.JobCardService;
+import com.autoservicehub.service.JobTaskService;
 import com.autoservicehub.service.PartService;
 import com.autoservicehub.service.StockMovementService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -101,6 +102,10 @@ class StockMovementControllerTest {
     @MockBean PartService          partService;
     @MockBean StockMovementService stockMovementService;
     @MockBean JobCardService       jobCardService;
+    // JobCardController also serves the repair-task endpoints, so its service
+    // is a constructor dependency of that controller and must be mocked here
+    // too. This slice is about stock movements, not tasks.
+    @MockBean JobTaskService       jobTaskService;
     @MockBean JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockBean JwtTokenProvider        jwtTokenProvider;
     @MockBean CustomUserDetailsService customUserDetailsService;

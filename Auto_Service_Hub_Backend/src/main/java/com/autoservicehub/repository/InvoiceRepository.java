@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Spring Data JPA repository for Invoice.
@@ -22,6 +23,16 @@ import java.util.List;
  */
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long>, JpaSpecificationExecutor<Invoice> {
+
+    /**
+     * The invoice already produced from an estimate, if any.
+     *
+     * <p>The readable second line of defence behind the {@code UNIQUE} constraint
+     * on {@code invoices.estimate_id}: it produces a clear "already converted"
+     * message, where the constraint alone would surface only as an opaque
+     * constraint violation.
+     */
+    Optional<Invoice> findByEstimateId(Long estimateId);
 
     // ── Existing dashboard / report queries ───────────────────────────────
     @Query("SELECT COALESCE(SUM(i.total), 0) FROM Invoice i WHERE i.invoiceDate = CURRENT_DATE")

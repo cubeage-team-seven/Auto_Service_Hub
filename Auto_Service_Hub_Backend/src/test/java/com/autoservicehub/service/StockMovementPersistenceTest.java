@@ -7,6 +7,7 @@ import com.autoservicehub.repository.JobCardRepository;
 import com.autoservicehub.repository.PartRepository;
 import com.autoservicehub.repository.StockMovementRepository;
 import com.autoservicehub.service.impl.StockMovementServiceImpl;
+import com.autoservicehub.service.impl.AuditServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * context shutting down drops the schema out from under the next.
  */
 @DataJpaTest(properties = {
-        "spring.datasource.url=jdbc:h2:mem:stock-movement-test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
+        "spring.datasource.url=jdbc:h2:mem:stock-movement-test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;NON_KEYWORDS=YEAR",
         "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.jpa.hibernate.ddl-auto=create-drop",
         // application.yml pins MySQLDialect for the real MySQL deployment, but
@@ -44,7 +45,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
         "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect"
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(StockMovementServiceImpl.class)
+@Import({ AuditServiceImpl.class, StockMovementServiceImpl.class})
 class StockMovementPersistenceTest {
 
     @Autowired StockMovementServiceImpl service;

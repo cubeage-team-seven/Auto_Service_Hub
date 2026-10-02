@@ -1,5 +1,6 @@
 package com.autoservicehub.dto;
 
+import com.autoservicehub.entity.BillingItemCategory;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,4 +20,10 @@ public class EstimateItemResponseDTO {
 
     /** quantity × unitPrice, calculated server-side. */
     private BigDecimal lineAmount;
+
+    /**
+     * PART | LABOUR | PACKAGE | OTHER. A line written before the category
+     * existed is reported as PART.
+     */
+    private BillingItemCategory category;
 }

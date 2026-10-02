@@ -15,9 +15,11 @@ import com.autoservicehub.repository.CustomerRepository;
 import com.autoservicehub.repository.InspectionItemRepository;
 import com.autoservicehub.repository.InspectionRepository;
 import com.autoservicehub.repository.JobCardRepository;
+import com.autoservicehub.repository.JobTaskRepository;
 import com.autoservicehub.repository.MechanicRepository;
 import com.autoservicehub.repository.VehicleRepository;
 import com.autoservicehub.service.impl.JobCardServiceImpl;
+import com.autoservicehub.util.BillingCalculator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +28,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,6 +65,15 @@ class JobCardServiceImplTest {
     @Mock AppointmentRepository    appointmentRepository;
     @Mock InspectionRepository     inspectionRepository;
     @Mock InspectionItemRepository inspectionItemRepository;
+    @Mock JobTaskRepository        jobTaskRepository;
+    @Mock AuditService auditService;
+
+    /**
+     * The real calculator, not a mock: {@code JobCardServiceImpl} uses it to
+     * normalise the task labour total it reports, and mocking it would hide
+     * whether that total is money-scale.
+     */
+    private final BillingCalculator calculator = new BillingCalculator(new BigDecimal("18"));
 
     @InjectMocks
     JobCardServiceImpl service;

@@ -97,6 +97,7 @@ class BillingControllerTest {
 
     @MockBean EstimateService       estimateService;
     @MockBean InvoiceService        invoiceService;
+    @MockBean com.autoservicehub.service.InvoiceDocumentService invoiceDocumentService;
     @MockBean JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockBean JwtTokenProvider        jwtTokenProvider;
     @MockBean CustomUserDetailsService customUserDetailsService;

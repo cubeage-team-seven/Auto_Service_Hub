@@ -3,11 +3,14 @@ package com.autoservicehub.service.impl;
 import com.autoservicehub.dto.InspectionItemResponseDTO;
 import com.autoservicehub.dto.JobCardRequestDTO;
 import com.autoservicehub.dto.JobCardResponseDTO;
+import com.autoservicehub.entity.AuditAction;
 import com.autoservicehub.entity.*;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.*;
+import com.autoservicehub.service.AuditService;
 import com.autoservicehub.service.JobCardService;
+import com.autoservicehub.util.BillingCalculator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +43,12 @@ public class JobCardServiceImpl implements JobCardService {
     private final AppointmentRepository appointmentRepository;
     private final InspectionRepository inspectionRepository;
     private final InspectionItemRepository inspectionItemRepository;
+    private final JobTaskRepository jobTaskRepository;
+    private final BillingCalculator calculator;
+    private final AuditService auditService;
+
+    /** Entity name recorded on this module's audit entries. */
+    private static final String AUDIT_ENTITY = "JOB_CARD";
 
     @Override
     public JobCardResponseDTO create(JobCardRequestDTO request) {
@@ -50,20 +59,44 @@ public class JobCardServiceImpl implements JobCardService {
         entity.setJobCardNumber(generateJobCardNumber());
         JobCard saved = repository.save(entity);
         linkInspection(request.getInspectionId(), saved);
-        return toResponse(saved);
+
+        JobCardResponseDTO response = toResponse(saved);
+        auditService.recordSuccess(AUDIT_ENTITY, saved.getId(), AuditAction.JOB_CARD_CREATE,
+                "Job card raised: " + saved.getJobCardNumber()
+                        + ", serviceType " + request.getServiceType()
+                        + ", vehicleId " + request.getVehicleId()
+                        + ", mechanicId " + request.getMechanicId());
+        return response;
     }
 
     @Override
     public JobCardResponseDTO update(Long id, JobCardRequestDTO request) {
         JobCard existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("JobCard not found: " + id));
+        // Captured before mapToEntity overwrites it.
+        String statusBefore = existing.getStatus();
+
         mapToEntity(request, existing);
         if ("DELIVERED".equalsIgnoreCase(request.getStatus()) && existing.getCompletedDate() == null) {
             existing.setCompletedDate(LocalDateTime.now());
         }
         JobCard saved = repository.save(existing);
         linkInspection(request.getInspectionId(), saved);
-        return toResponse(saved);
+
+        JobCardResponseDTO response = toResponse(saved);
+        // A status change is the audit question that matters on a job card —
+        // where is this repair in the workflow — so it gets its own action type
+        // rather than being folded into a general update.
+        boolean statusChanged = statusBefore != null
+                && request.getStatus() != null
+                && !statusBefore.equalsIgnoreCase(request.getStatus());
+        auditService.recordSuccess(AUDIT_ENTITY, id,
+                statusChanged ? AuditAction.JOB_CARD_STATUS_CHANGE : AuditAction.JOB_CARD_UPDATE,
+                "Job card updated: status " + statusBefore + " -> " + saved.getStatus()
+                        + ", serviceType " + saved.getServiceType()
+                        + ", mechanicId " + (saved.getMechanic() == null
+                                ? null : saved.getMechanic().getId()));
+        return response;
     }
 
     @Override
@@ -82,6 +115,10 @@ public class JobCardServiceImpl implements JobCardService {
     @Override
     public void delete(Long id) {
         if (!repository.existsById(id)) throw new ResourceNotFoundException("JobCard not found: " + id);
+
+        // Tasks are owned by the job card, so they go with it. Left behind they
+        // would be orphans pointing at a row that no longer exists.
+        jobTaskRepository.deleteAll(jobTaskRepository.findByJobCardIdOrderByIdAsc(id));
         repository.deleteById(id);
     }
 
@@ -191,6 +228,15 @@ public class JobCardServiceImpl implements JobCardService {
         dto.setCompletedDate(e.getCompletedDate());
         dto.setCreatedAt(e.getCreatedAt());
         dto.setUpdatedAt(e.getUpdatedAt());
+
+        // Task count and labour total for this job (FR-JOB-3), both derived from
+        // the stored tasks rather than anything the client sent. Skipped for an
+        // unsaved entity, where there can be no tasks yet.
+        if (e.getId() != null) {
+            dto.setTaskCount(jobTaskRepository.countByJobCardId(e.getId()));
+            dto.setTotalLabourCost(
+                    calculator.money(jobTaskRepository.sumLabourCostByJobCardId(e.getId())));
+        }
 
         // Surface the originating inspection's findings so the technician sees
         // what the inspection found without a second request. Left null when the

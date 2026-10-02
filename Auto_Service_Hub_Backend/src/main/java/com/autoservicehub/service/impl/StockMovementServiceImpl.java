@@ -2,6 +2,7 @@ package com.autoservicehub.service.impl;
 
 import com.autoservicehub.dto.StockMovementRequestDTO;
 import com.autoservicehub.dto.StockMovementResponseDTO;
+import com.autoservicehub.entity.AuditAction;
 import com.autoservicehub.entity.JobCard;
 import com.autoservicehub.entity.Part;
 import com.autoservicehub.entity.StockMovement;
@@ -10,6 +11,7 @@ import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.JobCardRepository;
 import com.autoservicehub.repository.PartRepository;
 import com.autoservicehub.repository.StockMovementRepository;
+import com.autoservicehub.service.AuditService;
 import com.autoservicehub.service.StockMovementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -46,9 +48,13 @@ public class StockMovementServiceImpl implements StockMovementService {
     /** Default reason stamped on a movement raised by job-card consumption. */
     public static final String REASON_PART_CONSUMED = "PART_CONSUMED";
 
+    /** Entity name recorded on this module's audit entries. */
+    private static final String AUDIT_ENTITY = "STOCK_MOVEMENT";
+
     private final StockMovementRepository repository;
     private final PartRepository           partRepository;
     private final JobCardRepository        jobCardRepository;
+    private final AuditService             auditService;
 
     @Override
     public StockMovementResponseDTO create(StockMovementRequestDTO request) {
@@ -83,7 +89,31 @@ public class StockMovementServiceImpl implements StockMovementService {
         part.setStockQty(stockAfter);
         partRepository.save(part);
 
-        return toResponse(repository.save(movement), part, jobCard);
+        StockMovementResponseDTO response = toResponse(repository.save(movement), part, jobCard);
+        // One audited event per movement, labelled with the movement type, so
+        // "who added stock, who removed it and who corrected it" is a single
+        // query rather than three inferences from the ledger.
+        auditService.recordSuccess(AUDIT_ENTITY, response.getId(), auditActionFor(type),
+                "Movement " + type + " qty " + quantity
+                        + " on part " + part.getSku()
+                        + "; stock " + stockBefore + " -> " + stockAfter
+                        + (jobCard == null ? "" : "; jobCard=" + jobCard.getJobCardNumber()));
+        return response;
+    }
+
+    /**
+     * The audit action matching a movement type.
+     *
+     * <p>IN is stock arriving, OUT is stock leaving, and ADJUSTMENT is a correction
+     * of the balance rather than a physical movement.
+     */
+    private AuditAction auditActionFor(String type) {
+        return switch (type) {
+            case TYPE_IN         -> AuditAction.STOCK_IN;
+            case TYPE_OUT        -> AuditAction.STOCK_OUT;
+            case TYPE_ADJUSTMENT -> AuditAction.STOCK_ADJUSTMENT;
+            default              -> AuditAction.STOCK_ADJUSTMENT;
+        };
     }
 
     /**
@@ -117,7 +147,12 @@ public class StockMovementServiceImpl implements StockMovementService {
         part.setStockQty(stockAfter);
         partRepository.save(part);
 
-        return toResponse(repository.save(movement), part, jobCard);
+        StockMovementResponseDTO response = toResponse(repository.save(movement), part, jobCard);
+        auditService.recordSuccess(AUDIT_ENTITY, response.getId(), AuditAction.STOCK_OUT,
+                "Parts consumed on job card " + jobCard.getJobCardNumber()
+                        + ": part " + part.getSku() + " qty " + qty
+                        + "; stock " + stockBefore + " -> " + stockAfter);
+        return response;
     }
 
     @Override

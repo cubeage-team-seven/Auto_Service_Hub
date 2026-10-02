@@ -2,12 +2,15 @@ package com.autoservicehub.service.impl;
 
 import com.autoservicehub.dto.PaymentRequestDTO;
 import com.autoservicehub.dto.PaymentResponseDTO;
+import com.autoservicehub.entity.AuditAction;
 import com.autoservicehub.entity.Invoice;
 import com.autoservicehub.entity.Payment;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.InvoiceRepository;
+import com.autoservicehub.repository.InvoiceItemRepository;
 import com.autoservicehub.repository.PaymentRepository;
+import com.autoservicehub.service.AuditService;
 import com.autoservicehub.service.PaymentService;
 import com.autoservicehub.util.BillingCalculator;
 import lombok.RequiredArgsConstructor;
@@ -59,8 +62,13 @@ public class PaymentServiceImpl implements PaymentService {
     /** Invoice status: void — must never accept a payment. */
     public static final String INVOICE_STATUS_CANCELLED      = "CANCELLED";
 
+    /** Entity name recorded on this module's audit entries. */
+    private static final String AUDIT_ENTITY = "PAYMENT";
+
     private final PaymentRepository repository;
     private final InvoiceRepository invoiceRepository;
+    private final InvoiceItemRepository invoiceItemRepository;
+    private final AuditService auditService;
 
     @Override
     public PaymentResponseDTO create(PaymentRequestDTO request) {
@@ -90,7 +98,15 @@ public class PaymentServiceImpl implements PaymentService {
         Payment saved = repository.save(entity);
         refreshInvoiceStatus(invoice);
 
-        return toResponse(saved);
+        PaymentResponseDTO response = toResponse(saved);
+        // The amount and mode are recorded; the transaction reference is not,
+        // because it may be a gateway credential rather than a receipt number.
+        auditService.recordSuccess(AUDIT_ENTITY, saved.getId(), AuditAction.PAYMENT_CREATE,
+                "Payment on invoice " + invoice.getId()
+                        + ": amount " + saved.getAmount()
+                        + ", mode " + saved.getMode()
+                        + ", status " + saved.getStatus());
+        return response;
     }
 
     @Override
@@ -126,7 +142,19 @@ public class PaymentServiceImpl implements PaymentService {
         }
         refreshInvoiceStatus(invoice);
 
-        return toResponse(saved);
+        PaymentResponseDTO response = toResponse(saved);
+        // A status change is a distinct action from a general update: whether a
+        // payment counts toward settling an invoice is the question an audit
+        // actually gets asked.
+        AuditAction action = isSettled(saved.getStatus())
+                ? AuditAction.PAYMENT_STATUS_CHANGE
+                : AuditAction.PAYMENT_UPDATE;
+        auditService.recordSuccess(AUDIT_ENTITY, saved.getId(), action,
+                "Payment updated: invoice " + invoice.getId()
+                        + ", amount " + saved.getAmount()
+                        + ", mode " + saved.getMode()
+                        + ", status " + saved.getStatus());
+        return response;
     }
 
     @Override
@@ -159,12 +187,20 @@ public class PaymentServiceImpl implements PaymentService {
         Payment existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found: " + id));
         Invoice invoice = existing.getInvoice();
+        // Captured before the delete, since afterwards the row is gone and the
+        // trail would lose what was removed.
+        BigDecimal amount = existing.getAmount();
         repository.deleteById(id);
         // Removing money received must put the invoice's status back in step
         // with the reduced balance, so a fully-paid invoice stops reading PAID.
         if (invoice != null) {
             refreshInvoiceStatus(invoice);
         }
+        // Deleting a payment is the most security-sensitive action in billing:
+        // it removes evidence that money arrived.
+        auditService.recordSuccess(AUDIT_ENTITY, id, AuditAction.PAYMENT_DELETE,
+                "Payment deleted: amount " + amount
+                        + ", invoice " + (invoice == null ? null : invoice.getId()));
     }
 
     // ── Private helpers ───────────────────────────────────────────────────
@@ -243,6 +279,14 @@ public class PaymentServiceImpl implements PaymentService {
 
         String status;
         if (paid.compareTo(total) >= 0) {
+            // FR-BILL-6: an invoice with no billable lines has no mandatory
+            // billing data, so it is never allowed to reach the settled state
+            // even when a payment happens to cover a zero total. Without this a
+            // payment against an empty invoice would silently mark it PAID.
+            if (invoiceItemRepository.countByInvoiceId(invoice.getId()) == 0) {
+                throw new BusinessRuleException(
+                        "Invoice " + invoice.getId() + " has no line items and cannot be closed.");
+            }
             status = INVOICE_STATUS_PAID;          // fully covered (a zero-total invoice too)
         } else if (paid.signum() > 0) {
             status = INVOICE_STATUS_PARTIALLY_PAID;

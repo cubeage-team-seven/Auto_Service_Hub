@@ -63,6 +63,7 @@ class StockMovementServiceImplTest {
     @Mock StockMovementRepository repository;
     @Mock PartRepository           partRepository;
     @Mock JobCardRepository        jobCardRepository;
+    @Mock AuditService auditService;
 
     @InjectMocks
     StockMovementServiceImpl service;
