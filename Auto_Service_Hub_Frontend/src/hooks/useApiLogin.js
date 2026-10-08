@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { getErrorMessage } from "../services/api";
 
-export function useApiLogin(redirectPath, roleRedirectOverrides = {}) {
-  const { login } = useContext(AuthContext);
+export function useApiLogin(redirectPath, roleRedirectOverrides = {}, expectedRole) {
+  const { login, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,6 +15,13 @@ export function useApiLogin(redirectPath, roleRedirectOverrides = {}) {
     setLoading(true);
     try {
       const user = await login(username.trim(), password);
+      if (expectedRole && user.role !== expectedRole) {
+        logout();
+        setError(
+          `This account is assigned to ${user.role || "another role"}, not ${expectedRole}. Sign in with a ${expectedRole} account.`
+        );
+        return;
+      }
       const roleRedirects = {
         ADMIN: "/admin",
         OWNER: "/garage-owner/dashboard",

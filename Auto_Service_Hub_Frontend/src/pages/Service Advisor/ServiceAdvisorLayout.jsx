@@ -1,6 +1,7 @@
 import React from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./ServiceAdvisor.css";
+import "./ServiceAdvisorTheme.css";
 
 const nav = [
   ["▦", "Dashboard", "/service-advisor"],
@@ -12,7 +13,13 @@ const nav = [
 ];
 
 export default function ServiceAdvisorLayout() {
+  const location = useLocation();
   const navigate = useNavigate();
+  const currentPage = nav.find(([, , to]) =>
+    to === "/service-advisor"
+      ? location.pathname === to
+      : location.pathname.startsWith(to)
+  )?.[1] || "Dashboard";
 
   return (
     <div className="sa-shell">
@@ -44,7 +51,7 @@ export default function ServiceAdvisorLayout() {
       <main className="sa-main">
         <header className="sa-topbar">
           <div className="sa-breadcrumb">
-            <span>Auto_Service_Hub</span><b>/</b><strong>Service Advisor</strong>
+            <span>Auto_Service_Hub</span><b>/</b><strong>{currentPage}</strong>
           </div>
           <div className="sa-top-actions">
             <span className="sa-role">SERVICE ADVISOR</span>

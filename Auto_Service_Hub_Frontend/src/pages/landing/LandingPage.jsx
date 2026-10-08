@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 import "./LandingPage.css";
 
 const modules = [
@@ -76,6 +77,7 @@ const aiFeatures = [
 
 function LandingPage() {
   const navigate = useNavigate();
+  const { logout, isAuthenticated } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -88,6 +90,11 @@ function LandingPage() {
   const [submitted, setSubmitted] = useState(false);
 
   const goToModule = () => {
+    navigate("/modules");
+  };
+
+  const startSignIn = () => {
+    if (isAuthenticated) logout();
     navigate("/modules");
   };
 
@@ -189,7 +196,7 @@ function LandingPage() {
 
             <button
               className="btn-signin"
-              onClick={goToModule}
+              onClick={startSignIn}
             >
               Sign In
             </button>

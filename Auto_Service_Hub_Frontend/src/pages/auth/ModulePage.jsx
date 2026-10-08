@@ -1,8 +1,15 @@
-import React from "react";
+import React, { useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
 import "./ModulePage.css";
 
 function ModulePage() {
+  const { logout } = useContext(AuthContext);
+
+  useEffect(() => {
+    logout();
+  }, [logout]);
+
   return (
     <div className="module-page">
 

@@ -114,10 +114,11 @@ function RequireRole({ roles }) {
     : <Navigate to={homeByRole[user?.role] || "/modules"} replace />;
 }
 
-function PublicOnly({ children }) {
+function PublicOnly({ children, roleRedirectOverrides = {} }) {
   const { user, isAuthenticated } = useContext(AuthContext);
+  const roleRedirects = { ...homeByRole, ...roleRedirectOverrides };
   return isAuthenticated
-    ? <Navigate to={homeByRole[user?.role] || "/"} replace />
+    ? <Navigate to={roleRedirects[user?.role] || "/"} replace />
     : children;
 }
 
@@ -143,7 +144,7 @@ function App() {
 
         <Route
           path="/modules"
-          element={<PublicOnly><ModulePage /></PublicOnly>}
+          element={<ModulePage />}
         />
         <Route path="/access-request" element={<PublicOnly><AccessRequestPage /></PublicOnly>} />
 
@@ -154,7 +155,7 @@ function App() {
 
         <Route
           path="/mechanic"
-          element={<PublicOnly><MechanicLogin /></PublicOnly>}
+          element={<MechanicLogin />}
         />
 
         <Route element={<RequireRole roles={["MECHANIC"]} />}>
@@ -172,7 +173,7 @@ function App() {
 
           <Route
             path="/job-cards/create"
-            element={<Navigate to="/job-cards" replace />}
+            element={<JobCardListPage />}
           />
 
           <Route
@@ -275,7 +276,7 @@ function App() {
 
         <Route
           path="/developer-login"
-          element={<PublicOnly><DeveloperLogin /></PublicOnly>}
+          element={<PublicOnly roleRedirectOverrides={{ ADMIN: "/developer" }}><DeveloperLogin /></PublicOnly>}
         />
         <Route path="/admin-login" element={<PublicOnly><DeveloperLogin /></PublicOnly>} />
 
