@@ -16,16 +16,16 @@ public class EmailService {
         SimpleMailMessage message = new SimpleMailMessage();
 
         message.setTo(toEmail);
-        message.setSubject("SmartGarage AI - Password Reset OTP");
+        message.setSubject("Auto_Service_Hub AI - Password Reset OTP");
 
         message.setText(
                 "Hello,\n\n" +
-                "Your SmartGarage AI password reset OTP is:\n\n" +
+                "Your Auto_Service_Hub AI password reset OTP is:\n\n" +
                 otp + "\n\n" +
                 "This OTP is valid for 10 minutes and can be used only once.\n\n" +
                 "If you did not request a password reset, please ignore this email.\n\n" +
                 "Regards,\n" +
-                "SmartGarage AI CRM"
+                "Auto_Service_Hub AI CRM"
         );
 
         mailSender.send(message);

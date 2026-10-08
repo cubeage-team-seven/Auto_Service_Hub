@@ -1,97 +1,53 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { dashboardApi, jobCardsApi, mechanicsApi, partsApi } from "../../services/resources";
+import { getErrorMessage } from "../../services/api";
 import "./GarageOwnerDashboard.css";
 
 function GarageOwnerDashboard() {
-  const jobs = [
-    {
-      id: "JC-2408",
-      customer: "Arjun Mehta",
-      vehicle: "MH-12-AB-4521 | Swift",
-      mechanic: "Ravi Kumar",
-      status: "In Repair",
-      statusClass: "repair",
-      eta: "Today 5:00 PM",
-      amount: "₹18,500",
-    },
-    {
-      id: "JC-2407",
-      customer: "Priya Sharma",
-      vehicle: "DL-01-CZ-9834 | Creta",
-      mechanic: "Amit Patel",
-      status: "Quality Check",
-      statusClass: "quality",
-      eta: "Today 3:30 PM",
-      amount: "₹8,200",
-    },
-    {
-      id: "JC-2406",
-      customer: "Rohit Desai",
-      vehicle: "GJ-05-XY-7712 | Innova",
-      mechanic: "Suresh Nair",
-      status: "Delivered",
-      statusClass: "delivered",
-      eta: "Delivered",
-      amount: "₹12,400",
-    },
-    {
-      id: "JC-2405",
-      customer: "Neha Joshi",
-      vehicle: "MH-14-PQ-3356 | City",
-      mechanic: "Ravi Kumar",
-      status: "Inspection",
-      statusClass: "inspection",
-      eta: "Today 6:00 PM",
-      amount: "₹4,800",
-    },
-    {
-      id: "JC-2404",
-      customer: "Vikram Singh",
-      vehicle: "UP-32-GH-1190 | Fortuner",
-      mechanic: "Amit Patel",
-      status: "Received",
-      statusClass: "received",
-      eta: "Tomorrow 12:00 PM",
-      amount: "₹32,000",
-    },
-    {
-      id: "JC-2403",
-      customer: "Kavita Rao",
-      vehicle: "KA-03-MN-5567 | Baleno",
-      mechanic: "Deepak Verma",
-      status: "Delivered",
-      statusClass: "delivered",
-      eta: "Delivered",
-      amount: "₹3,200",
-    },
-  ];
+  const [summary, setSummary] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [mechanics, setMechanics] = useState([]);
+  const [lowStockParts, setLowStockParts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const mechanics = [
-    {
-      name: "Ravi Kumar",
-      active: "3 active",
-      activeClass: "busy",
-    },
-    {
-      name: "Amit Patel",
-      active: "2 active",
-      activeClass: "busy",
-    },
-    {
-      name: "Suresh Nair",
-      active: "0 active",
-      activeClass: "available",
-    },
-    {
-      name: "Deepak Verma",
-      active: "1 active",
-      activeClass: "busy",
-    },
-    {
-      name: "Kiran Joshi",
-      active: "0 active",
-      activeClass: "available",
-    },
-  ];
+  useEffect(() => {
+    Promise.all([
+      dashboardApi.summary(),
+      jobCardsApi.list(),
+      mechanicsApi.list(),
+      partsApi.lowStock(),
+    ])
+      .then(([dashboardSummary, jobRecords, mechanicRecords, lowStockRecords]) => {
+        setSummary(dashboardSummary);
+        setJobs(jobRecords);
+        setMechanics(mechanicRecords);
+        setLowStockParts(lowStockRecords);
+      })
+      .catch((requestError) => setError(getErrorMessage(requestError)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const statusLabels = {
+    RECEIVED: "Received",
+    INSPECTION: "Inspection",
+    IN_REPAIR: "In Repair",
+    QUALITY_CHECK: "Quality Check",
+    DELIVERED: "Delivered",
+  };
+  const statusClasses = {
+    RECEIVED: "received",
+    INSPECTION: "inspection",
+    IN_REPAIR: "repair",
+    QUALITY_CHECK: "quality",
+    DELIVERED: "delivered",
+  };
+  const activeJobCount = jobs.filter((job) => job.status !== "DELIVERED").length;
+  const serviceCounts = jobs.reduce((counts, job) => {
+    const service = job.serviceType || "Unspecified";
+    counts[service] = (counts[service] || 0) + 1;
+    return counts;
+  }, {});
 
   return (
     <div className="garage-dashboard-page">
@@ -100,7 +56,7 @@ function GarageOwnerDashboard() {
 
       <section className="garage-dashboard-heading">
         <div className="garage-dashboard-date">
-          — TODAY, 17 AUGUST 2026
+          — TODAY, {new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" }).toUpperCase()}
         </div>
 
         <h1>OPERATIONS OVERVIEW</h1>
@@ -108,6 +64,8 @@ function GarageOwnerDashboard() {
 
 
       {/* ================= STAT CARDS ================= */}
+
+      {error && <p role="alert" className="login-error">{error}</p>}
 
       <section className="garage-dashboard-stats">
 
@@ -117,11 +75,11 @@ function GarageOwnerDashboard() {
           </div>
 
           <div className="garage-dashboard-stat-value lime">
-            14
+            {summary?.todaysJobs ?? (loading ? "…" : "—")}
           </div>
 
           <div className="garage-dashboard-stat-description">
-            8 active · 6 delivered
+            {summary ? `${summary.pendingJobs} active · ${summary.completedJobs} delivered` : "Awaiting data"}
           </div>
         </div>
 
@@ -132,26 +90,26 @@ function GarageOwnerDashboard() {
           </div>
 
           <div className="garage-dashboard-stat-value">
-            ₹42,500
+            {summary ? `₹${Number(summary.revenue || 0).toLocaleString("en-IN")}` : loading ? "…" : "—"}
           </div>
 
           <div className="garage-dashboard-stat-description">
-            +12% vs yesterday
+            Today's recorded revenue
           </div>
         </div>
 
 
         <div className="garage-dashboard-stat-card">
           <div className="garage-dashboard-stat-label">
-            PENDING INVOICES
+            UPCOMING APPOINTMENTS
           </div>
 
           <div className="garage-dashboard-stat-value">
-            6
+            {summary?.upcomingAppointments ?? (loading ? "…" : "—")}
           </div>
 
           <div className="garage-dashboard-stat-description">
-            ₹48,294 outstanding
+            Scheduled appointments
           </div>
         </div>
 
@@ -162,11 +120,11 @@ function GarageOwnerDashboard() {
           </div>
 
           <div className="garage-dashboard-stat-value">
-            3
+            {summary?.lowStockParts ?? (loading ? "…" : "—")}
           </div>
 
           <div className="garage-dashboard-stat-description">
-            ACF, OIF, TYR
+            Parts at or below reorder level
           </div>
         </div>
 
@@ -203,41 +161,43 @@ function GarageOwnerDashboard() {
 
               <tbody>
 
+                {loading && <tr><td colSpan="7">Loading recent job cards…</td></tr>}
+                {!loading && error && <tr><td colSpan="7" role="alert">{error}</td></tr>}
                 {jobs.map((job) => (
                   <tr key={job.id}>
 
                     <td className="garage-dashboard-job-id">
-                      {job.id.split("-")[0]}-
-                      <br />
-                      {job.id.split("-")[1]}
+                      {job.jobCardNumber}
                     </td>
 
                     <td className="garage-dashboard-customer">
-                      {job.customer}
+                      {job.customerName}
                     </td>
 
                     <td className="garage-dashboard-vehicle">
-                      {job.vehicle}
+                      {job.vehicleInfo}
                     </td>
 
                     <td className="garage-dashboard-mechanic">
-                      {job.mechanic}
+                      {job.mechanicName || "Unassigned"}
                     </td>
 
                     <td>
                       <span
-                        className={`garage-dashboard-status ${job.statusClass}`}
+                        className={`garage-dashboard-status ${statusClasses[job.status] || ""}`}
                       >
-                        {job.status}
+                        {statusLabels[job.status] || job.status}
                       </span>
                     </td>
 
                     <td className="garage-dashboard-eta">
-                      {job.eta}
+                      {job.estimatedDelivery
+                        ? new Date(job.estimatedDelivery).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" })
+                        : "—"}
                     </td>
 
                     <td className="garage-dashboard-amount">
-                      {job.amount}
+                      {job.estimatedCost == null ? "—" : `₹${Number(job.estimatedCost).toLocaleString("en-IN")}`}
                     </td>
 
                   </tr>
@@ -267,15 +227,16 @@ function GarageOwnerDashboard() {
             <div className="garage-dashboard-mechanics">
 
               {mechanics.map((mechanic) => (
-                <div
-                  className="garage-dashboard-mechanic-row"
-                  key={mechanic.name}
-                >
+                <div className="garage-dashboard-mechanic-row" key={mechanic.id}>
+                  {(() => {
+                    const activeCount = jobs.filter((job) => job.mechanicId === mechanic.id && job.status !== "DELIVERED").length;
+                    return (
+                      <>
 
                   <div className="garage-dashboard-mechanic-person">
 
                     <span
-                      className={`garage-dashboard-mechanic-dot ${mechanic.activeClass}`}
+                      className={`garage-dashboard-mechanic-dot ${activeCount ? "busy" : "available"}`}
                     ></span>
 
                     <span>
@@ -285,9 +246,12 @@ function GarageOwnerDashboard() {
                   </div>
 
                   <span className="garage-dashboard-active-count">
-                    {mechanic.active}
+                    {activeCount} active
                   </span>
 
+                      </>
+                    );
+                  })()}
                 </div>
               ))}
 
@@ -300,68 +264,19 @@ function GarageOwnerDashboard() {
 
           <div className="garage-dashboard-panel garage-dashboard-ai">
 
-            <div className="garage-dashboard-panel-title">
-              AI ALERTS
-            </div>
+            <div className="garage-dashboard-panel-title">LOW STOCK PARTS</div>
 
             <div className="garage-dashboard-alert-list">
-
-              <div className="garage-dashboard-alert">
-
-                <div className="garage-dashboard-alert-icon">
-                  🔍
+              {lowStockParts.map((part) => (
+                <div className="garage-dashboard-alert" key={part.id}>
+                  <div className="garage-dashboard-alert-icon">!</div>
+                  <div>
+                    <strong>{part.name}</strong>
+                    <span>{part.stockQty} in stock · reorder at {part.minStock}</span>
+                  </div>
                 </div>
-
-                <div>
-                  <strong>
-                    Battery Problem Detected
-                  </strong>
-
-                  <span>
-                    85% confidence
-                  </span>
-                </div>
-
-              </div>
-
-
-              <div className="garage-dashboard-alert">
-
-                <div className="garage-dashboard-alert-icon">
-                  ▦
-                </div>
-
-                <div>
-                  <strong>
-                    Tyre Replacement Due
-                  </strong>
-
-                  <span>
-                    78% confidence
-                  </span>
-                </div>
-
-              </div>
-
-
-              <div className="garage-dashboard-alert">
-
-                <div className="garage-dashboard-alert-icon">
-                  ◈
-                </div>
-
-                <div>
-                  <strong>
-                    Low Stock: Oil Filter
-                  </strong>
-
-                  <span>
-                    92% confidence
-                  </span>
-                </div>
-
-              </div>
-
+              ))}
+              {!loading && !error && lowStockParts.length === 0 && <p>No low-stock parts.</p>}
             </div>
 
           </div>
@@ -375,35 +290,6 @@ function GarageOwnerDashboard() {
 
       <section className="garage-dashboard-bottom">
 
-        {/* ================= REVENUE ================= */}
-
-        <div className="garage-dashboard-panel garage-dashboard-revenue">
-
-          <div className="garage-dashboard-panel-title">
-            REVENUE — THIS WEEK
-          </div>
-
-          <div className="garage-dashboard-chart">
-
-            <div className="garage-dashboard-chart-area">
-              <div className="garage-dashboard-chart-line"></div>
-            </div>
-
-            <div className="garage-dashboard-chart-days">
-              <span>M</span>
-              <span>T</span>
-              <span>W</span>
-              <span>T</span>
-              <span>F</span>
-              <span>S</span>
-              <span>S</span>
-            </div>
-
-          </div>
-
-        </div>
-
-
         {/* ================= SERVICE DISTRIBUTION ================= */}
 
         <div className="garage-dashboard-panel garage-dashboard-service">
@@ -414,72 +300,21 @@ function GarageOwnerDashboard() {
 
           <div className="garage-dashboard-service-list">
 
-            <div className="garage-dashboard-service-row">
-
-              <div className="garage-dashboard-service-info">
-                <strong>Full Service</strong>
-                <span>34</span>
+            {Object.entries(serviceCounts).map(([service, count]) => (
+              <div className="garage-dashboard-service-row" key={service}>
+                <div className="garage-dashboard-service-info">
+                  <strong>{service}</strong>
+                  <span>{count} jobs</span>
+                </div>
+                <div className="garage-dashboard-service-bar">
+                  <div
+                    className="garage-dashboard-service-fill full"
+                    style={{ width: `${jobs.length ? (count / jobs.length) * 100 : 0}%` }}
+                  ></div>
+                </div>
               </div>
-
-              <div className="garage-dashboard-service-bar">
-                <div
-                  className="garage-dashboard-service-fill full"
-                  style={{ width: "88%" }}
-                ></div>
-              </div>
-
-            </div>
-
-
-            <div className="garage-dashboard-service-row">
-
-              <div className="garage-dashboard-service-info">
-                <strong>Engine & Mechanical</strong>
-                <span>18</span>
-              </div>
-
-              <div className="garage-dashboard-service-bar">
-                <div
-                  className="garage-dashboard-service-fill mechanical"
-                  style={{ width: "57%" }}
-                ></div>
-              </div>
-
-            </div>
-
-
-            <div className="garage-dashboard-service-row">
-
-              <div className="garage-dashboard-service-info">
-                <strong>AC & Electrical</strong>
-                <span>12</span>
-              </div>
-
-              <div className="garage-dashboard-service-bar">
-                <div
-                  className="garage-dashboard-service-fill electrical"
-                  style={{ width: "38%" }}
-                ></div>
-              </div>
-
-            </div>
-
-
-            <div className="garage-dashboard-service-row">
-
-              <div className="garage-dashboard-service-info">
-                <strong>Tyres & Brakes</strong>
-                <span>28</span>
-              </div>
-
-              <div className="garage-dashboard-service-bar">
-                <div
-                  className="garage-dashboard-service-fill tyres"
-                  style={{ width: "72%" }}
-                ></div>
-              </div>
-
-            </div>
+            ))}
+            {!loading && !error && Object.keys(serviceCounts).length === 0 && <p>No job cards recorded.</p>}
 
           </div>
 

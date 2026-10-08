@@ -1,92 +1,32 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { jobCardsApi, mechanicsApi } from "../../services/resources";
+import { getErrorMessage } from "../../services/api";
 import "./GarageOwnerMechanics.css";
 
 function GarageOwnerMechanics() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [mechanics, setMechanics] = useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
+    employeeCode: "",
     phone: "",
-    role: "Junior Mechanic",
-    experience: "3",
-    skills: [],
-    joiningDate: "",
-    salary: "25000",
-    governmentId: "",
+    experienceYears: "",
   });
 
-  const mechanics = [
-    {
-      id: "M-01",
-      name: "Ravi Kumar",
-      role: "Senior Mechanic",
-      experience: "8 yrs",
-      phone: "+91 98100 11223",
-      status: "Present",
-      statusClass: "present",
-      dotClass: "yellow",
-      skills: ["Engine", "Transmission", "Electrical"],
-      active: 3,
-      done: 142,
-      rating: "4.9★",
-    },
-    {
-      id: "M-02",
-      name: "Amit Patel",
-      role: "Senior Mechanic",
-      experience: "11 yrs",
-      phone: "+91 97200 44556",
-      status: "Present",
-      statusClass: "present",
-      dotClass: "yellow",
-      skills: ["AC Repair", "Suspension", "Full Service"],
-      active: 2,
-      done: 198,
-      rating: "4.8★",
-    },
-    {
-      id: "M-03",
-      name: "Suresh Nair",
-      role: "Mechanic",
-      experience: "5 yrs",
-      phone: "+91 96300 77889",
-      status: "Present",
-      statusClass: "present",
-      dotClass: "green",
-      skills: ["Body Work", "Painting", "Denting"],
-      active: 0,
-      done: 87,
-      rating: "4.6★",
-    },
-    {
-      id: "M-04",
-      name: "Deepak Verma",
-      role: "Junior Mechanic",
-      experience: "3 yrs",
-      phone: "+91 95400 00112",
-      status: "Present",
-      statusClass: "present",
-      dotClass: "yellow",
-      skills: ["Basic Service", "Tyres", "Brakes"],
-      active: 1,
-      done: 56,
-      rating: "4.5★",
-    },
-    {
-      id: "M-05",
-      name: "Kiran Joshi",
-      role: "Auto Electrician",
-      experience: "6 yrs",
-      phone: "+91 94500 33445",
-      status: "Leave",
-      statusClass: "leave",
-      dotClass: "green",
-      skills: ["Wiring", "Battery", "AC Electrical"],
-      active: 0,
-      done: 64,
-      rating: "4.7★",
-    },
-  ];
+  useEffect(() => {
+    Promise.all([mechanicsApi.list(), jobCardsApi.list()])
+      .then(([mechanicRecords, jobRecords]) => {
+        setMechanics(mechanicRecords);
+        setJobs(jobRecords);
+      })
+      .catch((requestError) => setError(getErrorMessage(requestError)))
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -97,33 +37,7 @@ function GarageOwnerMechanics() {
     }));
   };
 
-  const handleSkillChange = (skill) => {
-    setFormData((previous) => {
-      const exists = previous.skills.includes(skill);
-
-      return {
-        ...previous,
-        skills: exists
-          ? previous.skills.filter((item) => item !== skill)
-          : [...previous.skills, skill],
-      };
-    });
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      phone: "",
-      role: "Junior Mechanic",
-      experience: "3",
-      skills: [],
-      joiningDate: "",
-      salary: "25000",
-      governmentId: "",
-    });
-  };
-
-  const handleAddMechanic = (e) => {
+  const handleAddMechanic = async (e) => {
     e.preventDefault();
 
     if (!formData.name || !formData.phone) {
@@ -131,34 +45,25 @@ function GarageOwnerMechanics() {
       return;
     }
 
-    alert("Mechanic added successfully.");
-
-    setShowAddModal(false);
-    resetForm();
+    setError("");
+    setSaving(true);
+    try {
+      const created = await mechanicsApi.create({
+        name: formData.name.trim(),
+        employeeCode: formData.employeeCode.trim(),
+        phone: formData.phone.trim(),
+        experienceYears: formData.experienceYears ? Number(formData.experienceYears) : null,
+        status: "ACTIVE",
+      });
+      setMechanics((existing) => [...existing, created]);
+      setShowAddModal(false);
+      setFormData({ name: "", employeeCode: "", phone: "", experienceYears: "" });
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, "Could not add mechanic."));
+    } finally {
+      setSaving(false);
+    }
   };
-
-  const handleEdit = (mechanic) => {
-    alert(`Edit ${mechanic.name}`);
-  };
-
-  const handleAssignJob = (mechanic) => {
-    alert(`Assign job to ${mechanic.name}`);
-  };
-
-  const skills = [
-    "Engine Repair",
-    "Transmission",
-    "AC Repair",
-    "Suspension",
-    "Electrical",
-    "Brakes",
-    "Body Work",
-    "Painting",
-    "Full Service",
-    "Tyres",
-    "Battery",
-    "Diagnostics",
-  ];
 
   return (
     <div className="garage-mechanics-content">
@@ -194,7 +99,7 @@ function GarageOwnerMechanics() {
           </div>
 
           <div className="mechanics-stat-value">
-            5
+            {mechanics.length}
           </div>
 
         </div>
@@ -203,11 +108,11 @@ function GarageOwnerMechanics() {
         <div className="mechanics-stat-card">
 
           <div className="mechanics-stat-label">
-            PRESENT TODAY
+            ACTIVE
           </div>
 
           <div className="mechanics-stat-value lime">
-            4
+            {mechanics.filter((mechanic) => mechanic.status === "ACTIVE").length}
           </div>
 
         </div>
@@ -216,11 +121,11 @@ function GarageOwnerMechanics() {
         <div className="mechanics-stat-card">
 
           <div className="mechanics-stat-label">
-            ON LEAVE
+            INACTIVE
           </div>
 
           <div className="mechanics-stat-value">
-            1
+            {mechanics.filter((mechanic) => mechanic.status !== "ACTIVE").length}
           </div>
 
         </div>
@@ -229,11 +134,13 @@ function GarageOwnerMechanics() {
         <div className="mechanics-stat-card">
 
           <div className="mechanics-stat-label">
-            AVG RATING
+            AVG EXPERIENCE
           </div>
 
           <div className="mechanics-stat-value">
-            4.7★
+            {mechanics.length
+              ? `${(mechanics.reduce((sum, mechanic) => sum + (mechanic.experienceYears || 0), 0) / mechanics.length).toFixed(1)} yrs`
+              : "—"}
           </div>
 
         </div>
@@ -247,6 +154,8 @@ function GarageOwnerMechanics() {
 
       <section className="mechanics-grid">
 
+        {loading && <p>Loading mechanics…</p>}
+        {!loading && error && <p role="alert" className="login-error">{error}</p>}
         {mechanics.map((mechanic) => (
 
           <div
@@ -263,7 +172,7 @@ function GarageOwnerMechanics() {
                 <div className="mechanic-name-row">
 
                   <span
-                    className={`mechanic-status-dot ${mechanic.dotClass}`}
+                    className={`mechanic-status-dot ${mechanic.status === "ACTIVE" ? "green" : "yellow"}`}
                   ></span>
 
                   <h3>
@@ -273,7 +182,7 @@ function GarageOwnerMechanics() {
                 </div>
 
                 <div className="mechanic-role">
-                  {mechanic.role} · {mechanic.experience}
+                  {mechanic.employeeCode} · {mechanic.experienceYears ?? 0} yrs experience
                 </div>
 
                 <div className="mechanic-phone">
@@ -286,34 +195,16 @@ function GarageOwnerMechanics() {
               <div className="mechanic-status-info">
 
                 <div className="mechanic-id">
-                  {mechanic.id}
+                  {mechanic.employeeCode}
                 </div>
 
                 <div
-                  className={`mechanic-presence ${mechanic.statusClass}`}
+                  className={`mechanic-presence ${String(mechanic.status || "").toLowerCase()}`}
                 >
                   {mechanic.status}
                 </div>
 
               </div>
-
-            </div>
-
-
-            {/* SKILLS */}
-
-            <div className="mechanic-skills">
-
-              {mechanic.skills.map((skill) => (
-
-                <span
-                  className="mechanic-skill"
-                  key={skill}
-                >
-                  {skill}
-                </span>
-
-              ))}
 
             </div>
 
@@ -330,7 +221,7 @@ function GarageOwnerMechanics() {
               <div className="mechanic-card-stat">
 
                 <strong>
-                  {mechanic.active}
+                  {jobs.filter((job) => job.mechanicId === mechanic.id && job.status !== "DELIVERED").length}
                 </strong>
 
                 <span>
@@ -343,7 +234,7 @@ function GarageOwnerMechanics() {
               <div className="mechanic-card-stat">
 
                 <strong>
-                  {mechanic.done}
+                  {jobs.filter((job) => job.mechanicId === mechanic.id && job.status === "DELIVERED").length}
                 </strong>
 
                 <span>
@@ -356,12 +247,10 @@ function GarageOwnerMechanics() {
               <div className="mechanic-card-stat rating">
 
                 <strong>
-                  {mechanic.rating}
+                  {mechanic.experienceYears ?? 0} yrs
                 </strong>
 
-                <span>
-                  Rating
-                </span>
+                <span>Experience</span>
 
               </div>
 
@@ -372,26 +261,6 @@ function GarageOwnerMechanics() {
 
             <div className="mechanic-divider"></div>
 
-
-            {/* BUTTONS */}
-
-            <div className="mechanic-card-actions">
-
-              <button
-                className="mechanic-edit-button"
-                onClick={() => handleEdit(mechanic)}
-              >
-                Edit
-              </button>
-
-              <button
-                className="mechanic-assign-button"
-                onClick={() => handleAssignJob(mechanic)}
-              >
-                Assign Job
-              </button>
-
-            </div>
 
           </div>
 
@@ -442,8 +311,9 @@ function GarageOwnerMechanics() {
               className="mechanic-form"
               onSubmit={handleAddMechanic}
             >
+              {error && <p role="alert" className="login-error">{error}</p>}
 
-              {/* NAME + PHONE */}
+              {/* NAME + EMPLOYEE CODE */}
 
               <div className="mechanic-form-row">
 
@@ -464,7 +334,20 @@ function GarageOwnerMechanics() {
 
                 </div>
 
+                <div className="mechanic-form-group">
+                  <label>EMPLOYEE CODE</label>
+                  <input
+                    type="text"
+                    name="employeeCode"
+                    value={formData.employeeCode}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
 
+              </div>
+
+              <div className="mechanic-form-row">
                 <div className="mechanic-form-group">
 
                   <label>
@@ -485,45 +368,6 @@ function GarageOwnerMechanics() {
               </div>
 
 
-              {/* ROLE */}
-
-              <div className="mechanic-form-group">
-
-                <label>
-                  ROLE
-                </label>
-
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                >
-
-                  <option>
-                    Junior Mechanic
-                  </option>
-
-                  <option>
-                    Mechanic
-                  </option>
-
-                  <option>
-                    Senior Mechanic
-                  </option>
-
-                  <option>
-                    Auto Electrician
-                  </option>
-
-                  <option>
-                    Service Technician
-                  </option>
-
-                </select>
-
-              </div>
-
-
               {/* EXPERIENCE */}
 
               <div className="mechanic-form-group">
@@ -534,105 +378,10 @@ function GarageOwnerMechanics() {
 
                 <input
                   type="number"
-                  name="experience"
+                  name="experienceYears"
                   min="0"
-                  value={formData.experience}
+                  value={formData.experienceYears}
                   onChange={handleInputChange}
-                />
-
-              </div>
-
-
-              {/* SKILLS */}
-
-              <div className="mechanic-form-group">
-
-                <label>
-                  SKILLS (SELECT ALL THAT APPLY)
-                </label>
-
-                <div className="mechanic-skills-checkbox-grid">
-
-                  {skills.map((skill) => (
-
-                    <label
-                      className="mechanic-checkbox-item"
-                      key={skill}
-                    >
-
-                      <input
-                        type="checkbox"
-                        checked={formData.skills.includes(skill)}
-                        onChange={() =>
-                          handleSkillChange(skill)
-                        }
-                      />
-
-                      <span>
-                        {skill}
-                      </span>
-
-                    </label>
-
-                  ))}
-
-                </div>
-
-              </div>
-
-
-              {/* DATE + SALARY */}
-
-              <div className="mechanic-form-row">
-
-                <div className="mechanic-form-group">
-
-                  <label>
-                    DATE OF JOINING
-                  </label>
-
-                  <input
-                    type="date"
-                    name="joiningDate"
-                    value={formData.joiningDate}
-                    onChange={handleInputChange}
-                  />
-
-                </div>
-
-
-                <div className="mechanic-form-group">
-
-                  <label>
-                    SALARY (₹/MONTH)
-                  </label>
-
-                  <input
-                    type="number"
-                    name="salary"
-                    value={formData.salary}
-                    onChange={handleInputChange}
-                  />
-
-                </div>
-
-              </div>
-
-
-              {/* GOVERNMENT ID */}
-
-              <div className="mechanic-form-group">
-
-                <label>
-                  GOVERNMENT ID / AADHAAR
-                </label>
-
-                <input
-                  type="text"
-                  name="governmentId"
-                  value={formData.governmentId}
-                  onChange={handleInputChange}
-                  placeholder="XXXX XXXX XXXX"
                 />
 
               </div>
@@ -645,8 +394,9 @@ function GarageOwnerMechanics() {
                 <button
                   type="submit"
                   className="mechanic-submit-button"
+                  disabled={saving}
                 >
-                  ADD MECHANIC
+                  {saving ? "SAVING..." : "ADD MECHANIC"}
                 </button>
 
                 <button

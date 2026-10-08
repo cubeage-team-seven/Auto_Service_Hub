@@ -1,5 +1,5 @@
 # =============================================================================
-# PRODUCTION profile — SmartGarage AI CRM backend (SRS 19, 20)
+# PRODUCTION profile — Auto_Service_Hub AI CRM backend (SRS 19, 20)
 # =============================================================================
 # Secrets are NOT defaulted here. SRS 19 requires database passwords, JWT secrets
 # and provider credentials to come from environment/secret management rather than
@@ -30,6 +30,11 @@ server:
   forward-headers-strategy: framework
 
 app:
+  bootstrap-admin:
+    username: ${ADMIN_BOOTSTRAP_USERNAME:}
+    email: ${ADMIN_BOOTSTRAP_EMAIL:}
+    password: ${ADMIN_BOOTSTRAP_PASSWORD:}
+    full-name: ${ADMIN_BOOTSTRAP_FULL_NAME:}
   jwt:
     # No default. The development placeholder must not be reachable in prod —
     # a known signing key would let anyone forge an ADMIN token.

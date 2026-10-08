@@ -1,9 +1,12 @@
-import React from "react";
+import React, { useContext } from "react";
 import {
   BrowserRouter,
+  Navigate,
+  Outlet,
   Routes,
   Route,
 } from "react-router-dom";
+import { AuthContext } from "./context/AuthContext";
 
 /* =========================
    LANDING
@@ -14,6 +17,9 @@ import LandingPage from "./pages/landing/LandingPage";
    MODULE SELECTION
 ========================= */
 import ModulePage from "./pages/auth/ModulePage";
+import AccessRequestPage from "./pages/auth/AccessRequestPage";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 /* =========================
    MECHANIC
@@ -34,7 +40,6 @@ import InventoryPage from "./pages/inventory/InventoryPage";
    JOB CARDS
 ========================= */
 import JobCardListPage from "./pages/jobcards/JobCardListPage";
-import JobCardCreatePage from "./pages/jobcards/JobCardCreatePage";
 import JobCardDetailsPage from "./pages/jobcards/JobCardDetailsPage";
 
 /* =========================
@@ -59,6 +64,7 @@ import GarageOwnerLogin from "./pages/garage-owner/GarageOwnerLogin";
    SERVICE ADVISOR LOGIN
 ========================= */
 import ServiceAdvisorLogin from "./pages/Service Advisor/ServiceAdvisorLogin";
+import ServiceAdvisorLayout from "./pages/Service Advisor/ServiceAdvisorLayout";
 
 /* =========================
    DEVELOPER LOGIN
@@ -90,6 +96,30 @@ import GarageOwnerReports from "./pages/garage-owner/GarageOwnerReports";
 ========================= */
 import PackagesPage from "./pages/packages/PackagesPage";
 
+const homeByRole = {
+  ADMIN: "/admin",
+  OWNER: "/garage-owner/dashboard",
+  MANAGER: "/garage-owner/dashboard",
+  SERVICE_ADVISOR: "/service-advisor",
+  MECHANIC: "/mechanic-dashboard",
+  INVENTORY_MANAGER: "/inventory-dashboard",
+  BILLING_USER: "/billing/dashboard",
+};
+
+function RequireRole({ roles }) {
+  const { user, isAuthenticated } = useContext(AuthContext);
+  if (!isAuthenticated) return <Navigate to="/modules" replace />;
+  return roles.includes(user?.role)
+    ? <Outlet />
+    : <Navigate to={homeByRole[user?.role] || "/modules"} replace />;
+}
+
+function PublicOnly({ children }) {
+  const { user, isAuthenticated } = useContext(AuthContext);
+  return isAuthenticated
+    ? <Navigate to={homeByRole[user?.role] || "/"} replace />
+    : children;
+}
 
 function App() {
   return (
@@ -113,8 +143,9 @@ function App() {
 
         <Route
           path="/modules"
-          element={<ModulePage />}
+          element={<PublicOnly><ModulePage /></PublicOnly>}
         />
+        <Route path="/access-request" element={<PublicOnly><AccessRequestPage /></PublicOnly>} />
 
 
         {/* =====================================================
@@ -123,9 +154,10 @@ function App() {
 
         <Route
           path="/mechanic"
-          element={<MechanicLogin />}
+          element={<PublicOnly><MechanicLogin /></PublicOnly>}
         />
 
+        <Route element={<RequireRole roles={["MECHANIC"]} />}>
         <Route element={<MechanicLayout />}>
 
           <Route
@@ -140,7 +172,7 @@ function App() {
 
           <Route
             path="/job-cards/create"
-            element={<JobCardCreatePage />}
+            element={<Navigate to="/job-cards" replace />}
           />
 
           <Route
@@ -148,6 +180,7 @@ function App() {
             element={<JobCardDetailsPage />}
           />
 
+        </Route>
         </Route>
 
 
@@ -157,7 +190,7 @@ function App() {
 
         <Route
           path="/inventory-login"
-          element={<InventoryLogin />}
+          element={<PublicOnly><InventoryLogin /></PublicOnly>}
         />
 
 
@@ -165,6 +198,7 @@ function App() {
             INVENTORY MODULE
         ===================================================== */}
 
+        <Route element={<RequireRole roles={["INVENTORY_MANAGER"]} />}>
         <Route element={<InventoryLayout />}>
 
           <Route
@@ -178,26 +212,16 @@ function App() {
           />
 
         </Route>
-
+        </Route>
 
         {/* =====================================================
             CUSTOMERS
         ===================================================== */}
 
-        <Route
-          path="/customers"
-          element={<CustomerLogin />}
-        />
-
-        <Route
-          path="/customer-dashboard"
-          element={<CustomerDashboard />}
-        />
-
-        <Route
-          path="/appointments"
-          element={<Appointments />}
-        />
+        <Route path="/customers" element={<CustomerLogin />} />
+        <Route path="/dashboard" element={<CustomerDashboard />} />
+        <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+        <Route path="/appointments" element={<Appointments />} />
 
 
         {/* =====================================================
@@ -206,13 +230,12 @@ function App() {
 
         <Route
           path="/billing"
-          element={<BillingLogin />}
+          element={<PublicOnly><BillingLogin /></PublicOnly>}
         />
 
-        <Route
-          path="/billing/dashboard"
-          element={<BillingPage />}
-        />
+        <Route element={<RequireRole roles={["BILLING_USER"]} />}>
+          <Route path="/billing/dashboard" element={<BillingPage />} />
+        </Route>
 
 
         {/* =====================================================
@@ -221,7 +244,7 @@ function App() {
 
         <Route
           path="/garage-owner-login"
-          element={<GarageOwnerLogin />}
+          element={<PublicOnly><GarageOwnerLogin /></PublicOnly>}
         />
 
 
@@ -231,8 +254,19 @@ function App() {
 
         <Route
           path="/service-advisor-login"
-          element={<ServiceAdvisorLogin />}
+          element={<PublicOnly><ServiceAdvisorLogin /></PublicOnly>}
         />
+
+        <Route path="/service-advisor" element={<RequireRole roles={["SERVICE_ADVISOR"]} />}>
+          <Route element={<ServiceAdvisorLayout />}>
+            <Route index element={<GarageOwnerDashboard />} />
+            <Route path="customers" element={<GarageOwnerCustomers />} />
+            <Route path="vehicles" element={<GarageOwnerVehicles />} />
+            <Route path="appointments" element={<GarageOwnerAppointments />} />
+            <Route path="jobcards" element={<GarageOwnerJobCards />} />
+            <Route path="packages" element={<PackagesPage />} />
+          </Route>
+        </Route>
 
 
         {/* =====================================================
@@ -241,8 +275,9 @@ function App() {
 
         <Route
           path="/developer-login"
-          element={<DeveloperLogin />}
+          element={<PublicOnly><DeveloperLogin /></PublicOnly>}
         />
+        <Route path="/admin-login" element={<PublicOnly><DeveloperLogin /></PublicOnly>} />
 
 
         {/* =====================================================
@@ -251,8 +286,9 @@ function App() {
 
         <Route
           path="/garage-owner"
-          element={<GarageOwnerLayout />}
+          element={<RequireRole roles={["OWNER", "MANAGER"]} />}
         >
+          <Route element={<GarageOwnerLayout />}>
 
           <Route
             index
@@ -319,18 +355,23 @@ function App() {
             element={<GarageOwnerReports />}
           />
 
+          </Route>
         </Route>
 
+        <Route path="/admin" element={<RequireRole roles={["ADMIN"]} />}>
+          <Route element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="customers" element={<GarageOwnerCustomers />} />
+          </Route>
+        </Route>
 
         {/* =====================================================
             DEVELOPER MODULE
             REUSES GARAGE OWNER COMPONENTS
         ===================================================== */}
 
-        <Route
-          path="/developer"
-          element={<GarageOwnerLayout />}
-        >
+        <Route path="/developer" element={<RequireRole roles={["ADMIN"]} />}>
+          <Route element={<GarageOwnerLayout />}>
 
           {/* Developer Dashboard */}
 
@@ -432,6 +473,7 @@ function App() {
             element={<GarageOwnerReports />}
           />
 
+          </Route>
         </Route>
 
       </Routes>

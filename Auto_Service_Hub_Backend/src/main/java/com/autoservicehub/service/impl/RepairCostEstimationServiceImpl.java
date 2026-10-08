@@ -62,7 +62,7 @@ public class RepairCostEstimationServiceImpl implements RepairCostEstimationServ
           + "and NOT a guaranteed price. It must be reviewed and confirmed by a service advisor or "
           + "manager, and agreed with the customer, before any repair work is authorised. "
           + "Final pricing is always established on the formal estimate or invoice document. "
-          + "SmartGarage AI accepts no liability for costs quoted on the basis of this output.";
+          + "Auto_Service_Hub AI accepts no liability for costs quoted on the basis of this output.";
 
     private final AiOrchestrationService aiOrchestrationService;
     private final VehicleRepository      vehicleRepository;

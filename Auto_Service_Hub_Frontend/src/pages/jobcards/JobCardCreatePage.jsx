@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./JobCardCreatePage.css";
 
+const JOB_CARDS_STORAGE_KEY = "auto_service_hub_jobcards";
+const LEGACY_JOB_CARDS_STORAGE_KEY = "smartgarage_jobcards";
+
 function JobCardCreatePage() {
   const navigate = useNavigate();
 
@@ -34,8 +37,10 @@ function JobCardCreatePage() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const existingJobs =
-      JSON.parse(localStorage.getItem("smartgarage_jobcards")) || [];
+    const storedJobs =
+      localStorage.getItem(JOB_CARDS_STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_JOB_CARDS_STORAGE_KEY);
+    const existingJobs = storedJobs ? JSON.parse(storedJobs) : [];
 
     const newJob = {
       id: `JC-${2409 + existingJobs.length}`,
@@ -75,9 +80,10 @@ function JobCardCreatePage() {
     };
 
     localStorage.setItem(
-      "smartgarage_jobcards",
+      JOB_CARDS_STORAGE_KEY,
       JSON.stringify([...existingJobs, newJob])
     );
+    localStorage.removeItem(LEGACY_JOB_CARDS_STORAGE_KEY);
 
     alert("Job Card created successfully!");
 

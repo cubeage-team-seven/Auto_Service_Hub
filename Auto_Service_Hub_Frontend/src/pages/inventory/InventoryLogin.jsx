@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useApiLogin } from "../../hooks/useApiLogin";
 
 import "./InventoryLogin.css";
 
@@ -9,20 +10,7 @@ function InventoryLogin() {
 
   const [rememberMe, setRememberMe] = useState(true);
 
-  const navigate = useNavigate();
-
-
-  // ==========================================
-  // LOGIN
-  // ==========================================
-  const handleLogin = (e) => {
-
-    e.preventDefault();
-
-    // After login → Inventory Manager Dashboard
-    navigate("/inventory-dashboard");
-
-  };
+  const { submitForm, error, loading } = useApiLogin("/inventory-dashboard");
 
 
   return (
@@ -183,8 +171,9 @@ function InventoryLogin() {
 
           <form
             className="inventory-login-form"
-            onSubmit={handleLogin}
+            onSubmit={submitForm}
           >
+            {error && <p role="alert" className="login-error">{error}</p>}
 
 
             {/* =================================================
@@ -192,15 +181,16 @@ function InventoryLogin() {
             ================================================= */}
 
             <label htmlFor="inventory-email">
-              EMAIL ADDRESS
+              EMAIL ADDRESS OR USERNAME
             </label>
 
 
             <input
               id="inventory-email"
-              type="email"
-              defaultValue="amitkaturde1@gmail.com"
-              placeholder="Enter your email"
+              type="text"
+              name="username"
+              placeholder="Email or username"
+              autoComplete="username"
               required
             />
 
@@ -220,8 +210,9 @@ function InventoryLogin() {
               <input
                 id="inventory-password"
                 type={showPassword ? "text" : "password"}
-                defaultValue="123456789"
+                name="password"
                 placeholder="Enter your password"
+                autoComplete="current-password"
                 required
               />
 
@@ -284,8 +275,9 @@ function InventoryLogin() {
             <button
               type="submit"
               className="inventory-login-button"
+              disabled={loading}
             >
-              ACCESS PLATFORM →
+              {loading ? "SIGNING IN..." : "ACCESS PLATFORM →"}
             </button>
 
 

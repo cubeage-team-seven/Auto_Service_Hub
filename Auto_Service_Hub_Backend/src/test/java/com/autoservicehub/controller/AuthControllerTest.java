@@ -149,6 +149,18 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Customer CRM records do not create an app sign-in role")
+    void customerRoleCannotSignIn() throws Exception {
+        givenSuccessfulLogin("CUSTOMER");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                       .contentType(MediaType.APPLICATION_JSON).content(BODY))
+               .andExpect(status().isForbidden());
+
+        verify(jwtTokenProvider, never()).generateAccessToken(any(), any());
+    }
+
+    @Test
     @DisplayName("A2 bad credentials return 401, not 500")
     void badCredentialsReturnUnauthorized() throws Exception {
         when(authenticationManager.authenticate(any()))
@@ -254,6 +266,21 @@ class AuthControllerTest {
                .andExpect(jsonPath("$.data.accessToken").value("new-access"))
                .andExpect(jsonPath("$.data.refreshToken").value("new-refresh"))
                .andExpect(jsonPath("$.data.tokenType").value("Bearer"));
+    }
+
+    @Test
+    @DisplayName("A customer role cannot refresh a portal token")
+    void customerRoleCannotRefresh() throws Exception {
+        when(jwtTokenProvider.validateRefreshToken("a-valid-refresh-token")).thenReturn(true);
+        when(jwtTokenProvider.getUsername("a-valid-refresh-token")).thenReturn("anil");
+        when(userRepository.findByUsernameIgnoreCase("anil"))
+                .thenReturn(Optional.of(givenUserWithRole("anil", "CUSTOMER")));
+
+        mockMvc.perform(post("/api/v1/auth/refresh")
+                       .contentType(MediaType.APPLICATION_JSON).content(REFRESH_BODY))
+               .andExpect(status().isUnauthorized());
+
+        verify(jwtTokenProvider, never()).generateAccessToken(any(), any());
     }
 
     @Test

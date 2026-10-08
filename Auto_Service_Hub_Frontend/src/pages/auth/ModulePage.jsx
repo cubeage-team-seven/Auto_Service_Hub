@@ -39,7 +39,7 @@ function ModulePage() {
           <h1>
             AUTO
             <br />
-            SERVICES
+            SERVICE
             <br />
             <span>HUB</span>
           </h1>
@@ -104,7 +104,9 @@ function ModulePage() {
             <p>
               Choose your workspace to continue.
             </p>
-
+            <Link to="/access-request" className="module-access-link">
+              Need an owner or staff account? Request access
+            </Link>
           </div>
 
 
@@ -363,6 +365,42 @@ function ModulePage() {
                 <p>
                   Manage integrations,
                   APIs and system configuration.
+                </p>
+
+              </div>
+
+              <span className="module-arrow">
+                →
+              </span>
+
+            </Link>
+
+
+            {/* =================================================
+                ADMINISTRATOR
+            ================================================= */}
+
+            <Link
+              to="/admin-login"
+              className="module-card module-card-link"
+            >
+
+              <div className="module-card-icon">
+                &lt;/&gt;
+              </div>
+
+              <div className="module-card-content">
+
+                <h3>
+                  Administrator
+                </h3>
+
+                <span>
+                  Restricted management workspace
+                </span>
+
+                <p>
+                  Review access requests and manage staff accounts.
                 </p>
 
               </div>
