@@ -8,7 +8,11 @@ function MechanicLogin() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const { submitForm, error, loading } = useApiLogin("/mechanic-dashboard");
+  const { submitForm, error, loading } = useApiLogin(
+    "/mechanic-dashboard",
+    {},
+    "MECHANIC"
+  );
 
 
   return (

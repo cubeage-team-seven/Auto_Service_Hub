@@ -370,7 +370,7 @@
    EMAIL INPUT
 ========================================================= */
 
-.inventory-login-form>input[type="email"] {
+.inventory-login-form>input[name="username"] {
     width: 100%;
     height: 42px;
     margin: 0 0 20px 0;
@@ -384,7 +384,7 @@
     font-size: 12px;
 }
 
-.inventory-login-form>input[type="email"]:focus {
+.inventory-login-form>input[name="username"]:focus {
     border-color: #c9ff20;
 }
 

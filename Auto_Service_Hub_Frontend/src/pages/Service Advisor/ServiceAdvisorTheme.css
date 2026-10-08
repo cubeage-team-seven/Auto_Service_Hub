@@ -1,0 +1,55 @@
+.sa-shell .sa-sidebar {
+  width: 265px;
+}
+
+.sa-shell .sa-main {
+  width: calc(100% - 265px);
+  margin-left: 265px;
+}
+
+.sa-main .api-data-page {
+  min-width: 0;
+  padding: 24px 21px 36px;
+}
+
+.sa-main .api-data-header h1 {
+  color: var(--sa-text);
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.sa-main .api-data-card {
+  border-color: var(--sa-line);
+  border-radius: 6px;
+  background: var(--sa-panel);
+}
+
+.sa-main .api-data-table-wrap {
+  overflow-x: auto;
+}
+
+.sa-main .garage-customers-page,
+.sa-main .garage-vehicles-page,
+.sa-main .garage-appointments-content,
+.sa-main .garage-jobcards-content {
+  background: var(--sa-bg);
+  color: var(--sa-text);
+}
+
+.sa-main .garage-customers-table-container,
+.sa-main .vehicles-table-panel,
+.sa-main .appointments-table-panel {
+  border-color: var(--sa-line);
+  background: var(--sa-panel);
+}
+
+@media (max-width: 760px) {
+  .sa-shell .sa-sidebar {
+    width: 60px;
+  }
+
+  .sa-shell .sa-main {
+    width: calc(100% - 60px);
+    margin-left: 60px;
+  }
+}

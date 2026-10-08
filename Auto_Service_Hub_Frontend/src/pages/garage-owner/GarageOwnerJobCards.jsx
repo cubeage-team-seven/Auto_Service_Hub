@@ -1,21 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { customersApi, jobCardsApi, mechanicsApi, vehiclesApi } from "../../services/resources";
+import { appointmentsApi, customersApi, jobCardsApi, mechanicsApi, vehiclesApi } from "../../services/resources";
 import { getErrorMessage } from "../../services/api";
 import "./GarageOwnerJobCards.css";
 
-function GarageOwnerJobCards({ allowCreate = true }) {
+function GarageOwnerJobCards({
+  allowCreate = true,
+  showAppointment = false,
+  openCreateOnMount = false,
+}) {
   const [activeFilter, setActiveFilter] = useState("ALL");
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(openCreateOnMount);
   const [jobCards, setJobCards] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [mechanics, setMechanics] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
+    appointment: "",
     customer: "",
     vehicle: "",
     odometer: "",
@@ -28,16 +34,23 @@ function GarageOwnerJobCards({ allowCreate = true }) {
   });
 
   useEffect(() => {
-    Promise.all([jobCardsApi.list(), customersApi.list(), vehiclesApi.list(), mechanicsApi.list()])
-      .then(([jobCardRecords, customerRecords, vehicleRecords, mechanicRecords]) => {
+    Promise.all([
+      jobCardsApi.list(),
+      customersApi.list(),
+      vehiclesApi.list(),
+      mechanicsApi.list(),
+      showAppointment ? appointmentsApi.list() : Promise.resolve([]),
+    ])
+      .then(([jobCardRecords, customerRecords, vehicleRecords, mechanicRecords, appointmentRecords]) => {
         setJobCards(jobCardRecords);
         setCustomers(customerRecords);
         setVehicles(vehicleRecords);
         setMechanics(mechanicRecords);
+        setAppointments(appointmentRecords);
       })
       .catch((requestError) => setError(getErrorMessage(requestError)))
       .finally(() => setLoading(false));
-  }, []);
+  }, [showAppointment]);
 
   const filterMap = {
     RECEIVED: "RECEIVED",
@@ -77,9 +90,21 @@ function GarageOwnerJobCards({ allowCreate = true }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    if (name === "appointment") {
+      const appointment = appointments.find((item) => String(item.id) === value);
+      setFormData((previous) => ({
+        ...previous,
+        appointment: value,
+        customer: appointment ? String(appointment.customerId) : "",
+        vehicle: appointment ? String(appointment.vehicleId) : "",
+      }));
+      return;
+    }
+
     setFormData((previous) => ({
       ...previous,
       [name]: value,
+      ...(["customer", "vehicle"].includes(name) ? { appointment: "" } : {}),
       ...(name === "customer" ? { vehicle: "" } : {}),
     }));
   };
@@ -98,6 +123,7 @@ function GarageOwnerJobCards({ allowCreate = true }) {
       const created = await jobCardsApi.create({
         customerId: Number(formData.customer),
         vehicleId: Number(formData.vehicle),
+        appointmentId: formData.appointment ? Number(formData.appointment) : null,
         mechanicId: formData.mechanic ? Number(formData.mechanic) : null,
         serviceType: formData.serviceType,
         complaint: formData.complaint,
@@ -110,6 +136,7 @@ function GarageOwnerJobCards({ allowCreate = true }) {
       setJobCards((existing) => [created, ...existing]);
       setShowModal(false);
       setFormData({
+        appointment: "",
         customer: "",
         vehicle: "",
         odometer: "",
@@ -341,7 +368,7 @@ function GarageOwnerJobCards({ allowCreate = true }) {
                 <div
                   className="progress-fill"
                   style={{
-                    width: `${job.progress}%`,
+                    width: `${Math.min(100, Math.max(0, (Number(job.progress) || 0) * 20))}%`,
                   }}
                 ></div>
 
@@ -431,6 +458,28 @@ function GarageOwnerJobCards({ allowCreate = true }) {
               onSubmit={handleCreateJobCard}
             >
               {error && <p role="alert" className="login-error">{error}</p>}
+
+              {showAppointment && (
+                <div className="jobcard-form-group">
+                  <label htmlFor="jobcard-appointment">FROM APPOINTMENT</label>
+                  <select
+                    id="jobcard-appointment"
+                    name="appointment"
+                    value={formData.appointment}
+                    onChange={handleChange}
+                  >
+                    <option value="">Create without appointment</option>
+                    {appointments.map((appointment) => (
+                      <option key={appointment.id} value={appointment.id}>
+                        Appointment #{appointment.id} — {appointment.customerName}
+                        {appointment.appointmentAt
+                          ? ` (${new Date(appointment.appointmentAt).toLocaleString()})`
+                          : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* CUSTOMER */}
 
