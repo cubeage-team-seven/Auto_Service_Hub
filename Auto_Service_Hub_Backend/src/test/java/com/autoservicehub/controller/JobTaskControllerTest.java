@@ -1,6 +1,8 @@
 package com.autoservicehub.controller;
 
 import com.autoservicehub.dto.JobTaskResponseDTO;
+import com.autoservicehub.dto.JobCardRequestDTO;
+import com.autoservicehub.dto.JobCardResponseDTO;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.GlobalExceptionHandler;
 import com.autoservicehub.exception.ResourceNotFoundException;
@@ -76,6 +78,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * CT17 POST task by BILLING_USER    -> 403
  * CT18 DELETE task by MECHANIC      -> 403
  * CT19 Anonymous                    -> 401
+ * CT20 MECHANIC creates a job card  -> 201
+ * CT21 BILLING_USER cannot create a job card -> 403
  */
 @WebMvcTest(controllers = {JobTaskController.class, JobCardController.class})
 @Import({JobTaskControllerTest.TestSecurityConfig.class, GlobalExceptionHandler.class})
@@ -151,6 +155,47 @@ class JobTaskControllerTest {
                 }
                 """;
     }
+
+        @Test
+        @WithMockUser(roles = "MECHANIC")
+        @DisplayName("CT20 - MECHANIC creates a job card -> 201")
+        void ct20_mechanicCreatesJobCard_returns201() throws Exception {
+            JobCardResponseDTO response = new JobCardResponseDTO();
+            response.setId(56L);
+            response.setJobCardNumber("JC-20261008150000");
+            response.setStatus("RECEIVED");
+            when(jobCardService.create(any(JobCardRequestDTO.class))).thenReturn(response);
+
+            mockMvc.perform(post("/api/v1/job-cards")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "customerId": 1,
+                                      "vehicleId": 1,
+                                      "serviceType": "Basic Service",
+                                      "status": "RECEIVED"
+                                    }
+                                    """))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.data.id").value(56))
+                    .andExpect(jsonPath("$.data.status").value("RECEIVED"));
+        }
+
+        @Test
+        @WithMockUser(roles = "BILLING_USER")
+        @DisplayName("CT21 - BILLING_USER cannot create a job card -> 403")
+        void ct21_billingUserCannotCreateJobCard_returns403() throws Exception {
+            mockMvc.perform(post("/api/v1/job-cards")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "customerId": 1,
+                                      "vehicleId": 1,
+                                      "serviceType": "Basic Service"
+                                    }
+                                    """))
+                    .andExpect(status().isForbidden());
+        }
 
     // ── CT1..CT5: creating a task ──────────────────────────────────────
 

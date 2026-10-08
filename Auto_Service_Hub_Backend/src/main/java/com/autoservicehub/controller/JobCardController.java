@@ -33,7 +33,7 @@ public class JobCardController {
     private final JobTaskService       jobTaskService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<JobCardResponseDTO> create(@Valid @RequestBody JobCardRequestDTO request) {
         return ApiResponse.ok("Created", service.create(request));
