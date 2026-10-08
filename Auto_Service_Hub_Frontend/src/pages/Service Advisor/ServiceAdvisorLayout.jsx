@@ -19,7 +19,7 @@ export default function ServiceAdvisorLayout() {
       <aside className="sa-sidebar">
         <div className="sa-logo-row">
           <div className="sa-logo-icon">◆</div>
-          <div className="sa-logo">SMARTGARAGE</div>
+          <div className="sa-logo">Auto_Service_Hub</div>
         </div>
 
         <nav className="sa-nav">
@@ -44,11 +44,11 @@ export default function ServiceAdvisorLayout() {
       <main className="sa-main">
         <header className="sa-topbar">
           <div className="sa-breadcrumb">
-            <span>SmartGarage</span><b>/</b><strong>Service Advisor</strong>
+            <span>Auto_Service_Hub</span><b>/</b><strong>Service Advisor</strong>
           </div>
           <div className="sa-top-actions">
             <span className="sa-role">SERVICE ADVISOR</span>
-            <span className="sa-alert-count"><i /> 3 AI alerts</span>
+            <span className="sa-alert-count"><i /> AI insights</span>
             <button className="sa-avatar">▣</button>
           </div>
         </header>

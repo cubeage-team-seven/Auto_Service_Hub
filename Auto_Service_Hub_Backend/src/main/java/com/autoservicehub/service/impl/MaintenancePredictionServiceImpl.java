@@ -68,7 +68,7 @@ public class MaintenancePredictionServiceImpl implements MaintenancePredictionSe
           "schedule and NOT a safety instruction. It must be reviewed and confirmed by a qualified " +
           "technician before any work is recommended to a customer. Predictions can be wrong, " +
           "particularly where service history is incomplete. " +
-          "SmartGarage AI accepts no liability for maintenance decisions based solely on this output.";
+          "Auto_Service_Hub AI accepts no liability for maintenance decisions based solely on this output.";
 
     private final AiOrchestrationService  aiOrchestrationService;
     private final VehicleRepository       vehicleRepository;

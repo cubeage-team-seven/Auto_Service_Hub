@@ -168,7 +168,7 @@ function GarageOwnerLayout() {
           </div>
 
           <div className="garage-owner-brand-name">
-            SMARTGARAGE
+            Auto_Service_Hub
           </div>
 
         </div>
@@ -242,7 +242,7 @@ function GarageOwnerLayout() {
           <div className="garage-owner-breadcrumb">
 
             <span>
-              SmartGarage
+              Auto_Service_Hub
             </span>
 
             <b>
@@ -268,7 +268,7 @@ function GarageOwnerLayout() {
 
               <span className="garage-owner-alert-dot"></span>
 
-              3 AI alerts
+              AI insights
 
             </div>
 

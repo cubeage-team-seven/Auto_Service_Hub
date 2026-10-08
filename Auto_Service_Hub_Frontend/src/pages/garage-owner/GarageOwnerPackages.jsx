@@ -22,7 +22,7 @@ function PackagesPage() {
           </div>
 
           <div className="garage-packages-logo-text">
-            SMARTGARAGE
+            Auto_Service_Hub
           </div>
         </div>
 
@@ -165,7 +165,7 @@ function PackagesPage() {
         <header className="garage-packages-header">
 
           <div className="garage-packages-breadcrumb">
-            <span>SmartGarage</span>
+            <span>Auto_Service_Hub</span>
             <b>/</b>
             <strong>Packages</strong>
           </div>

@@ -38,15 +38,46 @@ src/main/resources
 2. `mvn spring-boot:run` (dev profile: `-Dspring-boot.run.profiles=dev`).
 3. Swagger UI: `http://localhost:8080/swagger-ui.html`.
 
-## What's stubbed vs. what needs work
-- Entities match SRS 8.2/8.3 field lists; confirm exact types/nullability before
-  freezing the ERD (SRS 25, Open Questions).
-- DTOs, service impls and mappers are scaffolded with `TODO`s — fill in field
-  mapping once the API contract per module is confirmed (SRS 9).
-- `ai/` package defines the provider-independent boundary for the six AI
-  features (SRS 5); wire a real `AiProviderClient` once a provider is chosen
-  (SRS 25, Q8).
-- `NotificationServiceImpl` needs real WhatsApp/Email/SMS provider integration
-  (SRS 18, 25 Q3).
-- Role-to-authority mapping in `CustomUserDetailsService` is a placeholder —
-  wire it to the `roles`/`user_roles` tables once RBAC data model is implemented.
+## Frontend integration
+
+Run the Vite application from the sibling `Auto_Service_Hub_Frontend` directory.
+Its development server proxies `/api` requests to this backend on port 8080.
+Customers are CRM records used by administrators, owners, and staff for workshop
+operations. Customer login, self-registration, portal endpoints, and customer
+account provisioning are not supported.
+
+## Administrator and staff account workflow
+
+Owner/staff applicants use **Request platform access** from the module selection
+screen. Requests are stored as pending and do not create login accounts.
+Administrators approve or reject them from `/admin`; approval assigns only the
+requested non-admin role and creates a BCrypt-hashed account. Administrators can
+also create owner/staff accounts directly. The administrator can create and edit
+CRM customer profiles; other workshop roles can read customer records for
+operational workflows. One customer profile can have multiple vehicles.
+
+To establish the first administrator, set `ADMIN_BOOTSTRAP_USERNAME`,
+`ADMIN_BOOTSTRAP_EMAIL`, and `ADMIN_BOOTSTRAP_PASSWORD` in the backend process
+environment before the first startup. Use a unique username/email and a random
+password of at least 16 characters; optionally set `ADMIN_BOOTSTRAP_FULL_NAME`.
+The bootstrap creates an administrator only when no administrator account
+exists, and never resets an existing account. Remove the bootstrap secret from
+the deployment environment after successful initialization. There is no public
+admin registration or reset endpoint.
+
+For an existing production database, first inspect and resolve duplicate
+non-null usernames/emails in `users` without deleting or merging records
+automatically. Apply
+`src/main/resources/db/migration/V2__admin_access_workflows.sql` once for admin
+and access-request tables, then apply
+`src/main/resources/db/migration/V3__remove_customer_portal.sql` to disable any
+legacy customer login accounts and remove the portal-only customer email index.
+The V3 script preserves user rows and customer records. Development uses
+Hibernate schema update; production requires applying these SQL files manually.
+
+## External integrations
+
+Core workshop, inventory, billing, reporting, and customer APIs persist through
+the configured database. AI provider availability and messaging (email, SMS,
+WhatsApp) still depend on provider configuration; the frontend reports API or
+provider errors rather than substituting sample data.

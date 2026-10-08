@@ -71,7 +71,7 @@ public class SparePartsPredictionServiceImpl implements SparePartsPredictionServ
           "this prediction and confirm the actual requirement before ordering. The system does not record " +
           "which parts were used on past jobs, so this prediction is not based on this workshop's own " +
           "historical parts usage. Predictions can be wrong; quantities are guidance, not a confirmed " +
-          "billable requirement. SmartGarage AI accepts no liability for parts ordered on the basis of " +
+          "billable requirement. Auto_Service_Hub AI accepts no liability for parts ordered on the basis of " +
           "this output.";
 
     private final AiOrchestrationService aiOrchestrationService;

@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -51,6 +52,9 @@ public class AuthController {
         }
 
         String srsRoleName = roleName.startsWith("ROLE_") ? roleName.substring(5) : roleName;
+        if ("CUSTOMER".equalsIgnoreCase(srsRoleName)) {
+            throw new AccessDeniedException("Customer sign-in is not available.");
+        }
 
         String accessToken = jwtTokenProvider.generateAccessToken(
                 user.getUsername(),
@@ -66,7 +70,8 @@ public class AuthController {
         );
 
         return ApiResponse.ok(
-                new LoginResponseDTO(accessToken, refreshToken, "Bearer")
+                new LoginResponseDTO(accessToken, refreshToken, "Bearer",
+                        user.getUsername(), srsRoleName, user.getFullName())
         );
     }
 
@@ -144,11 +149,17 @@ public class AuthController {
             throw new InvalidRefreshTokenException();
         }
         String srsRoleName = roleName.startsWith("ROLE_") ? roleName.substring(5) : roleName;
+        if ("CUSTOMER".equalsIgnoreCase(srsRoleName)) {
+            throw new InvalidRefreshTokenException();
+        }
 
         return ApiResponse.ok(new LoginResponseDTO(
                 jwtTokenProvider.generateAccessToken(user.getUsername(), srsRoleName),
                 jwtTokenProvider.generateRefreshToken(user.getUsername(), srsRoleName),
-                "Bearer"));
+                "Bearer",
+                user.getUsername(),
+                srsRoleName,
+                user.getFullName()));
     }
 
     /** Trims the raw body and removes a JSON string wrapper, if present. */

@@ -34,3 +34,231 @@ input {
 input::placeholder {
     color: #666;
 }
+
+.login-error {
+    margin: 0 0 14px;
+    color: #f87171;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.api-data-page {
+    display: grid;
+    gap: 18px;
+    color: #f4f4f4;
+}
+
+.api-data-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.api-data-header p {
+    margin: 0 0 8px;
+    color: #9a9a9a;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.api-data-header h1 {
+    margin: 0;
+    font-size: 26px;
+}
+
+.api-data-card {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid #2b2b2b;
+    border-radius: 8px;
+    background: #121212;
+}
+
+.api-data-card h2 {
+    margin: 0 0 16px;
+    font-size: 16px;
+}
+
+.api-data-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 12px;
+}
+
+.api-data-form label {
+    display: grid;
+    flex: 1 1 180px;
+    gap: 7px;
+    color: #b8b8b8;
+    font-size: 12px;
+}
+
+.api-data-form input,
+.api-data-form select,
+.api-data-form textarea,
+.api-data-table select,
+.api-data-table button {
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid #383838;
+    border-radius: 5px;
+    background: #090909;
+    color: #f4f4f4;
+}
+
+.api-data-form textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.api-data-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.api-data-kpi {
+    padding: 16px;
+    border: 1px solid #2b2b2b;
+    border-radius: 7px;
+    background: #121212;
+}
+
+.api-data-kpi span,
+.api-data-kpi strong {
+    display: block;
+}
+
+.api-data-kpi span {
+    margin-bottom: 8px;
+    color: #aaa;
+    font-size: 11px;
+}
+
+.api-data-kpi strong {
+    font-size: 23px;
+}
+
+.api-data-form button,
+.api-data-table button {
+    min-height: 38px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 5px;
+    background: #c9ff20;
+    color: #090909;
+    font-weight: 700;
+}
+
+.api-data-error {
+    padding: 12px 14px;
+    border: 1px solid #7f1d1d;
+    border-radius: 5px;
+    background: #2a1010;
+    color: #fca5a5;
+}
+
+.api-data-notice {
+    padding: 12px 14px;
+    border: 1px solid #365314;
+    border-radius: 5px;
+    background: #18230a;
+    color: #d9f99d;
+}
+
+.api-data-modal {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    background: rgb(0 0 0 / 75%);
+}
+
+.api-data-payment-form {
+    width: min(100%, 460px);
+    display: grid;
+    gap: 14px;
+}
+
+.api-data-payment-form label {
+    display: grid;
+    gap: 7px;
+    color: #b8b8b8;
+    font-size: 12px;
+}
+
+.api-data-payment-form input,
+.api-data-payment-form select {
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid #383838;
+    border-radius: 5px;
+    background: #090909;
+    color: #f4f4f4;
+}
+
+.api-data-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.api-data-modal-actions button {
+    flex: 1;
+    min-height: 38px;
+    border: 0;
+    border-radius: 5px;
+    background: #c9ff20;
+    color: #090909;
+    font-weight: 700;
+}
+
+.api-data-modal-actions button + button {
+    border: 1px solid #383838;
+    background: #090909;
+    color: #f4f4f4;
+}
+
+.api-data-table-wrap {
+    overflow-x: auto;
+}
+
+.api-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.api-data-table th,
+.api-data-table td {
+    padding: 11px 10px;
+    border-bottom: 1px solid #292929;
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+.api-data-table th {
+    color: #aaa;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.api-report-output {
+    max-height: 65vh;
+    overflow: auto;
+    margin: 0;
+    padding: 14px;
+    border-radius: 5px;
+    background: #090909;
+    color: #d4d4d4;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}

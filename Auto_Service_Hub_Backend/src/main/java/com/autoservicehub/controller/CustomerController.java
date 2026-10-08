@@ -23,7 +23,6 @@ import java.util.List;
 public class CustomerController {
 
     private final CustomerService service;
-
     // ── FR-CRM-1: Basic CRUD ──────────────────────────────────────────────
 
     /**
@@ -31,7 +30,7 @@ public class CustomerController {
      * POST /api/v1/customers
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<CustomerResponseDTO> create(
             @Valid @RequestBody CustomerRequestDTO request) {
@@ -43,7 +42,7 @@ public class CustomerController {
      * PUT /api/v1/customers/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<CustomerResponseDTO> update(
             @PathVariable Long id,
             @Valid @RequestBody CustomerRequestDTO request) {
@@ -76,18 +75,18 @@ public class CustomerController {
      * PATCH /api/v1/customers/{id}/deactivate
      */
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> deactivate(@PathVariable Long id) {
         service.deactivate(id);
         return ApiResponse.ok("Customer deactivated", null);
     }
 
     /**
-     * Admin hard-delete. Normal flows should use PATCH /{id}/deactivate.
+     * Administrator-only hard-delete. Normal flows should use PATCH /{id}/deactivate.
      * DELETE /api/v1/customers/{id}
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         service.delete(id);
