@@ -1,11 +1,16 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { customersApi, vehiclesApi } from "../../services/resources";
+import { getErrorMessage } from "../../services/api";
 import "./GarageOwnerVehicles.css";
 
 function GarageOwnerVehicles() {
   const [search, setSearch] = useState("");
-  const [fuelType, setFuelType] = useState("All Fuel Types");
-  const [status, setStatus] = useState("All Statuses");
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [vehicles, setVehicles] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     registrationNumber: "",
@@ -15,106 +20,22 @@ function GarageOwnerVehicles() {
     fuelType: "Petrol",
     customer: "",
     mileage: "0",
-    engineChassis: "",
+    engineNo: "",
+    chassisNo: "",
     insuranceExpiry: "",
     warrantyExpiry: "",
     notes: "",
   });
 
-  const vehicles = [
-    {
-      regNo: "MH-12-AB-4521",
-      model: "Swift VXI",
-      make: "Maruti Suzuki",
-      year: "2021",
-      owner: "Arjun Mehta",
-      mileage: "28,400 km",
-      insurance: "31 Mar 2027",
-      lastService: "17 Aug 2026",
-      status: "In Service",
-      statusClass: "in-service",
-      fuel: "Petrol",
-    },
-    {
-      regNo: "DL-01-CZ-9834",
-      model: "Creta SX",
-      make: "Hyundai",
-      year: "2022",
-      owner: "Priya Sharma",
-      mileage: "42,100 km",
-      insurance: "15 Jun 2027",
-      lastService: "17 Aug 2026",
-      status: "In Service",
-      statusClass: "in-service",
-      fuel: "Diesel",
-    },
-    {
-      regNo: "GJ-05-XY-7712",
-      model: "Innova Crysta",
-      make: "Toyota",
-      year: "2019",
-      owner: "Rohit Desai",
-      mileage: "84,200 km",
-      insurance: "28 Feb 2027",
-      lastService: "16 Aug 2026",
-      status: "Delivered",
-      statusClass: "delivered",
-      fuel: "Diesel",
-    },
-    {
-      regNo: "MH-14-PQ-3356",
-      model: "City ZX",
-      make: "Honda",
-      year: "2020",
-      owner: "Neha Joshi",
-      mileage: "38,900 km",
-      insurance: "10 Sep 2026",
-      insuranceWarning: true,
-      lastService: "17 Aug 2026",
-      status: "In Service",
-      statusClass: "in-service",
-      fuel: "Petrol",
-    },
-    {
-      regNo: "UP-32-GH-1190",
-      model: "Fortuner 4×4",
-      make: "Toyota",
-      year: "2023",
-      owner: "Vikram Singh",
-      mileage: "18,700 km",
-      insurance: "22 Jan 2028",
-      lastService: "15 Aug 2026",
-      status: "Waiting",
-      statusClass: "waiting",
-      fuel: "Diesel",
-    },
-    {
-      regNo: "KA-03-MN-5567",
-      model: "Baleno Delta",
-      make: "Maruti Suzuki",
-      year: "2018",
-      owner: "Kavita Rao",
-      mileage: "61,000 km",
-      insurance: "05 May 2027",
-      lastService: "16 Aug 2026",
-      status: "Delivered",
-      statusClass: "delivered",
-      fuel: "Petrol",
-    },
-    {
-      regNo: "MH-09-ZZ-3344",
-      model: "Polo TSI",
-      make: "Volkswagen",
-      year: "2020",
-      owner: "Divya Kapoor",
-      mileage: "44,800 km",
-      insurance: "14 Dec 2026",
-      lastService: "10 Aug 2026",
-      status: "Delivered",
-      statusClass: "delivered",
-      fuel: "Petrol",
-    },
-  ];
+  useEffect(() => {
+    Promise.all([vehiclesApi.list(), customersApi.list()])
+      .then(([vehicleRecords, customerRecords]) => {
+        setVehicles(vehicleRecords);
+        setCustomers(customerRecords);
+      })
+      .catch((requestError) => setError(getErrorMessage(requestError)))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredVehicles = useMemo(() => {
     const searchValue = search.trim().toLowerCase();
@@ -122,22 +43,13 @@ function GarageOwnerVehicles() {
     return vehicles.filter((vehicle) => {
       const matchesSearch =
         !searchValue ||
-        vehicle.regNo.toLowerCase().includes(searchValue) ||
-        vehicle.owner.toLowerCase().includes(searchValue) ||
-        vehicle.model.toLowerCase().includes(searchValue) ||
-        vehicle.make.toLowerCase().includes(searchValue);
-
-      const matchesFuel =
-        fuelType === "All Fuel Types" ||
-        vehicle.fuel === fuelType;
-
-      const matchesStatus =
-        status === "All Statuses" ||
-        vehicle.status === status;
-
-      return matchesSearch && matchesFuel && matchesStatus;
+        vehicle.registrationNo?.toLowerCase().includes(searchValue) ||
+        vehicle.customerName?.toLowerCase().includes(searchValue) ||
+        vehicle.model?.toLowerCase().includes(searchValue) ||
+        vehicle.make?.toLowerCase().includes(searchValue);
+      return matchesSearch;
     });
-  }, [search, fuelType, status]);
+  }, [search, vehicles]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -148,7 +60,7 @@ function GarageOwnerVehicles() {
     }));
   };
 
-  const handleRegisterVehicle = (e) => {
+  const handleRegisterVehicle = async (e) => {
     e.preventDefault();
 
     if (
@@ -162,25 +74,42 @@ function GarageOwnerVehicles() {
       return;
     }
 
-    alert(
-      `Vehicle ${formData.registrationNumber} registered successfully.`
-    );
-
-    setShowRegisterModal(false);
-
-    setFormData({
-      registrationNumber: "",
-      make: "Maruti Suzuki",
-      model: "",
-      year: "2022",
-      fuelType: "Petrol",
-      customer: "",
-      mileage: "0",
-      engineChassis: "",
-      insuranceExpiry: "",
-      warrantyExpiry: "",
-      notes: "",
-    });
+    setError("");
+    setSaving(true);
+    try {
+      const created = await vehiclesApi.create({
+        registrationNo: formData.registrationNumber.trim(),
+        make: formData.make,
+        model: formData.model.trim(),
+        year: formData.year ? Number(formData.year) : null,
+        engineNo: formData.engineNo.trim() || null,
+        chassisNo: formData.chassisNo.trim() || null,
+        mileage: formData.mileage ? Number(formData.mileage) : null,
+        insuranceExpiry: formData.insuranceExpiry || null,
+        warrantyExpiry: formData.warrantyExpiry || null,
+        customerId: Number(formData.customer),
+      });
+      setVehicles((existing) => [created, ...existing]);
+      setShowRegisterModal(false);
+      setFormData({
+        registrationNumber: "",
+        make: "Maruti Suzuki",
+        model: "",
+        year: "",
+        fuelType: "Petrol",
+        customer: "",
+        mileage: "",
+        engineNo: "",
+        chassisNo: "",
+        insuranceExpiry: "",
+        warrantyExpiry: "",
+        notes: "",
+      });
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, "Could not register vehicle."));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -222,18 +151,18 @@ function GarageOwnerVehicles() {
             </div>
 
             <div className="vehicle-stat-value">
-              7
+              {vehicles.length}
             </div>
           </div>
 
 
           <div className="vehicle-stat-card">
             <div className="vehicle-stat-label">
-              IN SERVICE
+              REGISTERED CUSTOMERS
             </div>
 
             <div className="vehicle-stat-value lime">
-              3
+              {customers.length}
             </div>
           </div>
 
@@ -244,7 +173,11 @@ function GarageOwnerVehicles() {
             </div>
 
             <div className="vehicle-stat-value">
-              2
+              {vehicles.filter((vehicle) => {
+                if (!vehicle.insuranceExpiry) return false;
+                const daysRemaining = (new Date(vehicle.insuranceExpiry) - Date.now()) / 86400000;
+                return daysRemaining >= 0 && daysRemaining <= 60;
+              }).length}
             </div>
 
             <div className="vehicle-stat-description">
@@ -259,7 +192,9 @@ function GarageOwnerVehicles() {
             </div>
 
             <div className="vehicle-stat-value">
-              44K km
+              {vehicles.length
+                ? `${Math.round(vehicles.reduce((total, vehicle) => total + (vehicle.mileage || 0), 0) / vehicles.length).toLocaleString("en-IN")} km`
+                : "0 km"}
             </div>
           </div>
 
@@ -280,30 +215,6 @@ function GarageOwnerVehicles() {
             onChange={(e) => setSearch(e.target.value)}
           />
 
-
-          <select
-            className="vehicle-filter"
-            value={fuelType}
-            onChange={(e) => setFuelType(e.target.value)}
-          >
-            <option>All Fuel Types</option>
-            <option>Petrol</option>
-            <option>Diesel</option>
-            <option>CNG</option>
-            <option>Electric</option>
-          </select>
-
-
-          <select
-            className="vehicle-filter"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option>All Statuses</option>
-            <option>In Service</option>
-            <option>Delivered</option>
-            <option>Waiting</option>
-          </select>
 
         </div>
 
@@ -326,20 +237,20 @@ function GarageOwnerVehicles() {
                   <th>OWNER</th>
                   <th>MILEAGE</th>
                   <th>INSURANCE EXPIRY</th>
-                  <th>LAST SERVICE</th>
-                  <th>STATUS</th>
-                  <th></th>
+                  <th>WARRANTY EXPIRY</th>
                 </tr>
               </thead>
 
 
               <tbody>
 
+                {loading && <tr><td colSpan="7">Loading vehicles…</td></tr>}
+                {!loading && error && <tr><td colSpan="7" role="alert">{error}</td></tr>}
                 {filteredVehicles.map((vehicle) => (
-                  <tr key={vehicle.regNo}>
+                  <tr key={vehicle.id}>
 
                     <td className="vehicle-registration">
-                      {vehicle.regNo}
+                      {vehicle.registrationNo}
                     </td>
 
 
@@ -362,58 +273,23 @@ function GarageOwnerVehicles() {
 
 
                     <td className="vehicle-owner">
-                      {vehicle.owner}
+                      {vehicle.customerName || "—"}
                     </td>
 
 
                     <td className="vehicle-mileage">
-                      {vehicle.mileage}
+                      {vehicle.mileage == null ? "—" : `${Number(vehicle.mileage).toLocaleString("en-IN")} km`}
                     </td>
 
 
                     <td
-                      className={
-                        vehicle.insuranceWarning
-                          ? "vehicle-insurance warning"
-                          : "vehicle-insurance"
-                      }
+                      className="vehicle-insurance"
                     >
-                      {vehicle.insurance}
-
-                      {vehicle.insuranceWarning && (
-                        <span className="warning-icon">
-                          ⚠
-                        </span>
-                      )}
+                      {vehicle.insuranceExpiry || "—"}
                     </td>
-
-
-                    <td className="vehicle-last-service">
-                      {vehicle.lastService}
-                    </td>
-
 
                     <td>
-                      <span
-                        className={`vehicle-status ${vehicle.statusClass}`}
-                      >
-                        {vehicle.status}
-                      </span>
-                    </td>
-
-
-                    <td>
-                      <button
-                        type="button"
-                        className="vehicle-view-button"
-                        onClick={() =>
-                          alert(
-                            `Vehicle details: ${vehicle.regNo}`
-                          )
-                        }
-                      >
-                        View
-                      </button>
+                      {vehicle.warrantyExpiry || "—"}
                     </td>
 
                   </tr>
@@ -424,7 +300,7 @@ function GarageOwnerVehicles() {
             </table>
 
 
-            {filteredVehicles.length === 0 && (
+            {!loading && !error && filteredVehicles.length === 0 && (
               <div className="no-vehicles">
                 No vehicles found.
               </div>
@@ -540,42 +416,21 @@ function GarageOwnerVehicles() {
               </div>
 
 
-              {/* YEAR + FUEL */}
+              {/* YEAR */}
 
-              <div className="vehicle-form-grid">
+              <div className="vehicle-form-group full">
 
-                <div className="vehicle-form-group">
-                  <label>
-                    YEAR
-                  </label>
+                <label>
+                  YEAR
+                </label>
 
-                  <input
-                    type="number"
-                    name="year"
-                    placeholder="2022"
-                    value={formData.year}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
-
-                <div className="vehicle-form-group">
-                  <label>
-                    FUEL TYPE
-                  </label>
-
-                  <select
-                    name="fuelType"
-                    value={formData.fuelType}
-                    onChange={handleInputChange}
-                  >
-                    <option>Petrol</option>
-                    <option>Diesel</option>
-                    <option>CNG</option>
-                    <option>Electric</option>
-                    <option>Hybrid</option>
-                  </select>
-                </div>
+                <input
+                  type="number"
+                  name="year"
+                  placeholder="2022"
+                  value={formData.year}
+                  onChange={handleInputChange}
+                />
 
               </div>
 
@@ -592,38 +447,14 @@ function GarageOwnerVehicles() {
                   name="customer"
                   value={formData.customer}
                   onChange={handleInputChange}
+                  required
                 >
                   <option value="">
                     Select customer...
                   </option>
-
-                  <option>
-                    Arjun Mehta
-                  </option>
-
-                  <option>
-                    Priya Sharma
-                  </option>
-
-                  <option>
-                    Rohit Desai
-                  </option>
-
-                  <option>
-                    Neha Joshi
-                  </option>
-
-                  <option>
-                    Vikram Singh
-                  </option>
-
-                  <option>
-                    Kavita Rao
-                  </option>
-
-                  <option>
-                    Divya Kapoor
-                  </option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>{customer.name}</option>
+                  ))}
                 </select>
 
               </div>
@@ -650,14 +481,24 @@ function GarageOwnerVehicles() {
 
                 <div className="vehicle-form-group">
                   <label>
-                    ENGINE / CHASSIS NO.
+                    ENGINE NO.
                   </label>
 
                   <input
                     type="text"
-                    name="engineChassis"
+                    name="engineNo"
                     placeholder="Optional"
-                    value={formData.engineChassis}
+                    value={formData.engineNo}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="vehicle-form-group">
+                  <label>CHASSIS NO.</label>
+                  <input
+                    type="text"
+                    name="chassisNo"
+                    placeholder="Optional"
+                    value={formData.chassisNo}
                     onChange={handleInputChange}
                   />
                 </div>
@@ -701,25 +542,6 @@ function GarageOwnerVehicles() {
               </div>
 
 
-              {/* NOTES */}
-
-              <div className="vehicle-form-group full">
-
-                <label>
-                  NOTES
-                </label>
-
-                <textarea
-                  name="notes"
-                  placeholder="Any known issues or special notes..."
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  rows="3"
-                />
-
-              </div>
-
-
               {/* BUTTONS */}
 
               <div className="vehicle-modal-footer">
@@ -727,8 +549,9 @@ function GarageOwnerVehicles() {
                 <button
                   type="submit"
                   className="vehicle-register-submit"
+                  disabled={saving}
                 >
-                  REGISTER VEHICLE
+                  {saving ? "SAVING..." : "REGISTER VEHICLE"}
                 </button>
 
                 <button

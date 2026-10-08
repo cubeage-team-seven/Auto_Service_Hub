@@ -1,104 +1,63 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { appointmentsApi, customersApi, jobCardsApi, mechanicsApi, vehiclesApi } from "../../services/resources";
+import { getErrorMessage } from "../../services/api";
 import "./GarageOwnerJobCards.css";
 
-function GarageOwnerJobCards() {
+function GarageOwnerJobCards({
+  allowCreate = true,
+  showAppointment = false,
+  openCreateOnMount = false,
+}) {
   const [activeFilter, setActiveFilter] = useState("ALL");
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(openCreateOnMount);
+  const [jobCards, setJobCards] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [mechanics, setMechanics] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
-    appointment: "Create without appointment",
+    appointment: "",
     customer: "",
     vehicle: "",
-    odometer: "43200",
+    odometer: "",
     serviceType: "Basic Service",
-    mechanic: "Auto-assign via AI",
+    mechanic: "",
     complaint: "",
     delivery: "",
-    cost: "0",
+    cost: "",
     notes: "",
   });
 
-  const jobCards = [
-    {
-      id: "JC-2408",
-      customer: "Arjun Mehta",
-      vehicle: "MH-12-AB-4521 | Swift",
-      service: "Engine Overhaul",
-      mechanic: "Ravi Kumar",
-      status: "In Repair",
-      statusClass: "repair",
-      eta: "Today 5:00 PM",
-      amount: "₹18,500",
-      progress: 62,
-    },
-    {
-      id: "JC-2407",
-      customer: "Priya Sharma",
-      vehicle: "DL-01-CZ-9834 | Creta",
-      service: "Full Service",
-      mechanic: "Amit Patel",
-      status: "Quality Check",
-      statusClass: "quality",
-      eta: "Today 3:30 PM",
-      amount: "₹8,200",
-      progress: 82,
-    },
-    {
-      id: "JC-2406",
-      customer: "Rohit Desai",
-      vehicle: "GJ-05-XY-7712 | Innova",
-      service: "AC Repair + Service",
-      mechanic: "Suresh Nair",
-      status: "Delivered",
-      statusClass: "delivered",
-      eta: "Delivered",
-      amount: "₹12,400",
-      progress: 100,
-    },
-    {
-      id: "JC-2405",
-      customer: "Neha Joshi",
-      vehicle: "MH-14-PQ-3356 | City",
-      service: "Brake Replacement",
-      mechanic: "Ravi Kumar",
-      status: "Inspection",
-      statusClass: "inspection",
-      eta: "Today 6:00 PM",
-      amount: "₹4,800",
-      progress: 38,
-    },
-    {
-      id: "JC-2404",
-      customer: "Vikram Singh",
-      vehicle: "UP-32-GH-1190 | Fortuner",
-      service: "Suspension + Tyres",
-      mechanic: "Amit Patel",
-      status: "Received",
-      statusClass: "received",
-      eta: "Tomorrow 12:00 PM",
-      amount: "₹32,000",
-      progress: 20,
-    },
-    {
-      id: "JC-2403",
-      customer: "Kavita Rao",
-      vehicle: "KA-03-MN-5567 | Baleno",
-      service: "Basic Service",
-      mechanic: "Deepak Verma",
-      status: "Delivered",
-      statusClass: "delivered",
-      eta: "Delivered",
-      amount: "₹3,200",
-      progress: 100,
-    },
-  ];
+  useEffect(() => {
+    Promise.all([
+      jobCardsApi.list(),
+      customersApi.list(),
+      vehiclesApi.list(),
+      mechanicsApi.list(),
+      showAppointment ? appointmentsApi.list() : Promise.resolve([]),
+    ])
+      .then(([jobCardRecords, customerRecords, vehicleRecords, mechanicRecords, appointmentRecords]) => {
+        setJobCards(jobCardRecords);
+        setCustomers(customerRecords);
+        setVehicles(vehicleRecords);
+        setMechanics(mechanicRecords);
+        setAppointments(appointmentRecords);
+      })
+      .catch((requestError) => setError(getErrorMessage(requestError)))
+      .finally(() => setLoading(false));
+  }, [showAppointment]);
 
   const filterMap = {
-    RECEIVED: "Received",
-    INSPECTION: "Inspection",
-    REPAIR: "In Repair",
-    QC: "Quality Check",
-    DELIVERED: "Delivered",
+    RECEIVED: "RECEIVED",
+    INSPECTION: "INSPECTION",
+    REPAIR: "IN_REPAIR",
+    QC: "QUALITY_CHECK",
+    DELIVERED: "DELIVERED",
   };
 
   const filteredJobs =
@@ -107,32 +66,50 @@ function GarageOwnerJobCards() {
       : jobCards.filter(
           (job) => job.status === filterMap[activeFilter]
         );
+  const statusLabels = {
+    RECEIVED: "Received",
+    INSPECTION: "Inspection",
+    IN_REPAIR: "In Repair",
+    QUALITY_CHECK: "Quality Check",
+    DELIVERED: "Delivered",
+  };
+  const statusClasses = {
+    RECEIVED: "received",
+    INSPECTION: "inspection",
+    IN_REPAIR: "repair",
+    QUALITY_CHECK: "quality",
+    DELIVERED: "delivered",
+  };
+  const todayKey = new Date().toLocaleDateString("en-CA");
+  const overdueCount = jobCards.filter((job) =>
+    job.status !== "DELIVERED" &&
+    job.estimatedDelivery &&
+    new Date(job.estimatedDelivery) < new Date()
+  ).length;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    if (name === "appointment") {
+      const appointment = appointments.find((item) => String(item.id) === value);
+      setFormData((previous) => ({
+        ...previous,
+        appointment: value,
+        customer: appointment ? String(appointment.customerId) : "",
+        vehicle: appointment ? String(appointment.vehicleId) : "",
+      }));
+      return;
+    }
+
     setFormData((previous) => ({
       ...previous,
       [name]: value,
+      ...(["customer", "vehicle"].includes(name) ? { appointment: "" } : {}),
+      ...(name === "customer" ? { vehicle: "" } : {}),
     }));
   };
 
-  const resetForm = () => {
-    setFormData({
-      appointment: "Create without appointment",
-      customer: "",
-      vehicle: "",
-      odometer: "43200",
-      serviceType: "Basic Service",
-      mechanic: "Auto-assign via AI",
-      complaint: "",
-      delivery: "",
-      cost: "0",
-      notes: "",
-    });
-  };
-
-  const handleCreateJobCard = (e) => {
+  const handleCreateJobCard = async (e) => {
     e.preventDefault();
 
     if (!formData.customer || !formData.vehicle) {
@@ -140,10 +117,41 @@ function GarageOwnerJobCards() {
       return;
     }
 
-    alert("Job Card created successfully.");
-
-    setShowModal(false);
-    resetForm();
+    setError("");
+    setSaving(true);
+    try {
+      const created = await jobCardsApi.create({
+        customerId: Number(formData.customer),
+        vehicleId: Number(formData.vehicle),
+        appointmentId: formData.appointment ? Number(formData.appointment) : null,
+        mechanicId: formData.mechanic ? Number(formData.mechanic) : null,
+        serviceType: formData.serviceType,
+        complaint: formData.complaint,
+        technicianNotes: formData.notes,
+        odometerReading: formData.odometer ? Number(formData.odometer) : null,
+        estimatedDelivery: formData.delivery || null,
+        estimatedCost: formData.cost ? Number(formData.cost) : null,
+        status: "RECEIVED",
+      });
+      setJobCards((existing) => [created, ...existing]);
+      setShowModal(false);
+      setFormData({
+        appointment: "",
+        customer: "",
+        vehicle: "",
+        odometer: "",
+        serviceType: "Basic Service",
+        mechanic: "",
+        complaint: "",
+        delivery: "",
+        cost: "",
+        notes: "",
+      });
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, "Could not create job card."));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -157,12 +165,12 @@ function GarageOwnerJobCards() {
 
         <h1>JOB CARDS</h1>
 
-        <button
+        {allowCreate && <button
           className="new-jobcard-button"
           onClick={() => setShowModal(true)}
         >
           + NEW JOB CARD
-        </button>
+        </button>}
 
       </div>
 
@@ -179,7 +187,7 @@ function GarageOwnerJobCards() {
           </div>
 
           <div className="jobcard-stat-value">
-            14
+            {jobCards.filter((job) => job.assignedDate?.slice(0, 10) === todayKey).length}
           </div>
         </div>
 
@@ -190,7 +198,7 @@ function GarageOwnerJobCards() {
           </div>
 
           <div className="jobcard-stat-value lime">
-            4
+            {jobCards.filter((job) => job.status === "IN_REPAIR").length}
           </div>
         </div>
 
@@ -201,7 +209,7 @@ function GarageOwnerJobCards() {
           </div>
 
           <div className="jobcard-stat-value">
-            2
+            {jobCards.filter((job) => job.status === "QUALITY_CHECK").length}
           </div>
         </div>
 
@@ -212,7 +220,7 @@ function GarageOwnerJobCards() {
           </div>
 
           <div className="jobcard-stat-value">
-            6
+            {jobCards.filter((job) => job.status === "DELIVERED").length}
           </div>
         </div>
 
@@ -223,7 +231,7 @@ function GarageOwnerJobCards() {
           </div>
 
           <div className="jobcard-stat-value">
-            1
+            {overdueCount}
           </div>
         </div>
 
@@ -268,6 +276,8 @@ function GarageOwnerJobCards() {
 
       <div className="jobcards-list">
 
+        {loading && <div className="no-jobcards">Loading job cards…</div>}
+        {!loading && error && <div className="no-jobcards" role="alert">{error}</div>}
         {filteredJobs.map((job) => (
 
           <div
@@ -284,15 +294,15 @@ function GarageOwnerJobCards() {
               <div className="jobcard-left">
 
                 <div className="jobcard-id">
-                  {job.id}
+                  {job.jobCardNumber}
                 </div>
 
                 <div className="jobcard-customer">
-                  {job.customer}
+                  {job.customerName}
                 </div>
 
                 <div className="jobcard-vehicle">
-                  {job.vehicle}
+                  {job.vehicleInfo}
                 </div>
 
               </div>
@@ -307,11 +317,11 @@ function GarageOwnerJobCards() {
                 </span>
 
                 <strong>
-                  {job.service}
+                  {job.serviceType}
                 </strong>
 
                 <small>
-                  Mechanic: {job.mechanic}
+                  Mechanic: {job.mechanicName || "Unassigned"}
                 </small>
 
               </div>
@@ -322,27 +332,27 @@ function GarageOwnerJobCards() {
               <div className="jobcard-right">
 
                 <span
-                  className={`jobcard-status ${job.statusClass}`}
+                  className={`jobcard-status ${statusClasses[job.status] || ""}`}
                 >
-                  {job.status}
+                  {statusLabels[job.status] || job.status}
                 </span>
 
                 <div className="jobcard-eta">
-                  {job.eta}
+                  {job.estimatedDelivery
+                    ? new Date(job.estimatedDelivery).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+                    : "No delivery estimate"}
                 </div>
 
                 <div className="jobcard-amount">
-                  {job.amount}
+                  {job.estimatedCost == null ? "—" : `₹${Number(job.estimatedCost).toLocaleString("en-IN")}`}
                 </div>
 
-                <button
+                <Link
+                  to={`/job-cards/${job.id}`}
                   className="jobcard-details"
-                  onClick={() =>
-                    alert(`Details for ${job.id}`)
-                  }
                 >
                   Details
-                </button>
+                </Link>
 
               </div>
 
@@ -358,7 +368,7 @@ function GarageOwnerJobCards() {
                 <div
                   className="progress-fill"
                   style={{
-                    width: `${job.progress}%`,
+                    width: `${Math.min(100, Math.max(0, (Number(job.progress) || 0) * 20))}%`,
                   }}
                 ></div>
 
@@ -396,7 +406,7 @@ function GarageOwnerJobCards() {
         ))}
 
 
-        {filteredJobs.length === 0 && (
+        {!loading && !error && filteredJobs.length === 0 && (
           <div className="no-jobcards">
             No job cards found.
           </div>
@@ -409,7 +419,7 @@ function GarageOwnerJobCards() {
           NEW JOB CARD MODAL
       ===================================================== */}
 
-      {showModal && (
+      {allowCreate && showModal && (
 
         <div
           className="jobcard-modal-overlay"
@@ -447,41 +457,29 @@ function GarageOwnerJobCards() {
               className="jobcard-form"
               onSubmit={handleCreateJobCard}
             >
+              {error && <p role="alert" className="login-error">{error}</p>}
 
-              {/* APPOINTMENT */}
-
-              <div className="jobcard-form-group">
-
-                <label>
-                  FROM APPOINTMENT
-                </label>
-
-                <select
-                  name="appointment"
-                  value={formData.appointment}
-                  onChange={handleChange}
-                >
-
-                  <option>
-                    Create without appointment
-                  </option>
-
-                  <option>
-                    APT-0881 — Vikram Singh
-                  </option>
-
-                  <option>
-                    APT-0882 — Anjali Tiwari
-                  </option>
-
-                  <option>
-                    APT-0883 — Karan Malhotra
-                  </option>
-
-                </select>
-
-              </div>
-
+              {showAppointment && (
+                <div className="jobcard-form-group">
+                  <label htmlFor="jobcard-appointment">FROM APPOINTMENT</label>
+                  <select
+                    id="jobcard-appointment"
+                    name="appointment"
+                    value={formData.appointment}
+                    onChange={handleChange}
+                  >
+                    <option value="">Create without appointment</option>
+                    {appointments.map((appointment) => (
+                      <option key={appointment.id} value={appointment.id}>
+                        Appointment #{appointment.id} — {appointment.customerName}
+                        {appointment.appointmentAt
+                          ? ` (${new Date(appointment.appointmentAt).toLocaleString()})`
+                          : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* CUSTOMER */}
 
@@ -502,29 +500,9 @@ function GarageOwnerJobCards() {
                     Select customer...
                   </option>
 
-                  <option>
-                    Arjun Mehta
-                  </option>
-
-                  <option>
-                    Priya Sharma
-                  </option>
-
-                  <option>
-                    Rohit Desai
-                  </option>
-
-                  <option>
-                    Neha Joshi
-                  </option>
-
-                  <option>
-                    Vikram Singh
-                  </option>
-
-                  <option>
-                    Kavita Rao
-                  </option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>{customer.name} — {customer.phone}</option>
+                  ))}
 
                 </select>
 
@@ -550,29 +528,13 @@ function GarageOwnerJobCards() {
                     Select vehicle...
                   </option>
 
-                  <option>
-                    MH-12-AB-4521 | Swift
-                  </option>
-
-                  <option>
-                    DL-01-CZ-9834 | Creta
-                  </option>
-
-                  <option>
-                    GJ-05-XY-7712 | Innova
-                  </option>
-
-                  <option>
-                    MH-14-PQ-3356 | City
-                  </option>
-
-                  <option>
-                    UP-32-GH-1190 | Fortuner
-                  </option>
-
-                  <option>
-                    KA-03-MN-5567 | Baleno
-                  </option>
+                  {vehicles
+                    .filter((vehicle) => !formData.customer || vehicle.customerId === Number(formData.customer))
+                    .map((vehicle) => (
+                      <option key={vehicle.id} value={vehicle.id}>
+                        {vehicle.registrationNo} — {vehicle.make} {vehicle.model}
+                      </option>
+                    ))}
 
                 </select>
 
@@ -658,29 +620,10 @@ function GarageOwnerJobCards() {
                   onChange={handleChange}
                 >
 
-                  <option>
-                    Auto-assign via AI
-                  </option>
-
-                  <option>
-                    Ravi Kumar
-                  </option>
-
-                  <option>
-                    Amit Patel
-                  </option>
-
-                  <option>
-                    Suresh Nair
-                  </option>
-
-                  <option>
-                    Deepak Verma
-                  </option>
-
-                  <option>
-                    Kiran Joshi
-                  </option>
+                  <option value="">Unassigned</option>
+                  {mechanics.map((mechanic) => (
+                    <option key={mechanic.id} value={mechanic.id}>{mechanic.name}</option>
+                  ))}
 
                 </select>
 
@@ -768,8 +711,9 @@ function GarageOwnerJobCards() {
                 <button
                   type="submit"
                   className="create-jobcard-button"
+                  disabled={saving}
                 >
-                  CREATE JOB CARD
+                  {saving ? "SAVING..." : "CREATE JOB CARD"}
                 </button>
 
                 <button

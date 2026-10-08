@@ -1,25 +1,13 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useApiLogin } from "../../hooks/useApiLogin";
 import "./GarageOwnerLogin.css";
 
 function GarageOwnerLogin() {
-  const navigate = useNavigate();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-
-    if (!email || !password) {
-      alert("Please enter your email and password.");
-      return;
-    }
-
-    // Dashboard will be connected later.
-    navigate("/garage-owner/dashboard");
-  };
+  const { submit, error, loading } = useApiLogin("/garage-owner/dashboard");
 
   return (
     <div className="garage-login-page">
@@ -84,7 +72,7 @@ function GarageOwnerLogin() {
             <div className="garage-login-brand-text">
 
               <div className="garage-login-brand-title">
-                SMARTGARAGE AI CRM
+                Auto_Service_Hub AI CRM
               </div>
 
               <div className="garage-login-brand-subtitle">
@@ -157,24 +145,27 @@ function GarageOwnerLogin() {
 
           <form
             className="garage-login-form"
-            onSubmit={handleLogin}
+            onSubmit={(event) => submit(event, email, password)}
           >
+            {error && <p role="alert" className="login-error">{error}</p>}
 
             {/* EMAIL */}
 
             <div className="garage-login-field">
 
               <label htmlFor="garage-email">
-                EMAIL ADDRESS
+                EMAIL ADDRESS OR USERNAME
               </label>
 
               <input
                 id="garage-email"
-                type="email"
-                placeholder="you@garage.com"
+                type="text"
+                name="username"
+                placeholder="Email or username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
+                autoComplete="username"
+                required
               />
 
             </div>
@@ -191,10 +182,12 @@ function GarageOwnerLogin() {
               <input
                 id="garage-password"
                 type="password"
+                name="password"
                 placeholder="••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
+                required
               />
 
             </div>
@@ -238,8 +231,9 @@ function GarageOwnerLogin() {
             <button
               type="submit"
               className="garage-access-button"
+              disabled={loading}
             >
-              ACCESS PLATFORM →
+              {loading ? "SIGNING IN..." : "ACCESS PLATFORM →"}
             </button>
 
           </form>

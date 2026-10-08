@@ -1,18 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useApiLogin } from "../../hooks/useApiLogin";
 import "./ServiceAdvisorLogin.css";
 
 export default function ServiceAdvisorLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("deshmukh.dwarakadhish@gmail.com");
-  const [password, setPassword] = useState("••••••••••••");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Navigate directly into the workspace
-    navigate("/service-advisor");
-  };
+  const { submit, error, loading } = useApiLogin("/service-advisor");
 
   return (
     <div className="sa-login-container">
@@ -44,7 +40,7 @@ export default function ServiceAdvisorLogin() {
             <div className="sa-login-brand">
               <div className="sa-logo-icon">◆</div>
               <div>
-                <div className="sa-brand-name">SMARTGARAGE AI CRM</div>
+                <div className="sa-brand-name">Auto_Service_Hub AI CRM</div>
                 <div className="sa-brand-sub">Select your role to continue</div>
               </div>
             </div>
@@ -63,7 +59,8 @@ export default function ServiceAdvisorLogin() {
           </div>
 
           {/* Form Actions */}
-          <form className="sa-login-form" onSubmit={handleSubmit}>
+          <form className="sa-login-form" onSubmit={(event) => submit(event, email, password)}>
+            {error && <p role="alert" className="login-error">{error}</p>}
             <div className="sa-login-title-group">
               <h2 className="sa-form-title">SIGN IN</h2>
               <p className="sa-form-desc">
@@ -72,12 +69,15 @@ export default function ServiceAdvisorLogin() {
             </div>
 
             <div className="sa-field">
-              <label className="sa-label">EMAIL ADDRESS</label>
+              <label className="sa-label">EMAIL ADDRESS OR USERNAME</label>
               <input
-                type="email"
+                type="text"
                 className="sa-input"
+                name="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
+                placeholder="Email or username"
                 required
               />
             </div>
@@ -87,8 +87,10 @@ export default function ServiceAdvisorLogin() {
               <input
                 type="password"
                 className="sa-input"
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
               />
             </div>
@@ -107,8 +109,8 @@ export default function ServiceAdvisorLogin() {
               </a>
             </div>
 
-            <button type="submit" className="sa-submit-btn">
-              ACCESS PLATFORM →
+            <button type="submit" className="sa-submit-btn" disabled={loading}>
+              {loading ? "SIGNING IN..." : "ACCESS PLATFORM →"}
             </button>
           </form>
 

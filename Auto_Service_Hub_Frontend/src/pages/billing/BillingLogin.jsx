@@ -1,15 +1,11 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useApiLogin } from "../../hooks/useApiLogin";
 import "./BillingPage.css";
 
 function BillingLogin() {
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    navigate("/billing/dashboard");
-  };
+  const { submitForm, error, loading } = useApiLogin("/billing/dashboard");
 
   return (
     <div className="billing-login-container">
@@ -43,23 +39,26 @@ function BillingLogin() {
             Enter your credentials to access the Billing workspace.
           </p>
 
-          <form onSubmit={handleLogin}>
+          <form onSubmit={submitForm}>
+            {error && <p role="alert" className="login-error">{error}</p>}
             <div className="input-field">
-              <label>EMAIL ADDRESS</label>
-              <input type="email" defaultValue="you@garage.com" required />
+              <label>EMAIL ADDRESS OR USERNAME</label>
+              <input type="text" name="username" autoComplete="username" placeholder="Email or username" required />
             </div>
 
             <div className="input-field">
               <label>PASSWORD</label>
               <div className="pass-wrap">
-                <input type={showPassword ? "text" : "password"} defaultValue="password123" required />
+                <input type={showPassword ? "text" : "password"} name="password" autoComplete="current-password" required />
                 <button type="button" className="toggle-pass" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
             </div>
 
-            <button type="submit" className="btn-access">ACCESS PLATFORM →</button>
+            <button type="submit" className="btn-access" disabled={loading}>
+              {loading ? "SIGNING IN..." : "ACCESS PLATFORM →"}
+            </button>
           </form>
         </div>
       </section>

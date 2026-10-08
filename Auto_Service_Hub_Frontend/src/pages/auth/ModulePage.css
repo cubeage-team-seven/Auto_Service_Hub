@@ -50,7 +50,7 @@ body {
     flex-direction: column;
     justify-content: space-between;
     padding: 35px 38px;
-    background-image: linear-gradient( to bottom, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.82)), url("../../assets/mechanic-bg.jpg");
+    background-image: linear-gradient( to bottom, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.82)), url("/assets/landing/mechanic-bg.jpg");
     background-size: cover;
     /* Figma image position */
     background-position: center center;
@@ -457,6 +457,12 @@ body {
     color: #62a9ff;
 }
 
+/* Administrator */
+
+.module-card:nth-child(8) .module-card-content span {
+    color: #ff8b35;
+}
+
 
 /* =====================================================
    CLICKABLE CARDS
@@ -464,6 +470,18 @@ body {
 
 .module-card-link {
     cursor: pointer;
+}
+
+.module-access-link {
+    display: inline-block;
+    margin-top: 8px;
+    color: #d7ff36;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.module-access-link:hover {
+    text-decoration: underline;
 }
 
 

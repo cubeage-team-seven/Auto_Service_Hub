@@ -1,20 +1,18 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useApiLogin } from "../../hooks/useApiLogin";
 import "./DeveloperLogin.css";
 
 export default function DeveloperLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminLogin = location.pathname === "/admin-login";
 
-  const [email, setEmail] = useState("you@garage.com");
-  const [password, setPassword] = useState("••••••••••••");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    // Developer workspace
-    navigate("/developer");
-  };
+  const destination = isAdminLogin ? "/admin" : "/developer";
+  const { submit, error, loading } = useApiLogin(destination, { ADMIN: destination });
 
   return (
     <div className="developer-login-container">
@@ -39,7 +37,7 @@ export default function DeveloperLogin() {
         <div className="developer-login-banner-content">
 
           <div className="developer-login-kicker">
-            — AI-POWERED PLATFORM
+            {isAdminLogin ? "— ADMIN ACCESS" : "— DEVELOPER ACCESS"}
           </div>
 
           <h1 className="developer-login-hero-title">
@@ -79,7 +77,7 @@ export default function DeveloperLogin() {
 
               <div>
                 <div className="developer-brand-name">
-                  SMARTGARAGE AI CRM
+                  Auto_Service_Hub AI CRM
                 </div>
 
                 <div className="developer-brand-sub">
@@ -108,11 +106,11 @@ export default function DeveloperLogin() {
 
               <div>
                 <div className="developer-role-title">
-                  Developer
+                  {isAdminLogin ? "Administrator" : "Developer"}
                 </div>
 
                 <div className="developer-role-sub">
-                  QA Engineer
+                  {isAdminLogin ? "Account management" : "Administrator access"}
                 </div>
               </div>
 
@@ -126,8 +124,9 @@ export default function DeveloperLogin() {
           ================================================= */}
           <form
             className="developer-login-form"
-            onSubmit={handleSubmit}
+            onSubmit={(event) => submit(event, email, password)}
           >
+            {error && <p role="alert" className="login-error">{error}</p>}
 
             <div className="developer-login-title-group">
 
@@ -136,7 +135,9 @@ export default function DeveloperLogin() {
               </h2>
 
               <p className="developer-form-desc">
-                Enter your credentials to access the Developer workspace.
+                {isAdminLogin
+                  ? "Enter your administrator username or email and password."
+                  : "Sign in with an administrator account to access the Developer workspace."}
               </p>
 
             </div>
@@ -150,10 +151,13 @@ export default function DeveloperLogin() {
               </label>
 
               <input
-                type="email"
+                type="text"
                 className="developer-input"
+                name="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
+                placeholder="Email or username"
                 required
               />
 
@@ -170,8 +174,10 @@ export default function DeveloperLogin() {
               <input
                 type="password"
                 className="developer-input"
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
               />
 
@@ -213,8 +219,9 @@ export default function DeveloperLogin() {
             <button
               type="submit"
               className="developer-submit-btn"
+              disabled={loading}
             >
-              ACCESS PLATFORM →
+              {loading ? "SIGNING IN..." : "ACCESS PLATFORM →"}
             </button>
 
           </form>

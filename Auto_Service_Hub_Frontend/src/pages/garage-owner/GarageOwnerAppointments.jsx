@@ -1,137 +1,60 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { appointmentsApi, customersApi, vehiclesApi } from "../../services/resources";
+import { getErrorMessage } from "../../services/api";
 import "./GarageOwnerAppointments.css";
+
+const dateKey = (value) => {
+  const date = new Date(value);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+};
 
 function GarageOwnerAppointments() {
   const [selectedDay, setSelectedDay] = useState("ALL DAYS");
   const [showNewAppointment, setShowNewAppointment] = useState(false);
-
-  const [appointments, setAppointments] = useState([
-    {
-      id: "APT-0881",
-      date: "17 Aug 2026",
-      time: "09:00 AM",
-      customer: "Vikram Singh",
-      vehicle: "Fortuner UP-32-GH-1190",
-      service: "Suspension & Tyres",
-      type: "Walk-in",
-      bay: "Bay 3",
-      pickup: "—",
-      advisor: "Ramesh K.",
-      status: "Confirmed",
-      statusClass: "confirmed",
-      day: "17 AUG",
-    },
-    {
-      id: "APT-0882",
-      date: "17 Aug 2026",
-      time: "10:30 AM",
-      customer: "Anjali Tiwari",
-      vehicle: "Verna MH-04-RT-6621",
-      service: "Full Service",
-      type: "Online",
-      bay: "Bay 1",
-      pickup: "✓",
-      advisor: "Ramesh K.",
-      status: "Confirmed",
-      statusClass: "confirmed",
-      day: "17 AUG",
-    },
-    {
-      id: "APT-0883",
-      date: "17 Aug 2026",
-      time: "12:00 PM",
-      customer: "Karan Malhotra",
-      vehicle: "Nexon TN-09-HH-2210",
-      service: "AC Service",
-      type: "Online",
-      bay: "Bay 2",
-      pickup: "—",
-      advisor: "Sunita P.",
-      status: "In Progress",
-      statusClass: "progress",
-      day: "17 AUG",
-    },
-    {
-      id: "APT-0884",
-      date: "17 Aug 2026",
-      time: "02:00 PM",
-      customer: "Sonal Gupta",
-      vehicle: "WagonR GJ-01-AB-5541",
-      service: "Basic Service",
-      type: "Walk-in",
-      bay: "Bay 4",
-      pickup: "—",
-      advisor: "Ramesh K.",
-      status: "Pending",
-      statusClass: "pending",
-      day: "17 AUG",
-    },
-    {
-      id: "APT-0885",
-      date: "18 Aug 2026",
-      time: "09:30 AM",
-      customer: "Arjun Mehta",
-      vehicle: "Swift MH-12-AB-4521",
-      service: "Battery Replacement",
-      type: "Online",
-      bay: "Bay 1",
-      pickup: "—",
-      advisor: "Sunita P.",
-      status: "Confirmed",
-      statusClass: "confirmed",
-      day: "18 AUG",
-    },
-    {
-      id: "APT-0886",
-      date: "18 Aug 2026",
-      time: "11:00 AM",
-      customer: "Priya Sharma",
-      vehicle: "Creta DL-01-CZ-9834",
-      service: "Tyre Rotation",
-      type: "Online",
-      bay: "Bay 2",
-      pickup: "—",
-      advisor: "Ramesh K.",
-      status: "Confirmed",
-      statusClass: "confirmed",
-      day: "18 AUG",
-    },
-    {
-      id: "APT-0887",
-      date: "19 Aug 2026",
-      time: "10:00 AM",
-      customer: "Neha Joshi",
-      vehicle: "City MH-14-PQ-3356",
-      service: "Denting & Painting",
-      type: "Pickup/Drop",
-      bay: "Bay 3",
-      pickup: "✓",
-      advisor: "Sunita P.",
-      status: "Pending",
-      statusClass: "pending",
-      day: "19 AUG",
-    },
-  ]);
+  const [appointments, setAppointments] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const [appointmentForm, setAppointmentForm] = useState({
-    type: "Walk-in",
     customer: "",
     vehicle: "",
     service: "Basic Service",
     date: "",
-    time: "09:00 AM",
-    bay: "Bay 1",
-    advisor: "Ramesh K.",
+    time: "09:00",
     pickupDrop: false,
     notes: "",
   });
+
+  useEffect(() => {
+    Promise.all([appointmentsApi.list(), customersApi.list(), vehiclesApi.list()])
+      .then(([appointmentRecords, customerRecords, vehicleRecords]) => {
+        setAppointments(appointmentRecords);
+        setCustomers(customerRecords);
+        setVehicles(vehicleRecords);
+      })
+      .catch((requestError) => setError(getErrorMessage(requestError)))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredAppointments =
     selectedDay === "ALL DAYS"
       ? appointments
       : appointments.filter(
-          (appointment) => appointment.day === selectedDay
+          (appointment) => dateKey(appointment.appointmentAt) === selectedDay
         );
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+  const weekEnd = new Date(today);
+  weekEnd.setDate(today.getDate() + 7);
+  const todayKey = dateKey(today);
+  const tomorrowKey = dateKey(tomorrow);
+  const dayKeys = [...new Set(appointments.map((appointment) => dateKey(appointment.appointmentAt)))].sort();
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -139,10 +62,11 @@ function GarageOwnerAppointments() {
     setAppointmentForm((previous) => ({
       ...previous,
       [name]: type === "checkbox" ? checked : value,
+      ...(name === "customer" ? { vehicle: "" } : {}),
     }));
   };
 
-  const handleBookAppointment = (e) => {
+  const handleBookAppointment = async (e) => {
     e.preventDefault();
 
     if (
@@ -154,71 +78,40 @@ function GarageOwnerAppointments() {
       return;
     }
 
-    const selectedDate = new Date(
-      `${appointmentForm.date}T00:00:00`
-    );
-
-    const dayNumber = selectedDate
-      .getDate()
-      .toString()
-      .padStart(2, "0");
-
-    const monthName = selectedDate.toLocaleString("en-US", {
-      month: "short",
-    });
-
-    const year = selectedDate.getFullYear();
-
-    const day = `${dayNumber} ${monthName.toUpperCase()}`;
-
-    const formattedDate = `${dayNumber} ${monthName} ${year}`;
-
-    const newIdNumber =
-      881 +
-      appointments.length +
-      1;
-
-    const newAppointment = {
-      id: `APT-${newIdNumber}`,
-      date: formattedDate,
-      time: appointmentForm.time,
-      customer: appointmentForm.customer,
-      vehicle: appointmentForm.vehicle,
-      service: appointmentForm.service,
-      type: appointmentForm.type,
-      bay: appointmentForm.bay,
-      pickup: appointmentForm.pickupDrop ? "✓" : "—",
-      advisor: appointmentForm.advisor,
-      status: "Pending",
-      statusClass: "pending",
-      day: day,
-    };
-
-    setAppointments((previous) => [
-      ...previous,
-      newAppointment,
-    ]);
-
-    setSelectedDay("ALL DAYS");
-    setShowNewAppointment(false);
-
-    setAppointmentForm({
-      type: "Walk-in",
-      customer: "",
-      vehicle: "",
-      service: "Basic Service",
-      date: "",
-      time: "09:00 AM",
-      bay: "Bay 1",
-      advisor: "Ramesh K.",
-      pickupDrop: false,
-      notes: "",
-    });
+    setError("");
+    setSaving(true);
+    try {
+      const created = await appointmentsApi.create({
+        customerId: Number(appointmentForm.customer),
+        vehicleId: Number(appointmentForm.vehicle),
+        serviceType: appointmentForm.service,
+        appointmentAt: `${appointmentForm.date}T${appointmentForm.time}:00`,
+        pickupDrop: appointmentForm.pickupDrop,
+        notes: appointmentForm.notes,
+        status: "PENDING",
+      });
+      setAppointments((existing) => [created, ...existing]);
+      setSelectedDay("ALL DAYS");
+      setShowNewAppointment(false);
+      setAppointmentForm({
+        customer: "",
+        vehicle: "",
+        service: "Basic Service",
+        date: "",
+        time: "09:00",
+        pickupDrop: false,
+        notes: "",
+      });
+    } catch (requestError) {
+      setError(getErrorMessage(requestError, "Could not book appointment."));
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleEdit = (appointment) => {
-    alert(`Edit appointment ${appointment.id}`);
-  };
+  const formatAppointmentDate = (value) => value
+    ? new Date(value).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })
+    : "—";
 
   return (
     <div className="garage-appointments-content">
@@ -251,11 +144,11 @@ function GarageOwnerAppointments() {
           </div>
 
           <div className="appointment-stat-value">
-            4
+            {appointments.filter((appointment) => dateKey(appointment.appointmentAt) === todayKey).length}
           </div>
 
           <div className="appointment-stat-description">
-            2 confirmed · 1 pending
+            {appointments.filter((appointment) => dateKey(appointment.appointmentAt) === todayKey && appointment.status === "CONFIRMED").length} confirmed · {appointments.filter((appointment) => dateKey(appointment.appointmentAt) === todayKey && appointment.status === "PENDING").length} pending
           </div>
 
         </div>
@@ -268,7 +161,7 @@ function GarageOwnerAppointments() {
           </div>
 
           <div className="appointment-stat-value lime">
-            2
+            {appointments.filter((appointment) => dateKey(appointment.appointmentAt) === tomorrowKey).length}
           </div>
 
         </div>
@@ -281,7 +174,10 @@ function GarageOwnerAppointments() {
           </div>
 
           <div className="appointment-stat-value">
-            12
+            {appointments.filter((appointment) => {
+              const appointmentDate = new Date(appointment.appointmentAt);
+              return appointmentDate >= today && appointmentDate < weekEnd;
+            }).length}
           </div>
 
         </div>
@@ -294,7 +190,7 @@ function GarageOwnerAppointments() {
           </div>
 
           <div className="appointment-stat-value">
-            3
+            {appointments.filter((appointment) => appointment.pickupDrop).length}
           </div>
 
           <div className="appointment-stat-description">
@@ -323,43 +219,16 @@ function GarageOwnerAppointments() {
         </button>
 
 
-        <button
-          type="button"
-          className={
-            selectedDay === "17 AUG"
-              ? "day-filter active"
-              : "day-filter"
-          }
-          onClick={() => setSelectedDay("17 AUG")}
-        >
-          17 AUG
-        </button>
-
-
-        <button
-          type="button"
-          className={
-            selectedDay === "18 AUG"
-              ? "day-filter active"
-              : "day-filter"
-          }
-          onClick={() => setSelectedDay("18 AUG")}
-        >
-          18 AUG
-        </button>
-
-
-        <button
-          type="button"
-          className={
-            selectedDay === "19 AUG"
-              ? "day-filter active"
-              : "day-filter"
-          }
-          onClick={() => setSelectedDay("19 AUG")}
-        >
-          19 AUG
-        </button>
+        {dayKeys.map((day) => (
+          <button
+            key={day}
+            type="button"
+            className={selectedDay === day ? "day-filter active" : "day-filter"}
+            onClick={() => setSelectedDay(day)}
+          >
+            {new Date(`${day}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short" }).toUpperCase()}
+          </button>
+        ))}
 
       </div>
 
@@ -380,12 +249,8 @@ function GarageOwnerAppointments() {
                 <th>CUSTOMER</th>
                 <th>VEHICLE</th>
                 <th>SERVICE</th>
-                <th>TYPE</th>
-                <th>BAY</th>
                 <th>PICKUP</th>
-                <th>ADVISOR</th>
                 <th>STATUS</th>
-                <th></th>
               </tr>
 
             </thead>
@@ -393,6 +258,8 @@ function GarageOwnerAppointments() {
 
             <tbody>
 
+              {loading && <tr><td colSpan="7">Loading appointments…</td></tr>}
+              {!loading && error && <tr><td colSpan="7" role="alert">{error}</td></tr>}
               {filteredAppointments.map((appointment) => (
 
                 <tr key={appointment.id}>
@@ -404,82 +271,47 @@ function GarageOwnerAppointments() {
 
                   <td className="appointment-date">
 
-                    <strong>
-                      {appointment.date}
-                    </strong>
-
-                    <span>
-                      {appointment.time}
-                    </span>
+                    {formatAppointmentDate(appointment.appointmentAt)}
 
                   </td>
 
 
                   <td className="appointment-customer">
-                    {appointment.customer}
+                    {appointment.customerName}
                   </td>
 
 
                   <td className="appointment-vehicle">
-                    {appointment.vehicle}
+                    {appointment.vehicleInfo}
                   </td>
 
 
                   <td className="appointment-service">
-                    {appointment.service}
-                  </td>
-
-
-                  <td className="appointment-type">
-                    {appointment.type}
-                  </td>
-
-
-                  <td className="appointment-bay">
-                    {appointment.bay}
+                    {appointment.serviceType}
                   </td>
 
 
                   <td
                     className={
-                      appointment.pickup === "✓"
+                      appointment.pickupDrop
                         ? "appointment-pickup yes"
                         : "appointment-pickup"
                     }
                   >
-                    {appointment.pickup}
-                  </td>
-
-
-                  <td className="appointment-advisor">
-                    {appointment.advisor}
+                    {appointment.pickupDrop ? "Yes" : "No"}
                   </td>
 
 
                   <td>
 
                     <span
-                      className={`appointment-status ${appointment.statusClass}`}
+                      className={`appointment-status ${String(appointment.status || "").toLowerCase()}`}
                     >
                       {appointment.status}
                     </span>
 
                   </td>
 
-
-                  <td>
-
-                    <button
-                      type="button"
-                      className="appointment-edit-button"
-                      onClick={() =>
-                        handleEdit(appointment)
-                      }
-                    >
-                      Edit
-                    </button>
-
-                  </td>
 
                 </tr>
 
@@ -490,7 +322,7 @@ function GarageOwnerAppointments() {
           </table>
 
 
-          {filteredAppointments.length === 0 && (
+          {!loading && !error && filteredAppointments.length === 0 && (
 
             <div className="no-appointments">
               No appointments found.
@@ -557,80 +389,6 @@ function GarageOwnerAppointments() {
               <div className="new-appointment-form-scroll">
 
 
-                {/* APPOINTMENT TYPE */}
-
-                <div className="appointment-form-group">
-
-                  <label>
-                    APPOINTMENT TYPE
-                  </label>
-
-                  <div className="appointment-type-options">
-
-                    <label className="appointment-radio-option">
-
-                      <input
-                        type="radio"
-                        name="type"
-                        value="Walk-in"
-                        checked={
-                          appointmentForm.type ===
-                          "Walk-in"
-                        }
-                        onChange={handleInputChange}
-                      />
-
-                      <span>
-                        Walk-in
-                      </span>
-
-                    </label>
-
-
-                    <label className="appointment-radio-option">
-
-                      <input
-                        type="radio"
-                        name="type"
-                        value="Online"
-                        checked={
-                          appointmentForm.type ===
-                          "Online"
-                        }
-                        onChange={handleInputChange}
-                      />
-
-                      <span>
-                        Online
-                      </span>
-
-                    </label>
-
-
-                    <label className="appointment-radio-option">
-
-                      <input
-                        type="radio"
-                        name="type"
-                        value="Pickup/Drop"
-                        checked={
-                          appointmentForm.type ===
-                          "Pickup/Drop"
-                        }
-                        onChange={handleInputChange}
-                      />
-
-                      <span>
-                        Pickup/Drop
-                      </span>
-
-                    </label>
-
-                  </div>
-
-                </div>
-
-
                 {/* CUSTOMER */}
 
                 <div className="appointment-form-group">
@@ -650,33 +408,9 @@ function GarageOwnerAppointments() {
                       Select customer...
                     </option>
 
-                    <option value="Vikram Singh">
-                      Vikram Singh
-                    </option>
-
-                    <option value="Anjali Tiwari">
-                      Anjali Tiwari
-                    </option>
-
-                    <option value="Karan Malhotra">
-                      Karan Malhotra
-                    </option>
-
-                    <option value="Sonal Gupta">
-                      Sonal Gupta
-                    </option>
-
-                    <option value="Arjun Mehta">
-                      Arjun Mehta
-                    </option>
-
-                    <option value="Priya Sharma">
-                      Priya Sharma
-                    </option>
-
-                    <option value="Neha Joshi">
-                      Neha Joshi
-                    </option>
+                    {customers.map((customer) => (
+                      <option key={customer.id} value={customer.id}>{customer.name} — {customer.phone}</option>
+                    ))}
 
                   </select>
 
@@ -702,33 +436,13 @@ function GarageOwnerAppointments() {
                       Select vehicle...
                     </option>
 
-                    <option value="Fortuner UP-32-GH-1190">
-                      Fortuner UP-32-GH-1190
-                    </option>
-
-                    <option value="Verna MH-04-RT-6621">
-                      Verna MH-04-RT-6621
-                    </option>
-
-                    <option value="Nexon TN-09-HH-2210">
-                      Nexon TN-09-HH-2210
-                    </option>
-
-                    <option value="WagonR GJ-01-AB-5541">
-                      WagonR GJ-01-AB-5541
-                    </option>
-
-                    <option value="Swift MH-12-AB-4521">
-                      Swift MH-12-AB-4521
-                    </option>
-
-                    <option value="Creta DL-01-CZ-9834">
-                      Creta DL-01-CZ-9834
-                    </option>
-
-                    <option value="City MH-14-PQ-3356">
-                      City MH-14-PQ-3356
-                    </option>
+                    {vehicles
+                      .filter((vehicle) => !appointmentForm.customer || vehicle.customerId === Number(appointmentForm.customer))
+                      .map((vehicle) => (
+                        <option key={vehicle.id} value={vehicle.id}>
+                          {vehicle.registrationNo} — {vehicle.make} {vehicle.model}
+                        </option>
+                      ))}
 
                   </select>
 
@@ -809,101 +523,13 @@ function GarageOwnerAppointments() {
                       TIME SLOT
                     </label>
 
-                    <select
+                    <input
+                      type="time"
                       name="time"
                       value={appointmentForm.time}
                       onChange={handleInputChange}
-                    >
-
-                      <option>
-                        09:00 AM
-                      </option>
-
-                      <option>
-                        10:30 AM
-                      </option>
-
-                      <option>
-                        12:00 PM
-                      </option>
-
-                      <option>
-                        02:00 PM
-                      </option>
-
-                      <option>
-                        03:30 PM
-                      </option>
-
-                      <option>
-                        05:00 PM
-                      </option>
-
-                    </select>
-
-                  </div>
-
-                </div>
-
-
-                {/* BAY + ADVISOR */}
-
-                <div className="appointment-form-row">
-
-                  <div className="appointment-form-group">
-
-                    <label>
-                      BAY / SLOT
-                    </label>
-
-                    <select
-                      name="bay"
-                      value={appointmentForm.bay}
-                      onChange={handleInputChange}
-                    >
-
-                      <option>
-                        Bay 1
-                      </option>
-
-                      <option>
-                        Bay 2
-                      </option>
-
-                      <option>
-                        Bay 3
-                      </option>
-
-                      <option>
-                        Bay 4
-                      </option>
-
-                    </select>
-
-                  </div>
-
-
-                  <div className="appointment-form-group">
-
-                    <label>
-                      ASSIGNED ADVISOR
-                    </label>
-
-                    <select
-                      name="advisor"
-                      value={appointmentForm.advisor}
-                      onChange={handleInputChange}
-                    >
-
-                      <option>
-                        Ramesh K.
-                      </option>
-
-                      <option>
-                        Sunita P.
-                      </option>
-
-                    </select>
+                      required
+                    />
 
                   </div>
 
@@ -967,8 +593,9 @@ function GarageOwnerAppointments() {
                 <button
                   type="submit"
                   className="book-appointment-button"
+                  disabled={saving}
                 >
-                  BOOK APPOINTMENT
+                  {saving ? "SAVING..." : "BOOK APPOINTMENT"}
                 </button>
 
                 <button
