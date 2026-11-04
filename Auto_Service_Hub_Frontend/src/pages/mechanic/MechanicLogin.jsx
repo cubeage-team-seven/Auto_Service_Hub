@@ -1,24 +1,39 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 import "./MechanicLogin.css";
 
 function MechanicLogin() {
-
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // ==========================================
   // LOGIN
   // ==========================================
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-
-    navigate("/mechanic-dashboard");
+    setError("");
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
+    try {
+      await login(
+        formData.get("username"),
+        formData.get("password"),
+        rememberMe
+      );
+      navigate("/mechanic-dashboard");
+    } catch (loginError) {
+      setError(loginError.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
 
@@ -187,6 +202,7 @@ function MechanicLogin() {
             className="mechanic-login-form"
             onSubmit={handleLogin}
           >
+            {error && <p role="alert">{error}</p>}
 
 
             {/* =================================================
@@ -200,8 +216,10 @@ function MechanicLogin() {
 
             <input
               id="mechanic-email"
-              type="email"
+              name="username"
+              type="text"
               placeholder="you@garage.com"
+              autoComplete="username"
               required
             />
 
@@ -221,8 +239,10 @@ function MechanicLogin() {
 
               <input
                 id="mechanic-password"
+                name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••••••"
+                autoComplete="current-password"
                 required
               />
 
@@ -292,8 +312,9 @@ function MechanicLogin() {
             <button
               type="submit"
               className="mechanic-login-button"
+              disabled={loading}
             >
-              ACCESS PLATFORM →
+              {loading ? "SIGNING IN..." : "ACCESS PLATFORM →"}
             </button>
 
 

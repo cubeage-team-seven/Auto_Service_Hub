@@ -31,7 +31,7 @@ public class CustomerController {
      * POST /api/v1/customers
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<CustomerResponseDTO> create(
             @Valid @RequestBody CustomerRequestDTO request) {
@@ -43,7 +43,7 @@ public class CustomerController {
      * PUT /api/v1/customers/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     public ApiResponse<CustomerResponseDTO> update(
             @PathVariable Long id,
             @Valid @RequestBody CustomerRequestDTO request) {
@@ -55,7 +55,7 @@ public class CustomerController {
      * GET /api/v1/customers/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<CustomerResponseDTO> getById(@PathVariable Long id) {
         return ApiResponse.ok(service.getById(id));
     }
@@ -65,7 +65,7 @@ public class CustomerController {
      * GET /api/v1/customers
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<Page<CustomerResponseDTO>> list(Pageable pageable) {
         return ApiResponse.ok(service.list(pageable));
     }
@@ -76,7 +76,7 @@ public class CustomerController {
      * PATCH /api/v1/customers/{id}/deactivate
      */
     @PatchMapping("/{id}/deactivate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     public ApiResponse<Void> deactivate(@PathVariable Long id) {
         service.deactivate(id);
         return ApiResponse.ok("Customer deactivated", null);
@@ -87,7 +87,7 @@ public class CustomerController {
      * DELETE /api/v1/customers/{id}
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         service.delete(id);
@@ -108,7 +108,7 @@ public class CustomerController {
      * vehicleReg takes priority over q when both are supplied.
      */
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<Page<CustomerResponseDTO>> search(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String status,
@@ -124,7 +124,7 @@ public class CustomerController {
      * GET /api/v1/customers/{customerId}/vehicles
      */
     @GetMapping("/{customerId}/vehicles")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<List<VehicleResponseDTO>> getVehicles(
             @PathVariable Long customerId) {
         return ApiResponse.ok(service.getVehiclesByCustomer(customerId));
@@ -137,7 +137,7 @@ public class CustomerController {
      * GET /api/v1/customers/{customerId}/service-history
      */
     @GetMapping("/{customerId}/service-history")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'BILLING_USER')")
     public ApiResponse<List<ServiceHistoryDTO>> getServiceHistory(
             @PathVariable Long customerId) {
         return ApiResponse.ok(service.getServiceHistoryByCustomer(customerId));
@@ -151,7 +151,7 @@ public class CustomerController {
      * CRM API group without conflicting with /api/v1/vehicles.
      */
     @GetMapping("/vehicles/{vehicleId}/service-history")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'BILLING_USER')")
     public ApiResponse<List<ServiceHistoryDTO>> getVehicleServiceHistory(
             @PathVariable Long vehicleId) {
         return ApiResponse.ok(service.getServiceHistoryByVehicle(vehicleId));
@@ -167,7 +167,7 @@ public class CustomerController {
      * GET /api/v1/customers/{id}/360
      */
     @GetMapping("/{id}/360")
-    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'BILLING_USER')")
     public ApiResponse<Customer360DTO> getCustomer360(@PathVariable Long id) {
         return ApiResponse.ok(service.getCustomer360(id));
     }

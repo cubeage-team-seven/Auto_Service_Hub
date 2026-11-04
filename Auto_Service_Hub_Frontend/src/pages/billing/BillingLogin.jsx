@@ -1,14 +1,28 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import "./BillingPage.css";
 
 function BillingLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    navigate("/billing/dashboard");
+    setError("");
+    setLoading(true);
+    const formData = new FormData(e.currentTarget);
+    try {
+      await login(formData.get("username"), formData.get("password"));
+      navigate("/billing/dashboard");
+    } catch (loginError) {
+      setError(loginError.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,22 +58,35 @@ function BillingLogin() {
           </p>
 
           <form onSubmit={handleLogin}>
+            {error && <p role="alert">{error}</p>}
             <div className="input-field">
               <label>EMAIL ADDRESS</label>
-              <input type="email" defaultValue="you@garage.com" required />
+              <input
+                name="username"
+                type="text"
+                autoComplete="username"
+                required
+              />
             </div>
 
             <div className="input-field">
               <label>PASSWORD</label>
               <div className="pass-wrap">
-                <input type={showPassword ? "text" : "password"} defaultValue="password123" required />
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                />
                 <button type="button" className="toggle-pass" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
             </div>
 
-            <button type="submit" className="btn-access">ACCESS PLATFORM →</button>
+            <button type="submit" className="btn-access" disabled={loading}>
+              {loading ? "SIGNING IN..." : "ACCESS PLATFORM →"}
+            </button>
           </form>
         </div>
       </section>

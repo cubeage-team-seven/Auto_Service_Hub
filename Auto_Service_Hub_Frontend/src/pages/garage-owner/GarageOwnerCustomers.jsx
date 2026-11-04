@@ -1,9 +1,16 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { createCustomer, getCustomers } from "../../services/customerService";
 import "./GarageOwnerCustomers.css";
 
 function GarageOwnerCustomers() {
+  const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState("");
   const [showNewCustomer, setShowNewCustomer] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [createError, setCreateError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -13,100 +20,53 @@ function GarageOwnerCustomers() {
     address: "",
     city: "",
     pincode: "",
-    loyalty: "Bronze",
+    loyaltyTier: "Bronze",
     notes: "",
   });
 
-  const customers = [
-    {
-      id: "C-1041",
-      name: "Arjun Mehta",
-      phone: "+91 98201 45678",
-      email: "arjun.mehta@gmail.com",
-      vehicles: 2,
-      visits: 12,
-      lastVisit: "17 Aug 2026",
-      loyalty: "Gold",
-      balance: "₹0",
-    },
-    {
-      id: "C-1040",
-      name: "Priya Sharma",
-      phone: "+91 91234 56789",
-      email: "priya.sharma@gmail.com",
-      vehicles: 1,
-      visits: 8,
-      lastVisit: "17 Aug 2026",
-      loyalty: "Silver",
-      balance: "₹0",
-    },
-    {
-      id: "C-1039",
-      name: "Rohit Desai",
-      phone: "+91 99876 54321",
-      email: "rohit.desai@gmail.com",
-      vehicles: 3,
-      visits: 21,
-      lastVisit: "16 Aug 2026",
-      loyalty: "Platinum",
-      balance: "₹0",
-    },
-    {
-      id: "C-1038",
-      name: "Neha Joshi",
-      phone: "+91 88765 43210",
-      email: "neha.joshi@gmail.com",
-      vehicles: 1,
-      visits: 5,
-      lastVisit: "17 Aug 2026",
-      loyalty: "Bronze",
-      balance: "₹2,400",
-    },
-    {
-      id: "C-1037",
-      name: "Vikram Singh",
-      phone: "+91 77654 32109",
-      email: "vikram.singh@gmail.com",
-      vehicles: 2,
-      visits: 15,
-      lastVisit: "15 Aug 2026",
-      loyalty: "Gold",
-      balance: "₹0",
-    },
-    {
-      id: "C-1036",
-      name: "Kavita Rao",
-      phone: "+91 66543 21098",
-      email: "kavita.rao@gmail.com",
-      vehicles: 1,
-      visits: 4,
-      lastVisit: "16 Aug 2026",
-      loyalty: "Bronze",
-      balance: "₹0",
-    },
-    {
-      id: "C-1035",
-      name: "Sunil Nair",
-      phone: "+91 55432 10987",
-      email: "sunil.nair@gmail.com",
-      vehicles: 1,
-      visits: 9,
-      lastVisit: "12 Aug 2026",
-      loyalty: "Silver",
-      balance: "₹1,800",
-    },
-    {
-      id: "C-1034",
-      name: "Divya Kapoor",
-      phone: "+91 44321 09876",
-      email: "divya.kapoor@gmail.com",
-      vehicles: 2,
-      visits: 7,
-      lastVisit: "10 Aug 2026",
-      loyalty: "Silver",
-      balance: "₹0",
-    },
-  ];
+  const loadCustomers = useCallback(async ({
+    showLoading = true,
+    savedCustomer = null,
+  } = {}) => {
+    if (showLoading) {
+      setIsLoading(true);
+    }
+    setLoadError("");
+
+    try {
+      const fetchedCustomers = await getCustomers();
+      const refreshed = [...fetchedCustomers];
+      if (
+        savedCustomer?.id != null &&
+        !refreshed.some((customer) => String(customer.id) === String(savedCustomer.id))
+      ) {
+        refreshed.unshift(savedCustomer);
+      }
+      setCustomers([
+        ...new Map(refreshed.map((customer) => [String(customer.id), customer])).values(),
+      ]);
+      return true;
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : "Unable to load customers.");
+      if (savedCustomer?.id != null) {
+        setCustomers((current) => [
+          savedCustomer,
+          ...current.filter(
+            (customer) => String(customer.id) !== String(savedCustomer.id)
+          ),
+        ]);
+      }
+      return false;
+    } finally {
+      if (showLoading) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadCustomers();
+  }, [loadCustomers]);
 
   const filteredCustomers = useMemo(() => {
     const value = search.trim().toLowerCase();
@@ -117,13 +77,13 @@ function GarageOwnerCustomers() {
 
     return customers.filter((customer) => {
       return (
-        customer.id.toLowerCase().includes(value) ||
-        customer.name.toLowerCase().includes(value) ||
-        customer.phone.toLowerCase().includes(value) ||
-        customer.email.toLowerCase().includes(value)
+        String(customer.id ?? "").toLowerCase().includes(value) ||
+        String(customer.name ?? "").toLowerCase().includes(value) ||
+        String(customer.phone ?? "").toLowerCase().includes(value) ||
+        String(customer.email ?? "").toLowerCase().includes(value)
       );
     });
-  }, [search]);
+  }, [customers, search]);
 
   /* =========================================================
      FORM HANDLER
@@ -132,6 +92,7 @@ function GarageOwnerCustomers() {
   const handleChange = (e) => {
     const { name, value } = e.target;
 
+    setCreateError("");
     setFormData((previous) => ({
       ...previous,
       [name]: value,
@@ -142,8 +103,12 @@ function GarageOwnerCustomers() {
      CREATE CUSTOMER
   ========================================================= */
 
-  const handleCreateCustomer = (e) => {
+  const handleCreateCustomer = async (e) => {
     e.preventDefault();
+
+    if (isCreating) {
+      return;
+    }
 
     if (
       !formData.firstName.trim() ||
@@ -151,27 +116,52 @@ function GarageOwnerCustomers() {
       !formData.phone.trim() ||
       !formData.email.trim()
     ) {
-      alert("Please fill in all required fields.");
+      setCreateError("Please fill in all required fields.");
       return;
     }
 
-    alert(
-      `Customer ${formData.firstName} ${formData.lastName} created successfully.`
-    );
+    setIsCreating(true);
+    setCreateError("");
+    setSuccessMessage("");
 
-    setFormData({
-      firstName: "",
-      lastName: "",
-      phone: "",
-      email: "",
-      address: "",
-      city: "",
-      pincode: "",
-      loyalty: "Bronze",
-      notes: "",
-    });
+    const address = [formData.address, formData.city, formData.pincode]
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .join(", ");
 
-    setShowNewCustomer(false);
+    try {
+      const savedCustomer = await createCustomer({
+        name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        address,
+        status: "ACTIVE",
+        loyaltyTier: formData.loyaltyTier,
+        notes: formData.notes.trim(),
+      });
+
+      setSearch("");
+      setSuccessMessage(`${savedCustomer.name || "Customer"} created successfully.`);
+      setShowNewCustomer(false);
+      await loadCustomers({ showLoading: false, savedCustomer });
+
+      setFormData({
+        firstName: "",
+        lastName: "",
+        phone: "",
+        email: "",
+        address: "",
+        city: "",
+        pincode: "",
+        loyaltyTier: "Bronze",
+        notes: "",
+      });
+
+    } catch (error) {
+      setCreateError(error instanceof Error ? error.message : "Unable to create customer.");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   /* =========================================================
@@ -179,7 +169,9 @@ function GarageOwnerCustomers() {
   ========================================================= */
 
   const closeModal = () => {
-    setShowNewCustomer(false);
+    if (!isCreating) {
+      setShowNewCustomer(false);
+    }
   };
 
   return (
@@ -199,12 +191,30 @@ function GarageOwnerCustomers() {
           <button
             type="button"
             className="garage-customers-new-button"
-            onClick={() => setShowNewCustomer(true)}
+            onClick={() => {
+              setCreateError("");
+              setShowNewCustomer(true);
+            }}
           >
             + NEW CUSTOMER
           </button>
 
         </div>
+
+        {successMessage && (
+          <div className="customers-feedback customers-feedback-success" role="status">
+            {successMessage}
+          </div>
+        )}
+
+        {loadError && (
+          <div className="customers-feedback customers-feedback-error" role="alert">
+            <span>{loadError}</span>
+            <button type="button" onClick={() => void loadCustomers()}>
+              Retry
+            </button>
+          </div>
+        )}
 
 
         {/* =====================================================
@@ -254,80 +264,83 @@ function GarageOwnerCustomers() {
             </thead>
 
             <tbody>
-
-              {filteredCustomers.map((customer) => (
-                <tr key={customer.id}>
+              {isLoading && customers.length === 0 ? (
+                <tr>
+                  <td className="customer-table-state" colSpan={9}>Loading customers…</td>
+                </tr>
+              ) : filteredCustomers.length > 0 ? (
+                filteredCustomers.map((customer) => (
+                <tr key={customer.id ?? `${customer.phone}-${customer.name}`}>
 
                   <td>
                     <span className="customer-id">
-                      {customer.id}
+                      {customer.id ?? "—"}
                     </span>
                   </td>
 
                   <td>
-                    <span className="customer-name">
-                      {customer.name}
+                    <span className="customer-name-cell">
+                      <span className="customer-name">{customer.name || "—"}</span>
+                      {customer.notes && (
+                        <span className="customer-notes" title={customer.notes}>
+                          {customer.notes}
+                        </span>
+                      )}
                     </span>
                   </td>
 
                   <td>
                     <span className="customer-phone">
-                      {customer.phone}
+                      {customer.phone || "—"}
                     </span>
                   </td>
 
                   <td>
                     <span className="customer-email">
-                      {customer.email}
+                      {customer.email || "—"}
                     </span>
                   </td>
 
                   <td className="customer-number">
-                    {customer.vehicles}
+                    —
                   </td>
 
                   <td className="customer-number">
-                    {customer.visits}
+                    —
                   </td>
 
                   <td>
                     <span className="customer-date">
-                      {customer.lastVisit}
+                      —
                     </span>
                   </td>
 
                   <td>
-                    <span
-                      className={`loyalty-badge ${customer.loyalty.toLowerCase()}`}
-                    >
-                      {customer.loyalty}
+                    <span className="customer-loyalty">
+                      {customer.loyaltyTier || "—"}
                     </span>
                   </td>
 
                   <td>
-                    <span
-                      className={`customer-balance ${
-                        customer.balance !== "₹0"
-                          ? "due"
-                          : ""
-                      }`}
-                    >
-                      {customer.balance}
-                    </span>
+                    <span className="customer-balance">—</span>
                   </td>
 
                 </tr>
-              ))}
-
+                ))
+              ) : (
+                <tr>
+                  <td className="customer-table-state" colSpan={9}>
+                    {loadError
+                      ? "Customers could not be loaded."
+                      : search
+                        ? "No customers match your search."
+                        : "No customers found."}
+                  </td>
+                </tr>
+              )}
             </tbody>
 
           </table>
-
-          {filteredCustomers.length === 0 && (
-            <div className="no-customers">
-              No customers found.
-            </div>
-          )}
 
         </div>
 
@@ -342,7 +355,7 @@ function GarageOwnerCustomers() {
         <div
           className="garage-customer-modal-overlay"
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget) {
+            if (e.target === e.currentTarget && !isCreating) {
               closeModal();
             }
           }}
@@ -377,6 +390,8 @@ function GarageOwnerCustomers() {
               onSubmit={handleCreateCustomer}
             >
 
+              <div className="garage-customer-form-scroll">
+
               {/* FIRST + LAST NAME */}
 
               <div className="garage-customer-form-row">
@@ -393,6 +408,7 @@ function GarageOwnerCustomers() {
                     placeholder="Rajesh"
                     value={formData.firstName}
                     onChange={handleChange}
+                    required
                   />
 
                 </div>
@@ -410,6 +426,7 @@ function GarageOwnerCustomers() {
                     placeholder="Kumar"
                     value={formData.lastName}
                     onChange={handleChange}
+                    required
                   />
 
                 </div>
@@ -431,6 +448,7 @@ function GarageOwnerCustomers() {
                   placeholder="+91 98765 43210"
                   value={formData.phone}
                   onChange={handleChange}
+                  required
                 />
 
               </div>
@@ -450,6 +468,7 @@ function GarageOwnerCustomers() {
                   placeholder="rajesh.kumar@email.com"
                   value={formData.email}
                   onChange={handleChange}
+                  required
                 />
 
               </div>
@@ -513,58 +532,51 @@ function GarageOwnerCustomers() {
 
               </div>
 
-
-              {/* LOYALTY */}
-
               <div className="garage-customer-form-group">
 
-                <label>
+                <label htmlFor="customer-loyalty-tier">
                   LOYALTY TIER
                 </label>
 
                 <select
-                  name="loyalty"
-                  value={formData.loyalty}
+                  id="customer-loyalty-tier"
+                  name="loyaltyTier"
+                  value={formData.loyaltyTier}
                   onChange={handleChange}
                 >
-                  <option value="Bronze">
-                    Bronze
-                  </option>
-
-                  <option value="Silver">
-                    Silver
-                  </option>
-
-                  <option value="Gold">
-                    Gold
-                  </option>
-
-                  <option value="Platinum">
-                    Platinum
-                  </option>
+                  <option value="Bronze">Bronze</option>
+                  <option value="Silver">Silver</option>
+                  <option value="Gold">Gold</option>
+                  <option value="Platinum">Platinum</option>
                 </select>
 
               </div>
 
-
-              {/* NOTES */}
-
               <div className="garage-customer-form-group">
 
-                <label>
+                <label htmlFor="customer-notes">
                   NOTES / PREFERENCES
                 </label>
 
                 <textarea
+                  id="customer-notes"
                   name="notes"
                   placeholder="VIP customer, prefers weekend appointments..."
                   value={formData.notes}
                   onChange={handleChange}
+                  maxLength={2000}
                   rows="2"
                 />
 
               </div>
 
+              {createError && (
+                <div className="customers-feedback customers-feedback-error" role="alert">
+                  {createError}
+                </div>
+              )}
+
+              </div>
 
               {/* DIVIDER */}
 
@@ -578,14 +590,16 @@ function GarageOwnerCustomers() {
                 <button
                   type="submit"
                   className="garage-customer-create-button"
+                  disabled={isCreating}
                 >
-                  CREATE CUSTOMER
+                  {isCreating ? "CREATING..." : "CREATE CUSTOMER"}
                 </button>
 
                 <button
                   type="button"
                   className="garage-customer-cancel-button"
                   onClick={closeModal}
+                  disabled={isCreating}
                 >
                   Cancel
                 </button>

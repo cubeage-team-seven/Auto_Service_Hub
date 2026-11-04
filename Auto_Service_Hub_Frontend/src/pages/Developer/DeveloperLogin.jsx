@@ -1,19 +1,30 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import "./DeveloperLogin.css";
 
 export default function DeveloperLogin() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const [email, setEmail] = useState("you@garage.com");
-  const [password, setPassword] = useState("••••••••••••");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Developer workspace
-    navigate("/developer");
+    setError("");
+    setLoading(true);
+    try {
+      await login(email, password, rememberMe);
+      navigate("/developer");
+    } catch (loginError) {
+      setError(loginError.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -128,6 +139,7 @@ export default function DeveloperLogin() {
             className="developer-login-form"
             onSubmit={handleSubmit}
           >
+            {error && <p role="alert">{error}</p>}
 
             <div className="developer-login-title-group">
 
@@ -150,10 +162,11 @@ export default function DeveloperLogin() {
               </label>
 
               <input
-                type="email"
+                type="text"
                 className="developer-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
                 required
               />
 
@@ -172,6 +185,7 @@ export default function DeveloperLogin() {
                 className="developer-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
               />
 
@@ -213,8 +227,9 @@ export default function DeveloperLogin() {
             <button
               type="submit"
               className="developer-submit-btn"
+              disabled={loading}
             >
-              ACCESS PLATFORM →
+              {loading ? "SIGNING IN..." : "ACCESS PLATFORM →"}
             </button>
 
           </form>

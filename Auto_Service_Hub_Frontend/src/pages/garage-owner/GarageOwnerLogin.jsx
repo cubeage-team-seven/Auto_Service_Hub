@@ -1,24 +1,30 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import "./GarageOwnerLogin.css";
 
 function GarageOwnerLogin() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-
-    if (!email || !password) {
-      alert("Please enter your email and password.");
-      return;
+    setError("");
+    setLoading(true);
+    try {
+      await login(email, password, rememberMe);
+      navigate("/garage-owner/dashboard");
+    } catch (loginError) {
+      setError(loginError.message);
+    } finally {
+      setLoading(false);
     }
-
-    // Dashboard will be connected later.
-    navigate("/garage-owner/dashboard");
   };
 
   return (
@@ -159,6 +165,7 @@ function GarageOwnerLogin() {
             className="garage-login-form"
             onSubmit={handleLogin}
           >
+            {error && <p role="alert">{error}</p>}
 
             {/* EMAIL */}
 
@@ -170,10 +177,12 @@ function GarageOwnerLogin() {
 
               <input
                 id="garage-email"
-                type="email"
+                type="text"
                 placeholder="you@garage.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="username"
                 autoComplete="email"
               />
 
@@ -194,6 +203,8 @@ function GarageOwnerLogin() {
                 placeholder="••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
                 autoComplete="current-password"
               />
 
@@ -238,8 +249,9 @@ function GarageOwnerLogin() {
             <button
               type="submit"
               className="garage-access-button"
+              disabled={loading}
             >
-              ACCESS PLATFORM →
+              {loading ? "SIGNING IN..." : "ACCESS PLATFORM →"}
             </button>
 
           </form>

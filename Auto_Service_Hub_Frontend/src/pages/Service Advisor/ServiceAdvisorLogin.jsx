@@ -1,17 +1,29 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import "./ServiceAdvisorLogin.css";
 
 export default function ServiceAdvisorLogin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("deshmukh.dwarakadhish@gmail.com");
-  const [password, setPassword] = useState("••••••••••••");
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Navigate directly into the workspace
-    navigate("/service-advisor");
+    setError("");
+    setLoading(true);
+    try {
+      await login(email, password, rememberMe);
+      navigate("/service-advisor");
+    } catch (loginError) {
+      setError(loginError.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,6 +76,7 @@ export default function ServiceAdvisorLogin() {
 
           {/* Form Actions */}
           <form className="sa-login-form" onSubmit={handleSubmit}>
+            {error && <p role="alert">{error}</p>}
             <div className="sa-login-title-group">
               <h2 className="sa-form-title">SIGN IN</h2>
               <p className="sa-form-desc">
@@ -74,7 +87,7 @@ export default function ServiceAdvisorLogin() {
             <div className="sa-field">
               <label className="sa-label">EMAIL ADDRESS</label>
               <input
-                type="email"
+                type="text"
                 className="sa-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -107,8 +120,8 @@ export default function ServiceAdvisorLogin() {
               </a>
             </div>
 
-            <button type="submit" className="sa-submit-btn">
-              ACCESS PLATFORM →
+            <button type="submit" className="sa-submit-btn" disabled={loading}>
+              {loading ? "SIGNING IN..." : "ACCESS PLATFORM →"}
             </button>
           </form>
 

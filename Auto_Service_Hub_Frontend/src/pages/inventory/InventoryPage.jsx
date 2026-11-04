@@ -1,6 +1,17 @@
 import React, { useState } from "react";
 import "./InventoryPage.css";
 
+const SUPPLIER_OPTIONS = [
+  "Castrol India",
+  "Bosch India",
+  "Shell India",
+  "NGK India",
+  "MRF Ltd",
+  "Amaron India",
+  "Mahle Filters",
+  "Mann Filters",
+];
+
 function InventoryPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All Categories");
@@ -10,6 +21,7 @@ function InventoryPage() {
   ===================================================== */
 
   const [showAddPartModal, setShowAddPartModal] = useState(false);
+  const [customSuppliers, setCustomSuppliers] = useState([]);
 
   const [partForm, setPartForm] = useState({
     partName: "",
@@ -150,6 +162,26 @@ function InventoryPage() {
   const handlePartFormChange = (e) => {
     const { name, value } = e.target;
 
+    if (name === "supplier" && value === "Add New Supplier...") {
+      const newSupplier = window.prompt("Enter new supplier name:");
+      if (newSupplier && newSupplier.trim()) {
+        const trimmed = newSupplier.trim();
+        setCustomSuppliers((previous) =>
+          previous.includes(trimmed) ? previous : [...previous, trimmed]
+        );
+        setPartForm((previous) => ({
+          ...previous,
+          supplier: trimmed,
+        }));
+      } else {
+        setPartForm((previous) => ({
+          ...previous,
+          supplier: "",
+        }));
+      }
+      return;
+    }
+
     setPartForm((previous) => ({
       ...previous,
       [name]: value,
@@ -223,7 +255,7 @@ function InventoryPage() {
       return;
     }
 
-    if (!partForm.supplier) {
+    if (!partForm.supplier || partForm.supplier === "Add New Supplier...") {
       alert("Please select a supplier.");
       return;
     }
@@ -889,43 +921,18 @@ function InventoryPage() {
                   value={partForm.supplier}
                   onChange={handlePartFormChange}
                 >
-
-                  <option value="">
-                    Select supplier...
-                  </option>
-
-                  <option>
-                    Castrol India
-                  </option>
-
-                  <option>
-                    Bosch India
-                  </option>
-
-                  <option>
-                    Mahle Filters
-                  </option>
-
-                  <option>
-                    Shell India
-                  </option>
-
-                  <option>
-                    NGK India
-                  </option>
-
-                  <option>
-                    MRF Ltd
-                  </option>
-
-                  <option>
-                    Amaron India
-                  </option>
-
-                  <option>
-                    Mann Filters
-                  </option>
-
+                  <option value="">Select supplier...</option>
+                  {SUPPLIER_OPTIONS.map((supplier) => (
+                    <option key={supplier} value={supplier}>
+                      {supplier}
+                    </option>
+                  ))}
+                  {customSuppliers.map((supplier) => (
+                    <option key={supplier} value={supplier}>
+                      {supplier}
+                    </option>
+                  ))}
+                  <option value="Add New Supplier...">Add New Supplier...</option>
                 </select>
 
               </div>
