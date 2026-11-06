@@ -1,30 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { useApiLogin } from "../../hooks/useApiLogin";
 import "./ServiceAdvisorLogin.css";
 
 export default function ServiceAdvisorLogin() {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      await login(email, password, rememberMe);
-      navigate("/service-advisor");
-    } catch (loginError) {
-      setError(loginError.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { submit, error, loading } = useApiLogin("/service-advisor");
 
   return (
     <div className="sa-login-container">
@@ -56,7 +40,7 @@ export default function ServiceAdvisorLogin() {
             <div className="sa-login-brand">
               <div className="sa-logo-icon">◆</div>
               <div>
-                <div className="sa-brand-name">SMARTGARAGE AI CRM</div>
+                <div className="sa-brand-name">Auto_Service_Hub AI CRM</div>
                 <div className="sa-brand-sub">Select your role to continue</div>
               </div>
             </div>
@@ -75,8 +59,8 @@ export default function ServiceAdvisorLogin() {
           </div>
 
           {/* Form Actions */}
-          <form className="sa-login-form" onSubmit={handleSubmit}>
-            {error && <p role="alert">{error}</p>}
+          <form className="sa-login-form" onSubmit={(event) => submit(event, email, password, rememberMe)}>
+            {error && <p role="alert" className="login-error">{error}</p>}
             <div className="sa-login-title-group">
               <h2 className="sa-form-title">SIGN IN</h2>
               <p className="sa-form-desc">
@@ -85,12 +69,15 @@ export default function ServiceAdvisorLogin() {
             </div>
 
             <div className="sa-field">
-              <label className="sa-label">EMAIL ADDRESS</label>
+              <label className="sa-label">EMAIL ADDRESS OR USERNAME</label>
               <input
                 type="text"
                 className="sa-input"
+                name="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
+                placeholder="Email or username"
                 required
               />
             </div>
@@ -100,8 +87,10 @@ export default function ServiceAdvisorLogin() {
               <input
                 type="password"
                 className="sa-input"
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
               />
             </div>

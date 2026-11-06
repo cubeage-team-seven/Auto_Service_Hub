@@ -15,9 +15,9 @@ import org.springframework.context.annotation.Configuration;
 public class OpenApiConfig {
 
     @Bean
-    public OpenAPI smartGarageOpenAPI() {
+    public OpenAPI autoServiceHubOpenAPI() {
         return new OpenAPI()
-                .info(new Info().title("Auto Service HUB CRM API").version("v1"))
+                .info(new Info().title("Auto_Service_Hub API").version("v1"))
                 .components(new Components().addSecuritySchemes("bearerAuth",
                         new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)

@@ -45,7 +45,7 @@ function InventoryLayout() {
           </div>
 
           <span className="inventory-layout-logo-text">
-            SMARTGARAGE
+            Auto_Service_Hub
           </span>
 
         </div>
@@ -144,7 +144,7 @@ function InventoryLayout() {
           <div className="inventory-layout-breadcrumb">
 
             <span>
-              SmartGarage
+              Auto_Service_Hub
             </span>
 
             <b>
@@ -185,7 +185,7 @@ function InventoryLayout() {
               </span>
 
               <span>
-                3 AI alerts
+                AI tools
               </span>
 
             </button>

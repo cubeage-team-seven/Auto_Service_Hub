@@ -1,31 +1,13 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { Link } from "react-router-dom";
+import { useApiLogin } from "../../hooks/useApiLogin";
 import "./GarageOwnerLogin.css";
 
 function GarageOwnerLogin() {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      await login(email, password, rememberMe);
-      navigate("/garage-owner/dashboard");
-    } catch (loginError) {
-      setError(loginError.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { submit, error, loading } = useApiLogin("/garage-owner/dashboard");
 
   return (
     <div className="garage-login-page">
@@ -90,7 +72,7 @@ function GarageOwnerLogin() {
             <div className="garage-login-brand-text">
 
               <div className="garage-login-brand-title">
-                SMARTGARAGE AI CRM
+                Auto_Service_Hub AI CRM
               </div>
 
               <div className="garage-login-brand-subtitle">
@@ -163,27 +145,27 @@ function GarageOwnerLogin() {
 
           <form
             className="garage-login-form"
-            onSubmit={handleLogin}
+            onSubmit={(event) => submit(event, email, password, rememberMe)}
           >
-            {error && <p role="alert">{error}</p>}
+            {error && <p role="alert" className="login-error">{error}</p>}
 
             {/* EMAIL */}
 
             <div className="garage-login-field">
 
               <label htmlFor="garage-email">
-                EMAIL ADDRESS
+                EMAIL ADDRESS OR USERNAME
               </label>
 
               <input
                 id="garage-email"
                 type="text"
-                placeholder="you@garage.com"
+                name="username"
+                placeholder="Email or username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
                 autoComplete="username"
-                autoComplete="email"
+                required
               />
 
             </div>
@@ -200,12 +182,14 @@ function GarageOwnerLogin() {
               <input
                 id="garage-password"
                 type="password"
+                name="password"
                 placeholder="••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
                 autoComplete="current-password"
+                required
               />
 
             </div>

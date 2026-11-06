@@ -1,40 +1,17 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { Link } from "react-router-dom";
+import { useApiLogin } from "../../hooks/useApiLogin";
 
 import "./MechanicLogin.css";
 
 function MechanicLogin() {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  // ==========================================
-  // LOGIN
-  // ==========================================
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    const formData = new FormData(e.currentTarget);
-    try {
-      await login(
-        formData.get("username"),
-        formData.get("password"),
-        rememberMe
-      );
-      navigate("/mechanic-dashboard");
-    } catch (loginError) {
-      setError(loginError.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { submitForm, error, loading } = useApiLogin(
+    "/mechanic-dashboard",
+    {},
+    "MECHANIC"
+  );
 
 
   return (
@@ -200,9 +177,9 @@ function MechanicLogin() {
 
           <form
             className="mechanic-login-form"
-            onSubmit={handleLogin}
+            onSubmit={submitForm}
           >
-            {error && <p role="alert">{error}</p>}
+            {error && <p role="alert" className="login-error">{error}</p>}
 
 
             {/* =================================================
@@ -210,15 +187,15 @@ function MechanicLogin() {
             ================================================= */}
 
             <label htmlFor="mechanic-email">
-              EMAIL ADDRESS
+              EMAIL ADDRESS OR USERNAME
             </label>
 
 
             <input
               id="mechanic-email"
-              name="username"
               type="text"
-              placeholder="you@garage.com"
+              name="username"
+              placeholder="Email or username"
               autoComplete="username"
               required
             />
@@ -274,6 +251,7 @@ function MechanicLogin() {
 
                 <input
                   type="checkbox"
+                  name="rememberMe"
                   checked={rememberMe}
                   onChange={(e) =>
                     setRememberMe(e.target.checked)

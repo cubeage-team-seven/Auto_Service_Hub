@@ -1,16 +1,16 @@
-# React + Vite
+# Auto Service Hub frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React and Vite frontend for the Spring Boot API in `../Auto_Service_Hub_Backend`.
 
-Currently, two official plugins are available:
+## Run locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Start MySQL and configure the backend's database and JWT environment variables as described in the backend README.
+2. Start the API from `Auto_Service_Hub_Backend` with `mvn spring-boot:run`; it listens on `http://localhost:8080`.
+3. In this directory, run `npm ci` and `npm run dev`.
+4. Open the Vite URL shown in the terminal and sign in with an account provisioned in the backend.
 
-## React Compiler
+Vite proxies `/api` to `http://localhost:8080`. Set `VITE_API_PROXY_TARGET` when the backend is running elsewhere. For a directly reachable API, set `VITE_API_BASE_URL` to its `/api/v1` base URL.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Owner and staff applicants can submit an access request from the module screen. Requests do not create accounts until an administrator approves them. The first administrator is initialized once through the backend bootstrap environment variables described in the backend README; public administrator sign-up is not available.
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Customers are CRM records only; they do not sign in, self-register, or use this application. Administrators maintain customer profiles, while workshop staff and owners use customer records for operational workflows. Customer records may have multiple vehicles and related service history.

@@ -41,7 +41,7 @@ public class VehicleDiagnosisServiceImpl implements VehicleDiagnosisService {
     public static final String DISCLAIMER =
             "This diagnosis is AI-generated and must be reviewed and confirmed by a " +
             "qualified technician before any repair work is carried out. " +
-            "SmartGarage AI accepts no liability for actions taken based solely on this output.";
+            "Auto_Service_Hub AI accepts no liability for actions taken based solely on this output.";
 
     private final AiOrchestrationService aiOrchestrationService;
     private final VehicleRepository      vehicleRepository;

@@ -67,7 +67,7 @@ public class MechanicAssignmentServiceImpl implements MechanicAssignmentService 
           "advisor or manager must review this recommendation and assign the work manually. The system " +
           "holds no mechanic skill, certification, rating, availability or attendance data, so this " +
           "recommendation is based on employment status and current workload only. " +
-          "SmartGarage AI accepts no liability for staffing decisions based solely on this output.";
+          "Auto_Service_Hub AI accepts no liability for staffing decisions based solely on this output.";
 
     private final AiOrchestrationService aiOrchestrationService;
     private final JobCardRepository      jobCardRepository;

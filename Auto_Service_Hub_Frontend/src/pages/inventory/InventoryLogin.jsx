@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { Link } from "react-router-dom";
+import { useApiLogin } from "../../hooks/useApiLogin";
 
 import "./InventoryLogin.css";
 
@@ -10,33 +10,7 @@ function InventoryLogin() {
 
   const [rememberMe, setRememberMe] = useState(true);
 
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-
-  // ==========================================
-  // LOGIN
-  // ==========================================
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    const formData = new FormData(e.currentTarget);
-    try {
-      await login(
-        formData.get("username"),
-        formData.get("password"),
-        rememberMe
-      );
-      navigate("/inventory-dashboard");
-    } catch (loginError) {
-      setError(loginError.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { submitForm, error, loading } = useApiLogin("/inventory-dashboard");
 
 
   return (
@@ -197,9 +171,9 @@ function InventoryLogin() {
 
           <form
             className="inventory-login-form"
-            onSubmit={handleLogin}
+            onSubmit={submitForm}
           >
-            {error && <p role="alert">{error}</p>}
+            {error && <p role="alert" className="login-error">{error}</p>}
 
 
             {/* =================================================
@@ -207,15 +181,15 @@ function InventoryLogin() {
             ================================================= */}
 
             <label htmlFor="inventory-email">
-              EMAIL ADDRESS
+              EMAIL ADDRESS OR USERNAME
             </label>
 
 
             <input
               id="inventory-email"
-              name="username"
               type="text"
-              placeholder="Enter your email"
+              name="username"
+              placeholder="Email or username"
               autoComplete="username"
               required
             />
@@ -267,6 +241,7 @@ function InventoryLogin() {
 
                 <input
                   type="checkbox"
+                  name="rememberMe"
                   checked={rememberMe}
                   onChange={(e) =>
                     setRememberMe(e.target.checked)

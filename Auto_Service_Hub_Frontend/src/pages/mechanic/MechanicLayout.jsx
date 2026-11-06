@@ -31,7 +31,7 @@ function MechanicLayout() {
           </div>
 
           <div className="mechanic-brand-name">
-            SMARTGARAGE
+            Auto_Service_Hub
           </div>
         </div>
 
@@ -113,7 +113,7 @@ function MechanicLayout() {
           <div className="mechanic-breadcrumb">
 
             <span className="breadcrumb-muted">
-              SmartGarage
+              Auto_Service_Hub
             </span>
 
             <span className="breadcrumb-slash">
@@ -143,7 +143,7 @@ function MechanicLayout() {
               <span className="mechanic-ai-dot"></span>
 
               <span>
-                3 AI alerts
+                AI tools
               </span>
 
             </div>

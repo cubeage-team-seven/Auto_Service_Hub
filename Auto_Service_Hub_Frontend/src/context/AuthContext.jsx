@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useMemo, useState } from "react";
+import React, { createContext, useCallback, useEffect, useMemo, useState } from "react";
 import { getUser, login as authenticate, logout as clearSession } from "../services/authService";
 
 export const AuthContext = createContext(null);
@@ -15,6 +15,12 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     clearSession();
     setUser(null);
+  }, []);
+
+  useEffect(() => {
+    const expireSession = () => setUser(null);
+    window.addEventListener("autoservicehub:unauthorized", expireSession);
+    return () => window.removeEventListener("autoservicehub:unauthorized", expireSession);
   }, []);
 
   const value = useMemo(

@@ -59,7 +59,7 @@ public class DamageDetectionServiceImpl implements DamageDetectionService {
           "or vision capability. A qualified technician must physically inspect the vehicle and confirm " +
           "every reported area before this assessment is acted on or shown to a customer. This output " +
           "must NOT be used to settle, deny or value an insurance claim, and must NOT be used to declare " +
-          "a vehicle safe or unsafe, roadworthy or not roadworthy. SmartGarage AI accepts no liability " +
+          "a vehicle safe or unsafe, roadworthy or not roadworthy. Auto_Service_Hub AI accepts no liability " +
           "for damage or insurance decisions based solely on this output.";
 
     private final AiOrchestrationService aiOrchestrationService;

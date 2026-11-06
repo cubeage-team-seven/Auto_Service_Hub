@@ -20,7 +20,7 @@ function Appointments() {
       {/* SIDEBAR */}
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <span className="brand-icon">▰</span> SMARTGARAGE
+          <span className="brand-icon">▰</span> Auto_Service_Hub
         </div>
         <nav className="sidebar-nav">
           <Link to="/dashboard" className="nav-item">
@@ -35,7 +35,7 @@ function Appointments() {
       {/* MAIN CONTENT */}
       <main className="main-content">
         <header className="top-header">
-          <div className="breadcrumb">SmartGarage / <span>Appointments</span></div>
+          <div className="breadcrumb">Auto_Service_Hub / <span>Appointments</span></div>
           <div className="header-right">
             <span className="role-badge">CUSTOMER</span>
             <span className="ai-badge">● 3 AI alerts</span>

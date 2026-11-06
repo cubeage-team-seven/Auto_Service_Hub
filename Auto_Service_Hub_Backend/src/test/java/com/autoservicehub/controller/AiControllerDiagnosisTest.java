@@ -148,7 +148,7 @@ class AiControllerDiagnosisTest {
                 .disclaimer(
                         "This diagnosis is AI-generated and must be reviewed and confirmed by a " +
                         "qualified technician before any repair work is carried out. " +
-                        "SmartGarage AI accepts no liability for actions taken based solely on this output.")
+                        "Auto_Service_Hub AI accepts no liability for actions taken based solely on this output.")
                 .humanReviewRequired(true)
                 .providerUnavailable(false)
                 .generatedAt(LocalDateTime.now())

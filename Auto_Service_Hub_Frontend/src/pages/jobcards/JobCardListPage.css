@@ -1,5 +1,5 @@
 /* =========================================================
-   SMARTGARAGE
+   Auto_Service_Hub
    MECHANIC - JOB CARDS
 ========================================================= */
 
@@ -655,4 +655,14 @@
     .jobcard-modal-footer {
         grid-template-columns: 1fr;
     }
+}
+.mechanic-jobcards-page {
+  min-height: calc(100vh - 60px);
+  padding: 27px 24px 40px;
+}
+
+@media (max-width: 600px) {
+  .mechanic-jobcards-page {
+    padding: 20px 14px;
+  }
 }

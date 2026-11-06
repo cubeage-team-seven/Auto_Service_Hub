@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./ServiceAdvisor.css";
+import "./ServiceAdvisorTheme.css";
 
 const nav = [
   ["▦", "Dashboard", "/service-advisor"],
@@ -12,21 +13,21 @@ const nav = [
 ];
 
 export default function ServiceAdvisorLayout() {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
 
-  /* The breadcrumb names the section the advisor is in, so it reads
-     "SmartGarage / Packages" on the packages page. A nested or unknown
-     path falls back to the module name rather than showing nothing. */
-  const current = nav.find(([, , to]) => to === pathname);
-  const crumb = current ? current[1] : "Service Advisor";
+  const currentPage = nav.find(([, , to]) =>
+    to === "/service-advisor"
+      ? location.pathname === to
+      : location.pathname.startsWith(to)
+  )?.[1] || "Dashboard";
 
   return (
     <div className="sa-shell">
       <aside className="sa-sidebar">
         <div className="sa-logo-row">
           <div className="sa-logo-icon">◆</div>
-          <div className="sa-logo">SMARTGARAGE</div>
+          <div className="sa-logo">Auto_Service_Hub</div>
         </div>
 
         <nav className="sa-nav">
@@ -51,11 +52,11 @@ export default function ServiceAdvisorLayout() {
       <main className="sa-main">
         <header className="sa-topbar">
           <div className="sa-breadcrumb">
-            <span>SmartGarage</span><b>/</b><strong>{crumb}</strong>
+            <span>Auto_Service_Hub</span><b>/</b><strong>{currentPage}</strong>
           </div>
           <div className="sa-top-actions">
             <span className="sa-role">SERVICE ADVISOR</span>
-            <span className="sa-alert-count"><i /> 3 AI alerts</span>
+            <span className="sa-alert-count"><i /> AI insights</span>
             <button className="sa-avatar">▣</button>
           </div>
         </header>

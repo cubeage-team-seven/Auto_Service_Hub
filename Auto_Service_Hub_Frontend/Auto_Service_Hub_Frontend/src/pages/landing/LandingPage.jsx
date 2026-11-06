@@ -142,7 +142,7 @@ function LandingPage() {
 
             <div className="brand-text">
               <div className="brand-name">
-                SMARTGARAGE
+                Auto_Service_Hub
               </div>
 
               <div className="brand-badge">
@@ -245,7 +245,7 @@ function LandingPage() {
           </h1>
 
           <p className="hero-description">
-            The all-new SmartGarage AI CRM. AI-powered diagnosis,
+            The all-new Auto_Service_Hub AI CRM. AI-powered diagnosis,
             booking, billing and customer retention — in one platform.
           </p>
 
@@ -427,7 +427,7 @@ function LandingPage() {
         <div className="ai-content">
 
           <div className="section-eyebrow">
-            — SMARTGARAGE AI ENGINE
+            — Auto_Service_Hub AI ENGINE
           </div>
 
           <h2 className="section-title ai-title">
@@ -751,7 +751,7 @@ function LandingPage() {
           </h2>
 
           <p className="section-description">
-            SmartGarage AI CRM for automobile workshops,
+            Auto_Service_Hub AI CRM for automobile workshops,
             multi-bay service centres and franchise networks.
           </p>
 
@@ -854,7 +854,7 @@ function LandingPage() {
               </div>
 
               <span>
-                SMARTGARAGE
+                Auto_Service_Hub
               </span>
 
             </div>
@@ -972,7 +972,7 @@ function LandingPage() {
         <div className="footer-bottom">
 
           <span>
-            © 2026 SmartGarage AI. All rights reserved.
+            © 2026 Auto_Service_Hub AI. All rights reserved.
           </span>
 
           <div className="footer-legal">
