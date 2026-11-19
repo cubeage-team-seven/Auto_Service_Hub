@@ -1,33 +1,24 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 import {
-  DEMO_SEND_NOTICE,
-  FOLLOW_UP_CHANNELS,
-  MESSAGE_TEMPLATES,
-} from "./followUpDemoData";
-import {
   communicationStatusClassName,
   describeDueDate,
   formatDisplayDate,
   statusClassName,
 } from "./followUpUtils";
 
+const CHANNELS = [
+  ["EMAIL", "Email"],
+  ["SMS", "SMS"],
+  ["WHATSAPP", "WhatsApp"],
+  ["CALL", "Phone Call"],
+  ["IN_PERSON", "In Person"],
+];
+const templateForType = (type) =>
+  `Hello {customer}, this is a follow-up regarding your {vehicle} ({registration}). Please contact the workshop if you need assistance.`;
 /* =========================================================
    MESSAGE TEMPLATE PICKER
    ========================================================= */
-
-const templateForType = (type) => {
-  switch (type) {
-    case "Feedback Request":
-      return MESSAGE_TEMPLATES.feedback;
-    case "Payment Reminder":
-      return MESSAGE_TEMPLATES.payment;
-    case "Insurance Renewal":
-      return MESSAGE_TEMPLATES.renewal;
-    default:
-      return MESSAGE_TEMPLATES.reminder;
-  }
-};
 
 const fillTemplate = (template, followUp) =>
   template
@@ -35,27 +26,25 @@ const fillTemplate = (template, followUp) =>
     .replaceAll("{vehicle}", followUp?.vehicle || "vehicle")
     .replaceAll("{registration}", followUp?.registration || "registration");
 
-/* =========================================================
-   COMMUNICATION PANEL
-   Shows the conversation planner and the recorded contact
-   history for one follow-up.
+/* Communication records are persisted locally; external delivery is unavailable. */
 
-   IMPORTANT: "Send" is a simulation. The entry it creates is
-   stored in page state only — no SMS, WhatsApp, e-mail or call
-   is placed and nothing is written to the backend.
-   ========================================================= */
-
-function CommunicationModal({ open, followUp, history, onClose, onSend }) {
+function CommunicationModal({ open, followUp, history, reminders = [], onClose, onSend }) {
   const [channel, setChannel] = useState("");
   const [message, setMessage] = useState("");
   const [notice, setNotice] = useState("");
+  const [noticeError, setNoticeError] = useState(false);
+  const [sending, setSending] = useState(false);
 
   /* A different follow-up always starts a fresh draft. */
   useEffect(() => {
     if (open && followUp) {
-      setChannel(followUp.channel);
+      setChannel(followUp.backendChannel === "PHONE_CALL"
+        ? "CALL"
+        : followUp.backendChannel || "EMAIL");
       setMessage(fillTemplate(templateForType(followUp.type), followUp));
       setNotice("");
+      setNoticeError(false);
+      setSending(false);
     }
   }, [open, followUp]);
 
@@ -68,16 +57,24 @@ function CommunicationModal({ open, followUp, history, onClose, onSend }) {
     return null;
   }
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!message.trim()) {
-      setNotice("Write a message before recording it as sent.");
+      setNotice("Write a message before recording it.");
+      setNoticeError(true);
       return;
     }
 
-    onSend(followUp, { channel, message: message.trim() });
-    setNotice(
-      `Recorded as sent to ${followUp.customer} over ${channel} — simulated only.`
-    );
+    try {
+      setSending(true);
+      await onSend(followUp, { channel, message: message.trim() });
+      setNotice("Message saved to communication history. External delivery is not configured.");
+      setNoticeError(false);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Unable to record message.");
+      setNoticeError(true);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -158,12 +155,14 @@ function CommunicationModal({ open, followUp, history, onClose, onSend }) {
           </div>
 
 
-          <p className="followup-form-note">{DEMO_SEND_NOTICE}</p>
+          <p className="followup-form-note">
+            Messages are stored in the workshop history only. No SMS, email, WhatsApp, or call provider is configured.
+          </p>
 
           {notice && (
             <div
-              className="followup-feedback followup-feedback-success"
-              role="status"
+              className={`followup-feedback ${noticeError ? "followup-feedback-error" : "followup-feedback-success"}`}
+              role={noticeError ? "alert" : "status"}
             >
               {notice}
             </div>
@@ -182,9 +181,9 @@ function CommunicationModal({ open, followUp, history, onClose, onSend }) {
               value={channel}
               onChange={(event) => setChannel(event.target.value)}
             >
-              {FOLLOW_UP_CHANNELS.map((entry) => (
-                <option value={entry} key={entry}>
-                  {entry}
+              {CHANNELS.map(([value, label]) => (
+                <option value={value} key={value}>
+                  {label}
                 </option>
               ))}
             </select>
@@ -211,18 +210,17 @@ function CommunicationModal({ open, followUp, history, onClose, onSend }) {
             <button
               type="button"
               className="followup-save-button"
+              disabled={sending}
               onClick={handleSend}
             >
-              RECORD AS SENT (SIMULATED)
+              {sending ? "RECORDING..." : "RECORD MESSAGE (NOT SENT)"}
             </button>
 
             <button
               type="button"
               className="followup-cancel-button"
               onClick={() =>
-                setMessage(
-                  fillTemplate(templateForType(followUp.type), followUp)
-                )
+                setMessage(fillTemplate(templateForType(followUp.type), followUp))
               }
             >
               Reset message
@@ -250,27 +248,47 @@ function CommunicationModal({ open, followUp, history, onClose, onSend }) {
               <ul className="followup-history-list">
                 {history.map((entry) => (
                   <li className="followup-history-row" key={entry.id}>
-
                     <div className="followup-history-main">
                       <strong>{entry.channel}</strong>
-                      <span>{formatDisplayDate(entry.at)}</span>
+                      <span>{formatDisplayDate(entry.createdAt || entry.at)}</span>
                     </div>
-
-                    <p className="followup-history-note">{entry.note}</p>
-
+                    <p className="followup-history-note">{entry.message || entry.note}</p>
                     <span
                       className={`followup-comm-status ${communicationStatusClassName(
-                        entry.status
+                        entry.deliveryStatus || entry.status
                       )}`}
                     >
-                      {entry.status}
+                      {entry.deliveryStatus || entry.status}
                     </span>
 
                   </li>
                 ))}
               </ul>
             )}
+          </div>
 
+          <div className="followup-comm-history">
+            <h3>REMINDER HISTORY <span>{reminders.length} RECORDS</span></h3>
+            {reminders.length === 0 ? (
+              <p className="followup-comm-empty">No reminder history is available.</p>
+            ) : (
+              <ul className="followup-history-list">
+                {reminders.map((reminder) => (
+                  <li className="followup-history-row" key={reminder.id}>
+                    <div className="followup-history-main">
+                      <strong>{reminder.channel}</strong>
+                      <span>{formatDisplayDate(reminder.reminderAt)}</span>
+                    </div>
+                    <p className="followup-history-note">
+                      {reminder.reminderAt?.slice(11, 16) || ""} {reminder.failureReason || ""}
+                    </p>
+                    <span className={`followup-comm-status ${communicationStatusClassName(reminder.status)}`}>
+                      {reminder.status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
         </div>

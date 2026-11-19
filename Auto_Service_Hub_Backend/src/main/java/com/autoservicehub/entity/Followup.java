@@ -34,8 +34,22 @@ public class Followup extends BaseEntity {
     @JoinColumn(name = "job_card_id")
     private JobCard jobCard;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vehicle_id")
+    private Vehicle vehicle;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_user_id")
+    private User assignedUser;
+
     @Column(name = "due_date")
     private LocalDate dueDate;
+    @Column(name = "reminder_at")
+    private LocalDateTime reminderAt;
+    @Column(name = "followup_type", length = 80)
+    private String type;
+    @Column(name = "channel", length = 32)
+    private String channel;
     @Column(name = "reason")
     private String reason;
     @Column(name = "status")

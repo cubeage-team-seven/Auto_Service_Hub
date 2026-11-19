@@ -86,6 +86,9 @@ function PackagesPage() {
   const [formError, setFormError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [notice, setNotice] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const [form, setForm] = useState(EMPTY_FORM);
 
@@ -410,22 +413,47 @@ function PackagesPage() {
     }
   };
 
-  const handleDelete = async (pkg) => {
-    if (!window.confirm(`Delete "${pkg.name}"? This cannot be undone.`)) {
+  /* =====================================================
+     DELETE PACKAGE
+  ===================================================== */
+
+  /** Opens the delete confirmation dialog for the given package. */
+  const handleDeleteClick = (pkg) => {
+    setNotice("");
+    setSuccessMessage("");
+    setDeleteError("");
+    setDeleteTarget(pkg);
+  };
+
+  const cancelDelete = () => {
+    if (isDeleting) {
+      return;
+    }
+    setDeleteTarget(null);
+    setDeleteError("");
+  };
+
+  /** Confirms deletion — calls the existing DELETE /service-packages/{id}. */
+  const confirmDelete = async () => {
+    if (isDeleting || !deleteTarget) {
       return;
     }
 
-    setNotice("");
-    setSuccessMessage("");
+    setIsDeleting(true);
+    setDeleteError("");
 
     try {
-      await deleteServicePackage(pkg.id);
+      await deleteServicePackage(deleteTarget.id);
+      setDeleteTarget(null);
+      setSuccessMessage(`${deleteTarget.name} deleted successfully.`);
+      // Refresh the list and summary without resetting other UI state.
       await loadPackages({ showLoading: false });
-      setSuccessMessage(`${pkg.name} deleted successfully.`);
     } catch (error) {
-      setLoadError(
+      setDeleteError(
         error instanceof Error ? error.message : "Unable to delete the package."
       );
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -713,7 +741,7 @@ function PackagesPage() {
                 <button
                   type="button"
                   className="package-edit-button package-action-text package-delete-button"
-                  onClick={() => void handleDelete(pkg)}
+                  onClick={() => handleDeleteClick(pkg)}
                 >
                   Delete
                 </button>
@@ -1112,6 +1140,74 @@ function PackagesPage() {
               </div>
 
             </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================
+          DELETE PACKAGE CONFIRMATION DIALOG
+      ===================================================== */}
+      {deleteTarget && (
+        <div
+          className="package-modal-overlay"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) cancelDelete();
+          }}
+        >
+          <div className="package-modal package-delete-dialog">
+
+            <div className="package-modal-header">
+              <h2>DELETE PACKAGE</h2>
+              <button
+                type="button"
+                className="package-modal-close"
+                onClick={cancelDelete}
+                disabled={isDeleting}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="package-delete-body">
+
+              {deleteError && (
+                <div className="packages-feedback packages-feedback-error" role="alert">
+                  <span>{deleteError}</span>
+                </div>
+              )}
+
+              <div className="package-delete-confirm">
+                <p className="package-delete-question">
+                  Delete <strong>"{deleteTarget.name}"</strong>?
+                </p>
+                <p className="package-delete-hint">
+                  This permanently removes the package from the catalogue. If it
+                  has already been applied to a customer's vehicle, deletion is
+                  rejected — deactivate the package instead.
+                </p>
+              </div>
+
+              <div className="package-modal-actions">
+                <button
+                  type="button"
+                  className="package-create-button package-delete-confirm-button"
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "DELETING..." : "DELETE PACKAGE"}
+                </button>
+                <button
+                  type="button"
+                  className="package-cancel-button"
+                  onClick={cancelDelete}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+              </div>
+
+            </div>
 
           </div>
         </div>

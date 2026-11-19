@@ -68,5 +68,7 @@ public enum AuditAction {
     // ── User accounts (SRS 13 Roles & Permissions) ───────────────────────
     // Handing out access is a change of who can do what, which is exactly the
     // kind of change this trail exists to answer for.
-    USER_CREATE
+    USER_CREATE,
+    USER_UPDATE,
+    USER_DELETE
 }

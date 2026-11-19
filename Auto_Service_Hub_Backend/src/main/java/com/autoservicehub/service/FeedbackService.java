@@ -23,5 +23,7 @@ public interface FeedbackService {
     /** All feedback for a specific job card (typically 0 or 1 record). */
     Page<FeedbackResponseDTO> listByJobCard(Long jobCardId, Pageable pageable);
 
+    Page<FeedbackResponseDTO> listAll(String query, Pageable pageable);
+
     void delete(Long id);
 }

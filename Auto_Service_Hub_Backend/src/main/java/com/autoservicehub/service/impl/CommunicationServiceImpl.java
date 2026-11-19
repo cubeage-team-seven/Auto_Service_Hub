@@ -107,7 +107,11 @@ public class CommunicationServiceImpl implements CommunicationService {
         e.setDirection(r.getDirection() != null ? r.getDirection().toUpperCase() : null);
         e.setSubject(r.getSubject());
         e.setMessage(r.getMessage());
-        e.setSentAt(r.getSentAt() != null ? r.getSentAt() : LocalDateTime.now());
+        boolean inbound = "INBOUND".equalsIgnoreCase(r.getDirection());
+        e.setDeliveryStatus(inbound ? "RECEIVED" : "RECORDED");
+        e.setSentAt(inbound
+                ? (r.getSentAt() != null ? r.getSentAt() : LocalDateTime.now())
+                : null);
     }
 
     private CommunicationResponseDTO toResponse(Communication e) {
@@ -130,6 +134,7 @@ public class CommunicationServiceImpl implements CommunicationService {
         dto.setSubject(e.getSubject());
         dto.setMessage(e.getMessage());
         dto.setSentAt(e.getSentAt());
+        dto.setDeliveryStatus(e.getDeliveryStatus());
         dto.setCreatedAt(e.getCreatedAt());
         dto.setUpdatedAt(e.getUpdatedAt());
         return dto;

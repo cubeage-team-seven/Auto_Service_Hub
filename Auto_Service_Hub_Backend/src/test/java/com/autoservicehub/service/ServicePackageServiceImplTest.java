@@ -8,6 +8,7 @@ import com.autoservicehub.entity.PackageItemType;
 import com.autoservicehub.entity.ServicePackage;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.ResourceNotFoundException;
+import com.autoservicehub.repository.PackageApplicationRepository;
 import com.autoservicehub.repository.ServicePackageRepository;
 import com.autoservicehub.service.impl.ServicePackageServiceImpl;
 import org.junit.jupiter.api.DisplayName;
@@ -54,11 +55,13 @@ import static org.mockito.Mockito.when;
  * PK15 Update unknown id -> ResourceNotFoundException
  * PK16 Delete            -> removed
  * PK17 Delete unknown id -> ResourceNotFoundException
+ * PK18 Delete applied    -> BusinessRuleException (deactivate instead)
  */
 @ExtendWith(MockitoExtension.class)
 class ServicePackageServiceImplTest {
 
     @Mock ServicePackageRepository repository;
+    @Mock PackageApplicationRepository packageApplicationRepository;
 
     @InjectMocks
     ServicePackageServiceImpl service;
@@ -381,6 +384,7 @@ class ServicePackageServiceImplTest {
     @DisplayName("PK16 — deleting a package removes it")
     void pk16_delete_removes() {
         when(repository.existsById(5L)).thenReturn(true);
+        when(packageApplicationRepository.existsByServicePackageId(5L)).thenReturn(false);
 
         service.delete(5L);
 
@@ -396,6 +400,21 @@ class ServicePackageServiceImplTest {
 
         assertThatThrownBy(() -> service.delete(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
+
+        verify(repository, never()).deleteById(any(Long.class));
+    }
+
+    // ── PK18 ─────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("PK18 — deleting an applied package → BusinessRuleException, nothing deleted")
+    void pk18_deleteApplied_throws() {
+        when(repository.existsById(5L)).thenReturn(true);
+        when(packageApplicationRepository.existsByServicePackageId(5L)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.delete(5L))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Deactivate it instead");
 
         verify(repository, never()).deleteById(any(Long.class));
     }

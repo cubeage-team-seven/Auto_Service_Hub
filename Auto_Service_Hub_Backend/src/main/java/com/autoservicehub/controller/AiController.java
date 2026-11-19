@@ -79,7 +79,7 @@ public class AiController {
      * confirm before any repair action is taken (SRS BR-09, FR-AI-04).
      */
     @PostMapping("/diagnosis")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER')")
     @Operation(
         summary = "AI Vehicle Diagnosis",
         description = "Provides an AI-assisted diagnosis recommendation based on symptoms, " +
@@ -160,7 +160,7 @@ public class AiController {
      * anything is recommended to a customer (SRS BR-09, FR-AI-12).
      */
     @PostMapping("/maintenance-prediction")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     @Operation(
         summary = "AI Maintenance Prediction",
         description = "Predicts upcoming maintenance items for a vehicle using its recorded service " +
@@ -287,7 +287,7 @@ public class AiController {
      * vehicle safe or unsafe (SRS BR-09, FR-AI-16).
      */
     @PostMapping("/damage-detection")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     @Operation(
         summary = "AI Damage Assessment (text-based, NOT image analysis)",
         description = "Assesses reported damage from a WRITTEN description together with the vehicle record " +

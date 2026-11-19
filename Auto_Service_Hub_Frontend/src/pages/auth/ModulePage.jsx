@@ -1,14 +1,23 @@
-import React, { useContext, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext } from "react";
+import { Link, Navigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import "./ModulePage.css";
 
 function ModulePage() {
-  const { logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
+  const role = String(user?.role || "").replace(/^ROLE_/i, "").toUpperCase();
+  const isMechanic = role === "MECHANIC";
+  const isSpecialist = [
+    "MECHANIC",
+    "INVENTORY_MANAGER",
+    "BILLING_USER",
+    "SERVICE_ADVISOR",
+  ].includes(role);
+  const hasManagementWorkspaceAccess = ["OWNER", "GARAGE_OWNER", "MANAGER"].includes(role);
 
-  useEffect(() => {
-    logout();
-  }, [logout]);
+  if (role === "SERVICE_ADVISOR") {
+    return <Navigate to="/service-advisor" replace />;
+  }
 
   return (
     <div className="module-page">
@@ -114,6 +123,15 @@ function ModulePage() {
             <Link to="/access-request" className="module-access-link">
               Need an owner or staff account? Request access
             </Link>
+            {user && (
+              <Link
+                to="/modules"
+                className="module-access-link"
+                onClick={logout}
+              >
+                Sign out to change role
+              </Link>
+            )}
           </div>
 
 
@@ -124,41 +142,45 @@ function ModulePage() {
           <div className="module-list">
 
 
+            {!isMechanic && (
+              <>
             {/* =================================================
                 GARAGE OWNER
             ================================================= */}
 
-            <Link
-              to="/garage-owner-login"
-              className="module-card module-card-link"
-            >
+            {!isSpecialist && (
+              <Link
+                to={hasManagementWorkspaceAccess ? "/garage-owner/dashboard" : "/garage-owner-login"}
+                className="module-card module-card-link"
+              >
 
-              <div className="module-card-icon">
-                🏢
-              </div>
+                <div className="module-card-icon">
+                  🏢
+                </div>
 
-              <div className="module-card-content">
+                <div className="module-card-content">
 
-                <h3>
-                  Garage Owner
-                </h3>
+                  <h3>
+                    Garage Owner
+                  </h3>
 
-                <span>
-                  Workshop Management
+                  <span>
+                    Workshop Management
+                  </span>
+
+                  <p>
+                    Manage your workshop,
+                    staff, customers and business.
+                  </p>
+
+                </div>
+
+                <span className="module-arrow">
+                  →
                 </span>
 
-                <p>
-                  Manage your workshop,
-                  staff, customers and business.
-                </p>
-
-              </div>
-
-              <span className="module-arrow">
-                →
-              </span>
-
-            </Link>
+              </Link>
+            )}
 
 
             {/* =================================================
@@ -166,7 +188,7 @@ function ModulePage() {
             ================================================= */}
 
             <Link
-              to="/service-advisor-login"
+              to={hasManagementWorkspaceAccess ? "/service-advisor" : "/service-advisor-login"}
               className="module-card module-card-link"
             >
 
@@ -197,13 +219,15 @@ function ModulePage() {
 
             </Link>
 
+              </>
+            )}
 
             {/* =================================================
                 MECHANIC
             ================================================= */}
 
             <Link
-              to="/mechanic"
+              to={hasManagementWorkspaceAccess ? "/mechanic-dashboard" : "/mechanic"}
               className="module-card module-card-link"
             >
 
@@ -235,12 +259,14 @@ function ModulePage() {
             </Link>
 
 
+            {!isMechanic && (
+              <>
             {/* =================================================
                 INVENTORY MANAGER
             ================================================= */}
 
             <Link
-              to="/inventory-login"
+              to={hasManagementWorkspaceAccess ? "/inventory-dashboard" : "/inventory-login"}
               className="module-card module-card-link"
             >
 
@@ -277,7 +303,7 @@ function ModulePage() {
             ================================================= */}
 
             <Link
-              to="/billing"
+              to={hasManagementWorkspaceAccess ? "/billing/dashboard" : "/billing"}
               className="module-card module-card-link"
             >
 
@@ -417,6 +443,10 @@ function ModulePage() {
               </span>
 
             </Link>
+
+
+              </>
+            )}
 
 
           </div>

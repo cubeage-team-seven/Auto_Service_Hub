@@ -29,6 +29,15 @@ public interface PackageApplicationRepository
      */
     boolean existsByServicePackageIdAndVehicleId(Long servicePackageId, Long vehicleId);
 
+    /**
+     * Whether this package has ever been applied to a vehicle. Backs the
+     * delete guard in {@code ServicePackageServiceImpl}: an applied package
+     * is referenced by a restrictive foreign key (and, through the
+     * application, by job cards), so it must be deactivated rather than
+     * permanently deleted.
+     */
+    boolean existsByServicePackageId(Long servicePackageId);
+
     /** Applications of one package, newest first. */
     List<PackageApplication> findByServicePackageIdOrderByCreatedAtDescIdDesc(Long servicePackageId);
 

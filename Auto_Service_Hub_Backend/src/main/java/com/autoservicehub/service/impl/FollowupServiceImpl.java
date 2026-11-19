@@ -2,28 +2,45 @@ package com.autoservicehub.service.impl;
 
 import com.autoservicehub.dto.FollowupRequestDTO;
 import com.autoservicehub.dto.FollowupResponseDTO;
+import com.autoservicehub.dto.FollowupDashboardDTO;
+import com.autoservicehub.dto.FollowupAssigneeDTO;
+import com.autoservicehub.dto.FollowupReminderResponseDTO;
+import com.autoservicehub.dto.FollowupMessageRequestDTO;
+import com.autoservicehub.dto.FollowupRescheduleRequestDTO;
+import com.autoservicehub.dto.FollowupReminderStatusRequestDTO;
+import com.autoservicehub.dto.CommunicationResponseDTO;
+import com.autoservicehub.entity.Communication;
 import com.autoservicehub.entity.Customer;
 import com.autoservicehub.entity.Followup;
+import com.autoservicehub.entity.FollowupReminder;
 import com.autoservicehub.entity.JobCard;
 import com.autoservicehub.entity.User;
+import com.autoservicehub.entity.Vehicle;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.ResourceNotFoundException;
+import com.autoservicehub.repository.CommunicationRepository;
 import com.autoservicehub.repository.CustomerRepository;
+import com.autoservicehub.repository.FeedbackRepository;
 import com.autoservicehub.repository.FollowupRepository;
+import com.autoservicehub.repository.FollowupReminderRepository;
 import com.autoservicehub.repository.JobCardRepository;
 import com.autoservicehub.repository.UserRepository;
+import com.autoservicehub.repository.VehicleRepository;
 import com.autoservicehub.service.FollowupService;
 import com.autoservicehub.util.AppConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.criteria.JoinType;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * Customer Follow-up & Retention (SRS 4.10).
@@ -51,12 +68,23 @@ public class FollowupServiceImpl implements FollowupService {
     public static final String STATUS_IN_PROGRESS = "IN_PROGRESS";
     public static final String STATUS_COMPLETED   = "COMPLETED";
     public static final String STATUS_CANCELLED   = "CANCELLED";
+    private static final String OWNER_STORED_ALIAS = "GARAGE_OWNER";
 
     /** States in which a follow-up still needs doing. */
     public static final List<String> OPEN_STATUSES = List.of(STATUS_PENDING, STATUS_IN_PROGRESS);
 
     private static final List<String> ALL_STATUSES =
             List.of(STATUS_PENDING, STATUS_IN_PROGRESS, STATUS_COMPLETED, STATUS_CANCELLED);
+    private static final Set<String> MESSAGE_CHANNELS =
+            Set.of("EMAIL", "SMS", "WHATSAPP", "CALL", "REMINDER", "IN_PERSON");
+    private static final Set<String> FOLLOWUP_CHANNELS =
+            Set.of("PHONE_CALL", "CALL", "WHATSAPP", "SMS", "EMAIL", "IN_PERSON");
+    private static final List<String> ASSIGNABLE_ROLES = List.of(
+            AppConstants.ROLE_SERVICE_ADVISOR,
+            AppConstants.ROLE_MANAGER,
+            AppConstants.ROLE_OWNER,
+            OWNER_STORED_ALIAS,
+            "MECHANIC");
 
     /**
      * The garage-owner role as it is spelled in the {@code roles} table by a
@@ -68,8 +96,6 @@ public class FollowupServiceImpl implements FollowupService {
      * Listing both spellings means the owner is notified either way; neither
      * replaces the other.
      */
-    private static final String OWNER_STORED_ALIAS = "GARAGE_OWNER";
-
     /**
      * Roles that handle customer contact, and so are notified when a follow-up
      * falls due. Taken from the project's existing role constants, plus the
@@ -86,20 +112,39 @@ public class FollowupServiceImpl implements FollowupService {
     private final JobCardRepository        jobCardRepository;
     private final UserRepository           userRepository;
     private final NotificationServiceImpl  notificationService;
+    private final VehicleRepository        vehicleRepository;
+    private final FollowupReminderRepository reminderRepository;
+    private final FeedbackRepository       feedbackRepository;
+    private final CommunicationRepository  communicationRepository;
 
     @Override
     public FollowupResponseDTO create(FollowupRequestDTO request) {
         Followup entity = new Followup();
         mapToEntity(request, entity, true);
-        return toResponse(repository.save(entity));
+        Followup saved = repository.save(entity);
+        createReminder(saved);
+        return toResponse(saved);
     }
 
     @Override
     public FollowupResponseDTO update(Long id, FollowupRequestDTO request) {
         Followup existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Followup not found: " + id));
+        LocalDateTime previousReminderAt = existing.getReminderAt();
+        String previousStatus = existing.getStatus();
         mapToEntity(request, existing, false);
-        return toResponse(repository.save(existing));
+        boolean scheduleChanged = !java.util.Objects.equals(previousReminderAt, existing.getReminderAt());
+        if (scheduleChanged && OPEN_STATUSES.contains(existing.getStatus())) {
+            existing.setNotifiedAt(null);
+        }
+        Followup saved = repository.save(existing);
+        boolean reopened = isClosedStatus(previousStatus) && !isClosedStatus(saved.getStatus());
+        if (scheduleChanged || reopened) {
+            cancelPendingReminders(saved);
+            createReminder(saved);
+        }
+        if (isClosedStatus(saved.getStatus())) cancelPendingReminders(saved);
+        return toResponse(saved);
     }
 
     @Override
@@ -112,13 +157,15 @@ public class FollowupServiceImpl implements FollowupService {
     @Override
     @Transactional(readOnly = true)
     public Page<FollowupResponseDTO> list(Pageable pageable) {
-        return repository.findAll(pageable).map(this::toResponse);
+        return search(null, null, null, null, null, pageable);
     }
 
     @Override
     public void delete(Long id) {
-        if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Followup not found: " + id);
+        findFollowup(id);
+        if (reminderRepository.existsByFollowupId(id) || communicationRepository.existsByFollowupId(id)) {
+            throw new BusinessRuleException(
+                    "Follow-ups with reminder or communication history cannot be deleted; cancel them instead.");
         }
         repository.deleteById(id);
     }
@@ -126,16 +173,15 @@ public class FollowupServiceImpl implements FollowupService {
     @Override
     @Transactional(readOnly = true)
     public Page<FollowupResponseDTO> listPending(Pageable pageable) {
-        List<Followup> open = repository.findByStatusInOrderByDueDateAscIdAsc(OPEN_STATUSES);
-        return new PageImpl<>(open.stream().map(this::toResponse).toList(), pageable, open.size());
+        return repository.findByStatusInOrderByDueDateAscIdAsc(OPEN_STATUSES, pageable)
+                .map(this::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<FollowupResponseDTO> listDue(LocalDate asOf, Pageable pageable) {
-        List<Followup> due = repository.findByStatusInAndDueDateLessThanEqualOrderByIdAsc(
-                OPEN_STATUSES, asOf);
-        return new PageImpl<>(due.stream().map(this::toResponse).toList(), pageable, due.size());
+        return repository.findByStatusInAndDueDateLessThanEqualOrderByDueDateAscIdAsc(
+                OPEN_STATUSES, asOf, pageable).map(this::toResponse);
     }
 
     @Override
@@ -144,8 +190,183 @@ public class FollowupServiceImpl implements FollowupService {
         if (!customerRepository.existsById(customerId)) {
             throw new ResourceNotFoundException("Customer not found: " + customerId);
         }
-        List<Followup> all = repository.findByCustomerIdOrderByDueDateDesc(customerId);
-        return new PageImpl<>(all.stream().map(this::toResponse).toList(), pageable, all.size());
+        return repository.findByCustomerIdOrderByDueDateDesc(customerId, pageable)
+                .map(this::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<FollowupResponseDTO> search(String bucket, String status, String channel,
+                                             String type, String query, Pageable pageable) {
+        LocalDate today = LocalDate.now();
+        Specification<Followup> specification = (root, criteriaQuery, cb) -> {
+            var predicates = new java.util.ArrayList<jakarta.persistence.criteria.Predicate>();
+            String normalizedStatus = normalizeFilter(status);
+            if (normalizedStatus != null && !normalizedStatus.equals("ALL")) {
+                predicates.add(cb.equal(cb.upper(root.get("status")), normalizedStatus));
+            }
+            String normalizedChannel = normalizeFilter(channel);
+            if (normalizedChannel != null && !normalizedChannel.equals("ALL")) {
+                predicates.add(cb.equal(cb.upper(root.get("channel")), normalizedChannel));
+            }
+            String normalizedType = normalizeFilter(type);
+            if (normalizedType != null && !normalizedType.equals("ALL")) {
+                predicates.add(cb.equal(cb.lower(root.get("type")), normalizedType.toLowerCase(Locale.ROOT)));
+            }
+            String normalizedBucket = normalizeFilter(bucket);
+            if ("COMPLETED".equals(normalizedBucket)) {
+                predicates.add(cb.equal(cb.upper(root.get("status")), STATUS_COMPLETED));
+            } else if ("OVERDUE".equals(normalizedBucket)) {
+                predicates.add(cb.and(root.get("status").in(OPEN_STATUSES),
+                        cb.lessThan(root.get("dueDate"), today)));
+            } else if ("DUE-TODAY".equals(normalizedBucket)) {
+                predicates.add(cb.and(root.get("status").in(OPEN_STATUSES),
+                        cb.equal(root.get("dueDate"), today)));
+            } else if ("UPCOMING".equals(normalizedBucket)) {
+                predicates.add(cb.and(root.get("status").in(OPEN_STATUSES),
+                        cb.greaterThan(root.get("dueDate"), today)));
+            }
+            if (query != null && !query.isBlank()) {
+                String pattern = "%" + query.trim().toLowerCase(Locale.ROOT) + "%";
+                var customer = root.join("customer", JoinType.LEFT);
+                var vehicle = root.join("vehicle", JoinType.LEFT);
+                var jobCard = root.join("jobCard", JoinType.LEFT);
+                predicates.add(cb.or(
+                        cb.like(cb.lower(customer.get("name")), pattern),
+                        cb.like(cb.lower(customer.get("phone")), pattern),
+                        cb.like(cb.lower(vehicle.get("registrationNo")), pattern),
+                        cb.like(cb.lower(vehicle.get("make")), pattern),
+                        cb.like(cb.lower(vehicle.get("model")), pattern),
+                        cb.like(cb.lower(jobCard.get("jobCardNumber")), pattern)));
+            }
+            return cb.and(predicates.toArray(jakarta.persistence.criteria.Predicate[]::new));
+        };
+        return repository.findAll(specification, pageable).map(this::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FollowupDashboardDTO dashboard() {
+        FollowupDashboardDTO dto = new FollowupDashboardDTO();
+        dto.setDueFollowups(repository.count((root, query, cb) -> cb.and(
+                root.get("status").in(OPEN_STATUSES),
+                cb.lessThanOrEqualTo(root.get("dueDate"), LocalDate.now()))));
+        dto.setPendingReminders(reminderRepository.countByStatus("PENDING"));
+        dto.setFeedbackReceived(feedbackRepository.count());
+        dto.setMessagesSent(communicationRepository.countByDeliveryStatus("SENT"));
+        Double averageRating = feedbackRepository.findAverageRating();
+        dto.setAverageRating(averageRating != null ? averageRating : 0.0);
+        return dto;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FollowupAssigneeDTO> listAssignees() {
+        return userRepository.findActiveByRoleNameIn(ASSIGNABLE_ROLES).stream()
+                .map(user -> new FollowupAssigneeDTO(user.getId(),
+                        user.getFullName() != null ? user.getFullName() : user.getUsername()))
+                .toList();
+    }
+
+    @Override
+    public FollowupResponseDTO complete(Long id) {
+        Followup followup = findFollowup(id);
+        followup.setStatus(STATUS_COMPLETED);
+        cancelPendingReminders(followup);
+        return toResponse(repository.save(followup));
+    }
+
+    @Override
+    public FollowupResponseDTO cancel(Long id) {
+        Followup followup = findFollowup(id);
+        followup.setStatus(STATUS_CANCELLED);
+        cancelPendingReminders(followup);
+        return toResponse(repository.save(followup));
+    }
+
+    @Override
+    public FollowupResponseDTO reschedule(Long id, FollowupRescheduleRequestDTO request) {
+        Followup followup = findFollowup(id);
+        LocalDateTime reminderAt = request.getReminderAt();
+        if (reminderAt.isBefore(LocalDateTime.now())) {
+            throw new BusinessRuleException("The reminder time cannot be in the past.");
+        }
+        if (!OPEN_STATUSES.contains(followup.getStatus())) {
+            throw new BusinessRuleException("Only open follow-ups can be rescheduled.");
+        }
+        followup.setReminderAt(reminderAt);
+        followup.setDueDate(reminderAt.toLocalDate());
+        followup.setNotifiedAt(null);
+        Followup saved = repository.save(followup);
+        cancelPendingReminders(saved);
+        createReminder(saved);
+        return toResponse(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<FollowupReminderResponseDTO> listReminders(Long id, Pageable pageable) {
+        if (!repository.existsById(id)) {
+            throw new ResourceNotFoundException("Followup not found: " + id);
+        }
+        return reminderRepository.findByFollowupIdOrderByCreatedAtDesc(id, pageable)
+                .map(this::toReminderResponse);
+    }
+
+    @Override
+    public FollowupReminderResponseDTO updateReminderStatus(
+            Long followupId, Long reminderId, FollowupReminderStatusRequestDTO request) {
+        FollowupReminder reminder = reminderRepository.findById(reminderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Reminder not found: " + reminderId));
+        if (!reminder.getFollowup().getId().equals(followupId)) {
+            throw new ResourceNotFoundException("Reminder not found for follow-up: " + followupId);
+        }
+        String status = normalizeFilter(request.getStatus());
+        if (!"FAILED".equals(status) && !"CANCELLED".equals(status)) {
+            throw new BusinessRuleException(
+                    "Only FAILED or CANCELLED can be set manually; SENT requires provider confirmation.");
+        }
+        if ("FAILED".equals(status)
+                && (request.getFailureReason() == null || request.getFailureReason().isBlank())) {
+            throw new BusinessRuleException("failureReason is required when a reminder fails.");
+        }
+        if (!"PENDING".equals(reminder.getStatus())) {
+            throw new BusinessRuleException("Only pending reminders can be changed.");
+        }
+        reminder.setStatus(status);
+        reminder.setFailureReason("FAILED".equals(status) ? request.getFailureReason() : null);
+        return toReminderResponse(reminderRepository.save(reminder));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<CommunicationResponseDTO> listMessages(Long id, Pageable pageable) {
+        if (!repository.existsById(id)) {
+            throw new ResourceNotFoundException("Followup not found: " + id);
+        }
+        return communicationRepository.findByFollowupIdOrderByCreatedAtDesc(id, pageable)
+                .map(this::toCommunicationResponse);
+    }
+
+    @Override
+    public CommunicationResponseDTO recordMessage(Long id, FollowupMessageRequestDTO request) {
+        Followup followup = findFollowup(id);
+        String channel = request.getChannel().trim().toUpperCase(Locale.ROOT)
+                .replace("PHONE_CALL", "CALL");
+        if (!MESSAGE_CHANNELS.contains(channel)) {
+            throw new BusinessRuleException("Unsupported communication channel: " + request.getChannel());
+        }
+        Communication communication = new Communication();
+        communication.setCustomer(followup.getCustomer());
+        communication.setJobCard(followup.getJobCard());
+        communication.setFollowup(followup);
+        communication.setChannel(channel);
+        communication.setDirection("OUTBOUND");
+        communication.setSubject(request.getSubject());
+        communication.setMessage(request.getMessage().trim());
+        communication.setDeliveryStatus("RECORDED");
+        communication.setSentAt(null);
+        return toCommunicationResponse(communicationRepository.save(communication));
     }
 
     // ── Due-follow-up → notification ──────────────────────────────────────
@@ -231,14 +452,16 @@ public class FollowupServiceImpl implements FollowupService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Customer not found: " + r.getCustomerId()));
         e.setCustomer(customer);
+        LocalDate previousDueDate = e.getDueDate();
 
+        JobCard jobCard = null;
         if (r.getJobCardId() != null) {
-            JobCard jobCard = jobCardRepository.findById(r.getJobCardId())
+            jobCard = jobCardRepository.findById(r.getJobCardId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "JobCard not found: " + r.getJobCardId()));
             // A follow-up must relate to one of this customer's own visits.
-            if (jobCard.getCustomer() != null
-                    && !jobCard.getCustomer().getId().equals(customer.getId())) {
+            if (jobCard.getCustomer() == null
+                    || !jobCard.getCustomer().getId().equals(customer.getId())) {
                 throw new BusinessRuleException(
                         "JobCard " + r.getJobCardId() + " belongs to a different customer and cannot "
                         + "be linked to a follow-up for customer " + customer.getId() + ".");
@@ -248,13 +471,74 @@ public class FollowupServiceImpl implements FollowupService {
             e.setJobCard(null);
         }
 
+        Vehicle vehicle = null;
+        if (r.getVehicleId() != null) {
+            vehicle = vehicleRepository.findById(r.getVehicleId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Vehicle not found: " + r.getVehicleId()));
+            if (vehicle.getCustomer() == null
+                    || !vehicle.getCustomer().getId().equals(customer.getId())) {
+                throw new BusinessRuleException("The selected vehicle does not belong to this customer.");
+            }
+        } else if (jobCard != null) {
+            vehicle = jobCard.getVehicle();
+        }
+        if (vehicle != null && (vehicle.getCustomer() == null
+                || !vehicle.getCustomer().getId().equals(customer.getId()))) {
+            throw new BusinessRuleException("The selected vehicle does not belong to this customer.");
+        }
+        if (jobCard != null && vehicle != null && jobCard.getVehicle() != null
+                && !jobCard.getVehicle().getId().equals(vehicle.getId())) {
+            throw new BusinessRuleException("The selected vehicle does not match the job card.");
+        }
+        e.setVehicle(vehicle);
+
+        if (r.getAssignedUserId() != null) {
+            User assignedUser = userRepository.findById(r.getAssignedUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Assigned user not found: " + r.getAssignedUserId()));
+            if (!Boolean.TRUE.equals(assignedUser.getActive())) {
+                throw new BusinessRuleException("The assigned workshop user is inactive.");
+            }
+            String roleName = assignedUser.getRole() == null ? null : assignedUser.getRole().getName();
+            if (roleName == null
+                    || !ASSIGNABLE_ROLES.contains(roleName.toUpperCase(Locale.ROOT))) {
+                throw new BusinessRuleException("The selected user cannot be assigned to follow-ups.");
+            }
+            e.setAssignedUser(assignedUser);
+        } else {
+            e.setAssignedUser(null);
+        }
+
+        if (r.getDueDate() == null) {
+            throw new BusinessRuleException("dueDate is required.");
+        }
+        if (r.getReminderAt() != null && !r.getDueDate().equals(r.getReminderAt().toLocalDate())) {
+            throw new BusinessRuleException("reminderAt must fall on dueDate.");
+        }
         e.setDueDate(r.getDueDate());
+        e.setReminderAt(r.getReminderAt() != null
+                ? r.getReminderAt()
+                : (isNew || !java.util.Objects.equals(previousDueDate, r.getDueDate())
+                    || e.getReminderAt() == null
+                    ? r.getDueDate().atTime(9, 0)
+                    : e.getReminderAt()));
+        e.setType(r.getType() == null || r.getType().isBlank() ? "Service Reminder" : r.getType().trim());
+        String followupChannel = r.getChannel() == null || r.getChannel().isBlank()
+                ? "PHONE_CALL" : r.getChannel().trim().toUpperCase(Locale.ROOT);
+        if (!FOLLOWUP_CHANNELS.contains(followupChannel)) {
+            throw new BusinessRuleException("Unsupported follow-up channel: " + r.getChannel());
+        }
+        e.setChannel("CALL".equals(followupChannel) ? "PHONE_CALL" : followupChannel);
         e.setReason(r.getReason());
 
         if (isNew && r.getDueDate() != null && r.getDueDate().isBefore(LocalDate.now())) {
             throw new BusinessRuleException(
                     "dueDate " + r.getDueDate() + " is in the past; a new follow-up must be "
                     + "due today or later.");
+        }
+        if (isNew && e.getReminderAt().isBefore(LocalDateTime.now())) {
+            throw new BusinessRuleException("The reminder time cannot be in the past.");
         }
 
         String previousStatus = e.getStatus();
@@ -311,7 +595,22 @@ public class FollowupServiceImpl implements FollowupService {
             dto.setJobCardId(e.getJobCard().getId());
             dto.setJobCardNumber(e.getJobCard().getJobCardNumber());
         }
+        if (e.getVehicle() != null) {
+            dto.setVehicleId(e.getVehicle().getId());
+            dto.setVehicleMake(e.getVehicle().getMake());
+            dto.setVehicleModel(e.getVehicle().getModel());
+            dto.setRegistrationNumber(e.getVehicle().getRegistrationNo());
+        }
+        if (e.getAssignedUser() != null) {
+            dto.setAssignedUserId(e.getAssignedUser().getId());
+            dto.setAssignedUserName(e.getAssignedUser().getFullName() != null
+                    ? e.getAssignedUser().getFullName() : e.getAssignedUser().getUsername());
+        }
         dto.setDueDate(e.getDueDate());
+        dto.setReminderAt(e.getReminderAt() != null ? e.getReminderAt()
+                : e.getDueDate() != null ? e.getDueDate().atTime(9, 0) : null);
+        dto.setType(e.getType());
+        dto.setChannel(e.getChannel());
         dto.setReason(e.getReason());
         dto.setStatus(e.getStatus());
         dto.setNotifiedAt(e.getNotifiedAt());
@@ -322,5 +621,63 @@ public class FollowupServiceImpl implements FollowupService {
         dto.setCreatedAt(e.getCreatedAt());
         dto.setUpdatedAt(e.getUpdatedAt());
         return dto;
+    }
+
+    private Followup findFollowup(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Followup not found: " + id));
+    }
+
+    private void createReminder(Followup followup) {
+        FollowupReminder reminder = new FollowupReminder();
+        reminder.setFollowup(followup);
+        reminder.setReminderAt(followup.getReminderAt());
+        reminder.setChannel(followup.getChannel());
+        reminder.setStatus(isClosedStatus(followup.getStatus()) ? "CANCELLED" : "PENDING");
+        reminderRepository.save(reminder);
+    }
+
+    private void cancelPendingReminders(Followup followup) {
+        List<FollowupReminder> pending =
+                reminderRepository.findByFollowupIdAndStatus(followup.getId(), "PENDING");
+        pending.forEach(reminder -> reminder.setStatus("CANCELLED"));
+        reminderRepository.saveAll(pending);
+    }
+
+    private FollowupReminderResponseDTO toReminderResponse(FollowupReminder reminder) {
+        FollowupReminderResponseDTO dto = new FollowupReminderResponseDTO();
+        dto.setId(reminder.getId());
+        dto.setReminderAt(reminder.getReminderAt());
+        dto.setChannel(reminder.getChannel());
+        dto.setStatus(reminder.getStatus());
+        dto.setSentAt(reminder.getSentAt());
+        dto.setFailureReason(reminder.getFailureReason());
+        dto.setCreatedAt(reminder.getCreatedAt());
+        return dto;
+    }
+
+    private CommunicationResponseDTO toCommunicationResponse(Communication communication) {
+        CommunicationResponseDTO dto = new CommunicationResponseDTO();
+        dto.setId(communication.getId());
+        dto.setCustomerId(communication.getCustomer().getId());
+        dto.setCustomerName(communication.getCustomer().getName());
+        dto.setCustomerPhone(communication.getCustomer().getPhone());
+        if (communication.getJobCard() != null) {
+            dto.setJobCardId(communication.getJobCard().getId());
+            dto.setJobCardNumber(communication.getJobCard().getJobCardNumber());
+        }
+        dto.setChannel(communication.getChannel());
+        dto.setDirection(communication.getDirection());
+        dto.setSubject(communication.getSubject());
+        dto.setMessage(communication.getMessage());
+        dto.setSentAt(communication.getSentAt());
+        dto.setDeliveryStatus(communication.getDeliveryStatus());
+        dto.setCreatedAt(communication.getCreatedAt());
+        dto.setUpdatedAt(communication.getUpdatedAt());
+        return dto;
+    }
+
+    private String normalizeFilter(String value) {
+        return value == null || value.isBlank() ? null : value.trim().toUpperCase(Locale.ROOT);
     }
 }

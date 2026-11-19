@@ -18,8 +18,14 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "mechanics")
+@Table(name = "mechanics", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_mechanics_user_id", columnNames = "user_id")
+})
 public class Mechanic extends BaseEntity {
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_mechanics_user"))
+    private User user;
 
     @Column(name = "employee_code")
     private String employeeCode;

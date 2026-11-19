@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useApiLogin } from "../../hooks/useApiLogin";
+import ForgotPasswordLink from "../auth/ForgotPasswordLink";
 
 import "./MechanicLogin.css";
 
@@ -9,7 +10,8 @@ function MechanicLogin() {
   const [rememberMe, setRememberMe] = useState(false);
   const { submitForm, error, loading } = useApiLogin(
     "/mechanic-dashboard",
-    {},
+    { OWNER: "/mechanic-dashboard", MANAGER: "/mechanic-dashboard" },
+    ["MECHANIC", "OWNER", "MANAGER"],
     "MECHANIC"
   );
 
@@ -268,15 +270,7 @@ function MechanicLogin() {
 
 
 
-              <a
-                href="#forgot"
-                className="mechanic-forgot"
-                onClick={(e) =>
-                  e.preventDefault()
-                }
-              >
-                Forgot password?
-              </a>
+              <ForgotPasswordLink loginPath="/mechanic" className="mechanic-forgot" />
 
 
             </div>

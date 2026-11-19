@@ -90,7 +90,7 @@ class AuthControllerTest {
     @MockBean com.autoservicehub.security.JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockBean com.autoservicehub.security.CustomUserDetailsService customUserDetailsService;
 
-    private static final String BODY = "{\"username\":\"anil\",\"password\":\"correct-horse\"}";
+    private static final String BODY = "{\"username\":\"anil\",\"password\":\"correct-horse\",\"workspace\":\"SERVICE_ADVISOR\"}";
 
     /**
      * Spring Boot auto-registers every {@code Filter} bean into the servlet
@@ -154,8 +154,23 @@ class AuthControllerTest {
         givenSuccessfulLogin("CUSTOMER");
 
         mockMvc.perform(post("/api/v1/auth/login")
-                       .contentType(MediaType.APPLICATION_JSON).content(BODY))
+                       .contentType(MediaType.APPLICATION_JSON)
+                       .content("{\"username\":\"anil\",\"password\":\"correct-horse\",\"workspace\":\"CUSTOMER\"}"))
                .andExpect(status().isForbidden());
+
+        verify(jwtTokenProvider, never()).generateAccessToken(any(), any());
+    }
+
+    @Test
+    @DisplayName("A specialist cannot sign in through another workspace")
+    void specialistLoginIsRejectedForWrongWorkspace() throws Exception {
+        givenSuccessfulLogin("INVENTORY_MANAGER");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                       .contentType(MediaType.APPLICATION_JSON).content(BODY))
+               .andExpect(status().isForbidden())
+               .andExpect(jsonPath("$.message")
+                       .value("Your account is not authorized for this workspace."));
 
         verify(jwtTokenProvider, never()).generateAccessToken(any(), any());
     }

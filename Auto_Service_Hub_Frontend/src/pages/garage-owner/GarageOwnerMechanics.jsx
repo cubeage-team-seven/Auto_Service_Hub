@@ -1,11 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   createMechanic,
+  associateMechanicUser,
   getMechanicAttendance,
   getMechanicPerformance,
   getMechanics,
+  getUnlinkedMechanicAccounts,
   updateMechanic,
 } from "../../services/mechanicService";
+import { useAuth } from "../../hooks/useAuth";
 import {
   getJobCard,
   getJobCards,
@@ -75,10 +78,17 @@ const emptyForm = () => ({
 // ── Component ──────────────────────────────────────────────────────────────────
 
 function GarageOwnerMechanics() {
+  const { user } = useAuth();
+  const canManageMechanicAccounts = ["OWNER", "GARAGE_OWNER", "MANAGER"].includes(
+    String(user?.role || "").replace(/^ROLE_/i, "").toUpperCase()
+  );
   const [mechanics,          setMechanics]          = useState([]);
   const [attendance,         setAttendance]          = useState([]);
   const [jobCards,           setJobCards]            = useState([]);
   const [performance,        setPerformance]         = useState([]);
+  const [unlinkedAccounts,   setUnlinkedAccounts]    = useState([]);
+  const [selectedAccounts,   setSelectedAccounts]    = useState({});
+  const [accountLinkError,   setAccountLinkError]    = useState("");
   const [loading,            setLoading]             = useState(true);
   const [errors,             setErrors]              = useState({});
   const [notice,             setNotice]              = useState("");
@@ -100,12 +110,16 @@ function GarageOwnerMechanics() {
     periodStart.setDate(periodStart.getDate() - 29);
     const from = getLocalDate(periodStart);
 
-    const [mechanicsResult, attendanceResult, jobCardsResult, performanceResult] =
+    const accountsRequest = canManageMechanicAccounts
+      ? getUnlinkedMechanicAccounts()
+      : Promise.resolve([]);
+    const [mechanicsResult, attendanceResult, jobCardsResult, performanceResult, accountsResult] =
       await Promise.allSettled([
         getMechanics(),
         getMechanicAttendance(today),
         getJobCards(),
         getMechanicPerformance(from, today),
+        accountsRequest,
       ]);
 
     const nextErrors = {};
@@ -127,9 +141,15 @@ function GarageOwnerMechanics() {
       nextErrors.performance = performanceResult.reason?.message || "Ratings could not be loaded.";
     }
 
+    if (accountsResult.status === "fulfilled") setUnlinkedAccounts(accountsResult.value);
+    else {
+      setUnlinkedAccounts([]);
+      nextErrors.accounts = accountsResult.reason?.message || "Unlinked mechanic accounts could not be loaded.";
+    }
+
     setErrors(nextErrors);
     setLoading(false);
-  }, []);
+  }, [canManageMechanicAccounts]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -346,6 +366,39 @@ function GarageOwnerMechanics() {
     }
   };
 
+  const handleLinkAccount = async (mechanic) => {
+    const userId = selectedAccounts[mechanic.id];
+    if (!userId || saving) return;
+
+    setAccountLinkError("");
+    setNotice("");
+    const account = unlinkedAccounts.find((item) => String(item.id) === String(userId));
+    if (!account) {
+      setAccountLinkError("That login is no longer available. Refresh the list and select an unlinked account.");
+      return;
+    }
+
+    const accountLabel = `${account.fullName || account.username} (${account.username})`;
+    const profileLabel = `${mechanic.employeeCode || `#${mechanic.id}`} — ${mechanic.name}`;
+    if (!window.confirm(`Link login account ${accountLabel} to mechanic profile ${profileLabel}?`)) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await associateMechanicUser(mechanic.id, userId);
+      setSelectedAccounts((current) => ({ ...current, [mechanic.id]: "" }));
+      setNotice(`Login account linked to ${mechanic.employeeCode || mechanic.name}.`);
+      await loadData();
+    } catch (error) {
+      setAccountLinkError(
+        error instanceof Error ? error.message : "The mechanic account could not be linked."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // ── Close ───────────────────────────────────────────────────────────────────
 
   const closeModals = () => {
@@ -426,13 +479,20 @@ function GarageOwnerMechanics() {
       </section>
 
       {/* ── Data-fetch error notices ─────────────────────────────────────── */}
-      {(errors.mechanics || errors.attendance || errors.jobCards || errors.performance) && (
+      {(errors.mechanics || errors.attendance || errors.jobCards || errors.performance || errors.accounts) && (
         <aside className="mechanics-data-notice" role="status">
           {errors.mechanics   && <p>{errors.mechanics}</p>}
           {errors.attendance  && <p>Attendance unavailable: {errors.attendance}</p>}
           {errors.jobCards    && <p>Job counts and assignment choices unavailable: {errors.jobCards}</p>}
           {errors.performance && <p>Ratings unavailable: {errors.performance}</p>}
+          {errors.accounts   && <p>Account linking unavailable: {errors.accounts}</p>}
           <button type="button" className="mechanics-retry" onClick={loadData}>RETRY</button>
+        </aside>
+      )}
+
+      {accountLinkError && (
+        <aside className="mechanics-data-notice" role="alert">
+          <p>{accountLinkError}</p>
         </aside>
       )}
 
@@ -523,6 +583,51 @@ function GarageOwnerMechanics() {
                     <span>Rating</span>
                   </div>
                 </div>
+
+                {canManageMechanicAccounts && (
+                  <div className="mechanic-account-link">
+                    {mechanic.userId ? (
+                      <span>Login account linked (ID {mechanic.userId})</span>
+                    ) : (
+                      <>
+                        <label htmlFor={`mechanic-account-${mechanic.id}`}>Link login account</label>
+                        <div className="mechanic-account-link-controls">
+                          <select
+                            id={`mechanic-account-${mechanic.id}`}
+                            value={selectedAccounts[mechanic.id] || ""}
+                            onChange={(event) =>
+                              setSelectedAccounts((current) => ({
+                                ...current,
+                                [mechanic.id]: event.target.value,
+                              }))
+                            }
+                            disabled={saving || Boolean(errors.accounts) || unlinkedAccounts.length === 0}
+                          >
+                            <option value="">
+                              {unlinkedAccounts.length === 0
+                                ? "No unlinked MECHANIC accounts"
+                                : "Select an account"}
+                            </option>
+                            {unlinkedAccounts.map((account) => (
+                              <option value={account.id} key={account.id}>
+                                {account.fullName || account.username} ({account.username})
+                                {account.active === false ? " — inactive" : ""}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            className="mechanic-assign-button"
+                            onClick={() => void handleLinkAccount(mechanic)}
+                            disabled={saving || !selectedAccounts[mechanic.id] || Boolean(errors.accounts)}
+                          >
+                            Link
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
 
                 <div className="mechanic-divider" />
 

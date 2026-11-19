@@ -6,9 +6,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import jakarta.persistence.LockModeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,8 +26,16 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     @EntityGraph(attributePaths = "role")
     Optional<User> findByEmailIgnoreCase(String email);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)")
+    Optional<User> findByEmailIgnoreCaseForPasswordReset(@Param("email") String email);
+
     @EntityGraph(attributePaths = "role")
     Optional<User> findByUsernameIgnoreCase(String username);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> findByIdForMechanicAssociation(@Param("id") Long id);
 
     /**
      * True when an account already uses this username, ignoring case.
@@ -56,6 +66,11 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
      */
     @EntityGraph(attributePaths = "role")
     Page<User> findAll(Pageable pageable);
+
+    @Query("SELECT u FROM User u WHERE UPPER(u.role.name) IN ('MECHANIC', 'ROLE_MECHANIC') "
+         + "AND NOT EXISTS (SELECT m.id FROM Mechanic m WHERE m.user.id = u.id) "
+         + "ORDER BY u.username ASC")
+    List<User> findUnlinkedMechanicAccounts();
 
     /**
      * Active users holding any of the given roles. Used to decide who a

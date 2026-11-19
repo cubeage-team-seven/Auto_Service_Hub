@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import "./MechanicLayout.css";
 
 function MechanicLayout() {
@@ -7,6 +8,13 @@ function MechanicLayout() {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const role = String(user?.role || "").replace(/^ROLE_/i, "").toUpperCase();
+  const normalizedRole = role === "GARAGE_OWNER" ? "OWNER" : role;
+  const canManageMechanics = ["ADMIN", "OWNER", "MANAGER"].includes(normalizedRole);
+  const mechanicManagementPath = normalizedRole === "ADMIN"
+    ? "/developer/mechanics"
+    : "/garage-owner/mechanics";
 
   const isDashboard =
     location.pathname === "/mechanic-dashboard";
@@ -75,6 +83,20 @@ function MechanicLayout() {
             </span>
           </NavLink>
 
+          {canManageMechanics && (
+            <NavLink
+              to={mechanicManagementPath}
+              className={({ isActive }) =>
+                `mechanic-nav-link ${
+                  isActive ? "active" : ""
+                }`
+              }
+            >
+              <span className="mechanic-nav-icon">⚒</span>
+              <span className="mechanic-nav-text">Mechanic Management</span>
+            </NavLink>
+          )}
+
         </nav>
 
 
@@ -132,7 +154,7 @@ function MechanicLayout() {
             {/* ROLE */}
 
             <div className="mechanic-role">
-              MECHANIC
+              {normalizedRole.replace(/_/g, " ") || "UNKNOWN ROLE"}
             </div>
 
 

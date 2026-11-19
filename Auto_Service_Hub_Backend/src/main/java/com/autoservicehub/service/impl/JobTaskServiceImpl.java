@@ -15,8 +15,10 @@ import com.autoservicehub.repository.JobTaskRepository;
 import com.autoservicehub.repository.MechanicRepository;
 import com.autoservicehub.service.AuditService;
 import com.autoservicehub.service.JobTaskService;
+import com.autoservicehub.service.MechanicAuthorizationService;
 import com.autoservicehub.util.BillingCalculator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -72,9 +74,12 @@ public class JobTaskServiceImpl implements JobTaskService {
     private final MechanicRepository mechanicRepository;
     private final AuditService auditService;
     private final BillingCalculator  calculator;
+    @Autowired
+    private MechanicAuthorizationService mechanicAuthorization;
 
     @Override
     public JobTaskResponseDTO create(Long jobCardId, JobTaskRequestDTO request) {
+        MechanicAuthorizationService.assertNotMechanic("Mechanics cannot create or assign repair tasks.");
         JobCard jobCard = jobCardRepository.findById(jobCardId)
                 .orElseThrow(() -> new ResourceNotFoundException("JobCard not found: " + jobCardId));
         assertJobCardNotDelivered(jobCard);
@@ -104,20 +109,39 @@ public class JobTaskServiceImpl implements JobTaskService {
     @Override
     @Transactional(readOnly = true)
     public JobTaskResponseDTO getById(Long id) {
-        return toResponse(findOrThrow(id));
+        JobTask task = findOrThrow(id);
+        assertMechanicAssignment(task);
+        return toResponse(task);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<JobTaskResponseDTO> listByJobCard(Long jobCardId, Pageable pageable) {
-        if (!jobCardRepository.existsById(jobCardId)) {
-            throw new ResourceNotFoundException("JobCard not found: " + jobCardId);
-        }
+        JobCard jobCard = jobCardRepository.findById(jobCardId)
+                .orElseThrow(() -> new ResourceNotFoundException("JobCard not found: " + jobCardId));
+        assertMechanicAssignment(jobCard);
         return repository.findByJobCardIdOrderByIdAsc(jobCardId, pageable).map(this::toResponse);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<JobTaskResponseDTO> listAssignedToCurrentMechanic(Pageable pageable) {
+        if (!MechanicAuthorizationService.isMechanicPrincipal()) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "A mechanic account is required.");
+        }
+        if (mechanicAuthorization == null) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Mechanic assignment authorization is unavailable.");
+        }
+        Mechanic mechanic = mechanicAuthorization.requireCurrentMechanic();
+        return repository.findByMechanic_IdOrderByIdAsc(mechanic.getId(), pageable)
+                .map(this::toResponse);
+    }
+
+    @Override
     public JobTaskResponseDTO update(Long id, JobTaskRequestDTO request) {
+        MechanicAuthorizationService.assertNotMechanic("Mechanics may only update task status and work notes.");
         JobTask existing = findOrThrow(id);
         assertTaskJobCardNotDelivered(existing);
 
@@ -150,6 +174,7 @@ public class JobTaskServiceImpl implements JobTaskService {
 
     @Override
     public void delete(Long id) {
+        MechanicAuthorizationService.assertNotMechanic("Mechanics cannot delete repair tasks.");
         JobTask existing = findOrThrow(id);
         assertTaskJobCardNotDelivered(existing);
         // Captured before the delete: afterwards the row is gone and the trail
@@ -163,6 +188,7 @@ public class JobTaskServiceImpl implements JobTaskService {
     @Override
     public JobTaskResponseDTO updateStatus(Long id, JobTaskStatusRequestDTO request) {
         JobTask existing = findOrThrow(id);
+        assertMechanicAssignment(existing);
         assertTaskJobCardNotDelivered(existing);
         String from = existing.getStatus();
         String to = resolveStatus(request.getStatus(), existing.getStatus());
@@ -177,6 +203,7 @@ public class JobTaskServiceImpl implements JobTaskService {
     @Override
     public JobTaskResponseDTO updateWorkNotes(Long id, JobTaskWorkNotesRequestDTO request) {
         JobTask existing = findOrThrow(id);
+        assertMechanicAssignment(existing);
         // Notes describe work done on the vehicle; once it has left, that account
         // is closed and no further note belongs to it.
         assertTaskJobCardNotDelivered(existing);
@@ -192,6 +219,7 @@ public class JobTaskServiceImpl implements JobTaskService {
 
     @Override
     public JobTaskResponseDTO assignMechanic(Long id, Long mechanicId) {
+        MechanicAuthorizationService.assertNotMechanic("Mechanics cannot change task assignments.");
         JobTask existing = findOrThrow(id);
         assertTaskJobCardNotDelivered(existing);
         Long from = existing.getMechanic() == null ? null : existing.getMechanic().getId();
@@ -206,6 +234,7 @@ public class JobTaskServiceImpl implements JobTaskService {
     @Override
     @Transactional(readOnly = true)
     public BigDecimal totalLabourCost(Long jobCardId) {
+        MechanicAuthorizationService.assertNotMechanic("Mechanics cannot access job-card labour totals.");
         if (!jobCardRepository.existsById(jobCardId)) {
             throw new ResourceNotFoundException("JobCard not found: " + jobCardId);
         }
@@ -298,6 +327,26 @@ public class JobTaskServiceImpl implements JobTaskService {
     private JobTask findOrThrow(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("JobTask not found: " + id));
+    }
+
+    private void assertMechanicAssignment(JobTask task) {
+        if (MechanicAuthorizationService.isMechanicPrincipal()) {
+            if (mechanicAuthorization == null) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Mechanic assignment authorization is unavailable.");
+            }
+            mechanicAuthorization.assertTaskAssigned(task);
+        }
+    }
+
+    private void assertMechanicAssignment(JobCard jobCard) {
+        if (MechanicAuthorizationService.isMechanicPrincipal()) {
+            if (mechanicAuthorization == null) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Mechanic assignment authorization is unavailable.");
+            }
+            mechanicAuthorization.assertJobCardAssigned(jobCard);
+        }
     }
 
     /** A task nobody can describe is not actionable work. */

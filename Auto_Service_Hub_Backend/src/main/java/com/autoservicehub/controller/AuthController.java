@@ -8,6 +8,8 @@ import com.autoservicehub.dto.ResetPasswordRequest;
 import com.autoservicehub.dto.VerifyOtpRequest;
 import com.autoservicehub.entity.User;
 import com.autoservicehub.exception.InvalidRefreshTokenException;
+import com.autoservicehub.exception.PasswordResetRejectedException;
+import com.autoservicehub.exception.WorkspaceAccessDeniedException;
 import com.autoservicehub.repository.UserRepository;
 import com.autoservicehub.security.JwtTokenProvider;
 import com.autoservicehub.service.PasswordResetService;
@@ -18,6 +20,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Login and password reset authentication APIs.
  */
@@ -25,6 +31,17 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
+    private static final Map<String, Set<String>> WORKSPACE_ROLES = Map.of(
+            "GARAGE_OWNER", Set.of("OWNER", "MANAGER"),
+            "SERVICE_ADVISOR", Set.of("SERVICE_ADVISOR", "OWNER", "MANAGER"),
+            "MECHANIC", Set.of("MECHANIC", "OWNER", "MANAGER"),
+            "INVENTORY_MANAGER", Set.of("INVENTORY_MANAGER", "OWNER", "MANAGER"),
+            "BILLING", Set.of("BILLING_USER", "OWNER", "MANAGER"),
+            "CUSTOMER", Set.of("CUSTOMER"),
+            "ADMINISTRATOR", Set.of("ADMIN"),
+            "DEVELOPER", Set.of("ADMIN")
+    );
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
@@ -52,6 +69,9 @@ public class AuthController {
         }
 
         String srsRoleName = roleName.startsWith("ROLE_") ? roleName.substring(5) : roleName;
+        if (!isAuthorizedForWorkspace(request.getWorkspace(), srsRoleName)) {
+            throw new WorkspaceAccessDeniedException();
+        }
         if ("CUSTOMER".equalsIgnoreCase(srsRoleName)) {
             throw new AccessDeniedException("Customer sign-in is not available.");
         }
@@ -75,6 +95,26 @@ public class AuthController {
         );
     }
 
+    private boolean isAuthorizedForWorkspace(String requestedWorkspace, String roleName) {
+        String workspace = normalizeIdentifier(requestedWorkspace);
+        String role = normalizeIdentifier(roleName);
+        if ("GARAGE_OWNER".equals(role)) {
+            role = "OWNER";
+        }
+        return WORKSPACE_ROLES.getOrDefault(workspace, Set.of()).contains(role);
+    }
+
+    private String normalizeIdentifier(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.trim()
+                .replaceFirst("(?i)^ROLE_", "")
+                .replaceAll("[^A-Za-z0-9]+", "_")
+                .replaceAll("^_|_$", "")
+                .toUpperCase(Locale.ROOT);
+    }
+
     @PostMapping("/forgot-password")
     public ApiResponse<String> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequest request) {
@@ -82,7 +122,7 @@ public class AuthController {
         passwordResetService.sendOtp(request.getEmail());
 
         return ApiResponse.ok(
-                "OTP sent successfully to your email"
+                "If an account exists for this email, password reset instructions will be sent."
         );
     }
 
@@ -90,11 +130,9 @@ public class AuthController {
     public ApiResponse<String> verifyOtp(
             @Valid @RequestBody VerifyOtpRequest request) {
 
-        passwordResetService.verifyOtp(request);
-
-        return ApiResponse.ok(
-                "OTP verified successfully"
-        );
+        String resetToken = passwordResetService.verifyOtp(request)
+                .orElseThrow(PasswordResetRejectedException::new);
+        return ApiResponse.ok("OTP verified successfully", resetToken);
     }
 
     @PostMapping("/reset-password")

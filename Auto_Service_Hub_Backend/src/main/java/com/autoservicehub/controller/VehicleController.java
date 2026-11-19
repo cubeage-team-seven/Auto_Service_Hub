@@ -51,7 +51,7 @@ public class VehicleController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'GARAGE_OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<VehicleResponseDTO> getById(@PathVariable Long id) {
         return ApiResponse.ok(service.getById(id));
     }
@@ -64,7 +64,7 @@ public class VehicleController {
      * exists, it has simply never been serviced. Only an unknown id is a 404.
      */
     @GetMapping("/{id}/service-history")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'BILLING_USER')")
     public ApiResponse<VehicleServiceHistoryDTO> serviceHistory(@PathVariable Long id) {
         return ApiResponse.ok(service.getServiceHistory(id));
     }
@@ -78,7 +78,7 @@ public class VehicleController {
      * more permissive than reading.
      */
     @GetMapping("/{id}/service-history.pdf")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'BILLING_USER')")
     public ResponseEntity<byte[]> serviceHistoryPdf(@PathVariable Long id) {
         ExportFileDTO file = vehicleHistoryDocumentService.toPdf(service.getServiceHistory(id));
 
@@ -93,7 +93,7 @@ public class VehicleController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'GARAGE_OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<Page<VehicleResponseDTO>> list(
             Pageable pageable,
             @RequestParam(required = false) String fuelType,

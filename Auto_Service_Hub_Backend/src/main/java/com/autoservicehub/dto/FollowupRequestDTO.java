@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Inbound payload for a customer follow-up (SRS 4.10).
@@ -22,6 +23,16 @@ public class FollowupRequestDTO {
 
     /** Optional — the service visit this follow-up relates to. */
     private Long jobCardId;
+
+    private Long vehicleId;
+
+    private Long assignedUserId;
+
+    private String type;
+
+    private String channel;
+
+    private LocalDateTime reminderAt;
 
     @NotNull(message = "dueDate is required")
     private LocalDate dueDate;

@@ -1,16 +1,49 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  createPart,
+  createSupplier,
+  getParts,
+  getSuppliers,
+} from "../../services/inventoryService";
 import "./InventoryPage.css";
 
-const SUPPLIER_OPTIONS = [
-  "Castrol India",
-  "Bosch India",
-  "Shell India",
-  "NGK India",
-  "MRF Ltd",
-  "Amaron India",
-  "Mahle Filters",
-  "Mann Filters",
+const PART_CATEGORIES = [
+  "Lubricants",
+  "Brakes",
+  "Filters",
+  "Ignition",
+  "Tyres",
+  "Electrical",
+  "Engine Parts",
+  "Suspension",
+  "Other",
 ];
+
+const formatPrice = (value) =>
+  `₹${Number(value ?? 0).toLocaleString("en-IN")}`;
+
+function toInventoryRow(part) {
+  const stock = Number(part.stockQty ?? 0);
+  const min = Number(part.minStock ?? 0);
+
+  return {
+    id: part.id,
+    sku: part.sku ?? "",
+    name: part.name ?? "",
+    category: part.category ?? "Uncategorised",
+    location: part.storageLocation ?? "—",
+    stock,
+    min,
+    price: part.purchasePrice == null ? "—" : formatPrice(part.purchasePrice),
+    supplier: part.supplierName ?? "Not Assigned",
+    status:
+      stock === 0
+        ? "Out of Stock"
+        : stock <= min
+        ? "Low Stock"
+        : "OK",
+  };
+}
 
 function InventoryPage() {
   const [search, setSearch] = useState("");
@@ -21,7 +54,12 @@ function InventoryPage() {
   ===================================================== */
 
   const [showAddPartModal, setShowAddPartModal] = useState(false);
-  const [customSuppliers, setCustomSuppliers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [createError, setCreateError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [partForm, setPartForm] = useState({
     partName: "",
@@ -41,96 +79,35 @@ function InventoryPage() {
      INVENTORY DATA
   ===================================================== */
 
-  const [inventory, setInventory] = useState([
-    {
-      sku: "ENO-7742",
-      name: "Engine Oil 5W-30 (1L)",
-      category: "Lubricants",
-      location: "Rack A1",
-      stock: 48,
-      min: 20,
-      price: "₹320",
-      supplier: "Castrol India",
-      status: "OK",
-    },
-    {
-      sku: "BRP-2211",
-      name: "Brake Pads — Front (Pair)",
-      category: "Brakes",
-      location: "Rack B3",
-      stock: 12,
-      min: 8,
-      price: "₹1,200",
-      supplier: "Bosch India",
-      status: "OK",
-    },
-    {
-      sku: "ACF-5503",
-      name: "AC Filter",
-      category: "Filters",
-      location: "Rack C2",
-      stock: 3,
-      min: 5,
-      price: "₹450",
-      supplier: "Mahle Filters",
-      status: "Low Stock",
-    },
-    {
-      sku: "ATF-9902",
-      name: "ATF Oil (1L)",
-      category: "Lubricants",
-      location: "Rack A2",
-      stock: 18,
-      min: 10,
-      price: "₹580",
-      supplier: "Shell India",
-      status: "OK",
-    },
-    {
-      sku: "SPK-1144",
-      name: "Spark Plugs (Set of 4)",
-      category: "Ignition",
-      location: "Rack D1",
-      stock: 22,
-      min: 8,
-      price: "₹880",
-      supplier: "NGK India",
-      status: "OK",
-    },
-    {
-      sku: "TYR-3389",
-      name: "Tyre 195/65 R15",
-      category: "Tyres",
-      location: "Bay Store",
-      stock: 4,
-      min: 4,
-      price: "₹4,800",
-      supplier: "MRF Ltd",
-      status: "Low Stock",
-    },
-    {
-      sku: "BAT-6670",
-      name: "Battery 60Ah",
-      category: "Electrical",
-      location: "Rack E1",
-      stock: 7,
-      min: 3,
-      price: "₹6,200",
-      supplier: "Amaron India",
-      status: "OK",
-    },
-    {
-      sku: "OIF-3301",
-      name: "Oil Filter",
-      category: "Filters",
-      location: "Rack C1",
-      stock: 2,
-      min: 10,
-      price: "₹180",
-      supplier: "Mann Filters",
-      status: "Low Stock",
-    },
-  ]);
+  const [inventory, setInventory] = useState([]);
+
+  const loadInventory = useCallback(async ({ showLoading = true } = {}) => {
+    if (showLoading) {
+      setIsLoading(true);
+    }
+    setLoadError("");
+
+    try {
+      const parts = await getParts();
+      setInventory(parts.map(toInventoryRow));
+      const supplierList = await getSuppliers();
+      setSuppliers(supplierList);
+      return true;
+    } catch (error) {
+      setLoadError(
+        error instanceof Error ? error.message : "Unable to load inventory."
+      );
+      return false;
+    } finally {
+      if (showLoading) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadInventory();
+  }, [loadInventory]);
 
   /* =====================================================
      FILTERED INVENTORY
@@ -159,20 +136,32 @@ function InventoryPage() {
      FORM CHANGE
   ===================================================== */
 
-  const handlePartFormChange = (e) => {
+  const handlePartFormChange = async (e) => {
     const { name, value } = e.target;
+    setCreateError("");
 
     if (name === "supplier" && value === "Add New Supplier...") {
       const newSupplier = window.prompt("Enter new supplier name:");
       if (newSupplier && newSupplier.trim()) {
         const trimmed = newSupplier.trim();
-        setCustomSuppliers((previous) =>
-          previous.includes(trimmed) ? previous : [...previous, trimmed]
-        );
-        setPartForm((previous) => ({
-          ...previous,
-          supplier: trimmed,
-        }));
+        try {
+          const createdSupplier = await createSupplier({ name: trimmed });
+          setSuppliers((previous) => [...previous, createdSupplier]);
+          setPartForm((previous) => ({
+            ...previous,
+            supplier: String(createdSupplier.id),
+          }));
+        } catch (error) {
+          setCreateError(
+            error instanceof Error
+              ? error.message
+              : "Unable to add the supplier."
+          );
+          setPartForm((previous) => ({
+            ...previous,
+            supplier: "",
+          }));
+        }
       } else {
         setPartForm((previous) => ({
           ...previous,
@@ -193,6 +182,8 @@ function InventoryPage() {
   ===================================================== */
 
   const openAddPartModal = () => {
+    setCreateError("");
+    setSuccessMessage("");
     setPartForm({
       partName: "",
       sku: "",
@@ -215,72 +206,68 @@ function InventoryPage() {
   ===================================================== */
 
   const closeAddPartModal = () => {
+    if (isCreating) {
+      return;
+    }
     setShowAddPartModal(false);
+    setCreateError("");
   };
 
   /* =====================================================
      ADD PART
   ===================================================== */
 
-  const handleAddPart = (e) => {
+  const handleAddPart = async (e) => {
     e.preventDefault();
 
+    if (isCreating) {
+      return;
+    }
+
     if (!partForm.partName.trim()) {
-      alert("Please enter part name.");
+      setCreateError("Please enter part name.");
       return;
     }
 
     if (!partForm.sku.trim()) {
-      alert("Please enter SKU / Part Number.");
+      setCreateError("Please enter SKU / Part Number.");
       return;
     }
 
     if (partForm.openingStock === "") {
-      alert("Please enter opening stock quantity.");
+      setCreateError("Please enter opening stock quantity.");
       return;
     }
 
     if (partForm.minimumQty === "") {
-      alert("Please enter minimum quantity.");
+      setCreateError("Please enter minimum quantity.");
       return;
     }
 
     if (partForm.unitPrice === "") {
-      alert("Please enter unit price.");
+      setCreateError("Please enter unit price.");
       return;
     }
 
     if (partForm.sellingPrice === "") {
-      alert("Please enter selling price.");
+      setCreateError("Please enter selling price.");
       return;
     }
 
     if (!partForm.supplier || partForm.supplier === "Add New Supplier...") {
-      alert("Please select a supplier.");
+      setCreateError("Please select a supplier.");
       return;
     }
 
     if (!partForm.storageLocation.trim()) {
-      alert("Please enter storage location.");
+      setCreateError("Please enter storage location.");
       return;
     }
 
     if (!partForm.hsnCode.trim()) {
-      alert("Please enter HSN code.");
+      setCreateError("Please enter HSN code.");
       return;
     }
-
-    const openingStock = Number(
-      partForm.openingStock
-    ) || 0;
-
-    const minimumQty = Number(
-      partForm.minimumQty
-    ) || 0;
-
-    const unitPrice = Number(
-      partForm.unitPrice
-    ) || 0;
 
     const duplicateSKU = inventory.some(
       (item) =>
@@ -289,59 +276,72 @@ function InventoryPage() {
     );
 
     if (duplicateSKU) {
-      alert("This SKU already exists.");
+      setCreateError("This SKU already exists.");
       return;
     }
 
-    const newPart = {
-      sku: partForm.sku.trim().toUpperCase(),
+    const supplierId = Number(partForm.supplier);
+    if (!Number.isInteger(supplierId) || supplierId <= 0) {
+      setCreateError("Please select a valid supplier.");
+      return;
+    }
 
-      name: partForm.partName.trim(),
+    setIsCreating(true);
+    setCreateError("");
+    setSuccessMessage("");
 
-      category: partForm.category,
+    try {
+      const savedPart = await createPart({
+        sku: partForm.sku.trim().toUpperCase(),
+        name: partForm.partName.trim(),
+        unit: partForm.unit,
+        stockQty: Number(partForm.openingStock),
+        minStock: Number(partForm.minimumQty),
+        purchasePrice: Number(partForm.unitPrice),
+        sellingPrice: Number(partForm.sellingPrice),
+        category: partForm.category,
+        supplierId,
+        storageLocation: partForm.storageLocation.trim(),
+        hsnCode: partForm.hsnCode.trim(),
+      });
 
-      location:
-        partForm.storageLocation.trim(),
-
-      stock: openingStock,
-
-      min: minimumQty,
-
-      price:
-        `₹${unitPrice.toLocaleString("en-IN")}`,
-
-      supplier: partForm.supplier,
-
-      status:
-        openingStock === 0
-          ? "Out of Stock"
-          : openingStock <= minimumQty
-          ? "Low Stock"
-          : "OK",
-    };
-
-    setInventory((previous) => [
-      ...previous,
-      newPart,
-    ]);
-
-    setShowAddPartModal(false);
-
-    setPartForm({
-      partName: "",
-      sku: "",
-      category: "Lubricants",
-      unit: "Piece",
-      openingStock: "",
-      minimumQty: "",
-      unitPrice: "",
-      sellingPrice: "",
-      supplier: "",
-      storageLocation: "",
-      hsnCode: "",
-    });
-
-    alert("Spare part added successfully.");
+      const savedRow = toInventoryRow(savedPart);
+      setInventory((previous) => [
+        savedRow,
+        ...previous.filter(
+          (item) =>
+            item.id !== savedRow.id &&
+            item.sku.toLowerCase() !== savedRow.sku.toLowerCase()
+        ),
+      ]);
+      setShowAddPartModal(false);
+      setPartForm({
+        partName: "",
+        sku: "",
+        category: "Lubricants",
+        unit: "Piece",
+        openingStock: "",
+        minimumQty: "",
+        unitPrice: "",
+        sellingPrice: "",
+        supplier: "",
+        storageLocation: "",
+        hsnCode: "",
+      });
+      setSearch("");
+      setCategory("All Categories");
+      setStock("All Stock");
+      setSuccessMessage(
+        `${savedPart.name || partForm.partName.trim()} (${savedPart.sku || partForm.sku.trim()}) added successfully.`
+      );
+      await loadInventory({ showLoading: false });
+    } catch (error) {
+      setCreateError(
+        error instanceof Error ? error.message : "Unable to add the part."
+      );
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   /* =====================================================
@@ -414,11 +414,23 @@ function InventoryPage() {
               type="button"
               className="inventory-add-button"
               onClick={openAddPartModal}
+              disabled={isLoading}
             >
               + ADD PART
             </button>
 
           </div>
+
+          {loadError && (
+            <p className="inventory-feedback inventory-feedback-error" role="alert">
+              {loadError}
+            </p>
+          )}
+          {successMessage && (
+            <p className="inventory-feedback inventory-feedback-success" role="status">
+              {successMessage}
+            </p>
+          )}
 
 
           {/* =================================================
@@ -494,29 +506,9 @@ function InventoryPage() {
                 All Categories
               </option>
 
-              <option>
-                Lubricants
-              </option>
-
-              <option>
-                Brakes
-              </option>
-
-              <option>
-                Filters
-              </option>
-
-              <option>
-                Electrical
-              </option>
-
-              <option>
-                Ignition
-              </option>
-
-              <option>
-                Tyres
-              </option>
+              {PART_CATEGORIES.map((partCategory) => (
+                <option key={partCategory}>{partCategory}</option>
+              ))}
 
             </select>
 
@@ -604,14 +596,22 @@ function InventoryPage() {
                   {filteredInventory.map(
                     (item) => (
                       <InventoryRow
-                        key={item.sku}
+                        key={item.id ?? item.sku}
                         {...item}
                       />
                     )
                   )}
 
 
-                  {filteredInventory.length ===
+                  {isLoading && (
+                    <tr>
+                      <td colSpan="9" className="inventory-empty">
+                        Loading inventory...
+                      </td>
+                    </tr>
+                  )}
+
+                  {!isLoading && filteredInventory.length ===
                     0 && (
 
                     <tr>
@@ -690,6 +690,8 @@ function InventoryPage() {
               onSubmit={handleAddPart}
             >
 
+              <div className="inventory-modal-body">
+
               {/* PART NAME */}
 
               <div className="inventory-form-field full">
@@ -744,37 +746,9 @@ function InventoryPage() {
                     onChange={handlePartFormChange}
                   >
 
-                    <option>
-                      Lubricants
-                    </option>
-
-                    <option>
-                      Brakes
-                    </option>
-
-                    <option>
-                      Filters
-                    </option>
-
-                    <option>
-                      Electrical
-                    </option>
-
-                    <option>
-                      Ignition
-                    </option>
-
-                    <option>
-                      Tyres
-                    </option>
-
-                    <option>
-                      Engine Parts
-                    </option>
-
-                    <option>
-                      Transmission
-                    </option>
+                    {PART_CATEGORIES.map((partCategory) => (
+                      <option key={partCategory}>{partCategory}</option>
+                    ))}
 
                   </select>
 
@@ -922,14 +896,9 @@ function InventoryPage() {
                   onChange={handlePartFormChange}
                 >
                   <option value="">Select supplier...</option>
-                  {SUPPLIER_OPTIONS.map((supplier) => (
-                    <option key={supplier} value={supplier}>
-                      {supplier}
-                    </option>
-                  ))}
-                  {customSuppliers.map((supplier) => (
-                    <option key={supplier} value={supplier}>
-                      {supplier}
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
                     </option>
                   ))}
                   <option value="Add New Supplier...">Add New Supplier...</option>
@@ -982,19 +951,29 @@ function InventoryPage() {
 
               {/* DIVIDER + BUTTONS */}
 
+              {createError && (
+                <p className="inventory-feedback inventory-feedback-error" role="alert">
+                  {createError}
+                </p>
+              )}
+
+              </div>
+
               <div className="inventory-modal-actions">
 
                 <button
                   type="submit"
                   className="inventory-save-button"
+                  disabled={isCreating}
                 >
-                  ADD PART
+                  {isCreating ? "SAVING..." : "ADD PART"}
                 </button>
 
                 <button
                   type="button"
                   className="inventory-cancel-button"
                   onClick={closeAddPartModal}
+                  disabled={isCreating}
                 >
                   Cancel
                 </button>

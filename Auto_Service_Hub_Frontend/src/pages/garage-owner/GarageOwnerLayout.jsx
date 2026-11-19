@@ -25,15 +25,13 @@ function GarageOwnerLayout() {
     : "/garage-owner";
 
   /*
-   * Users and Roles is Owner-only (SRS 13): every other role — MANAGER
-   * included — must not reach it, which is the rule UserController already
-   * enforces with hasAnyRole('OWNER') on its endpoints. GARAGE_OWNER is
-   * accepted beside OWNER for the same reason the billing page accepts it: the
-   * token can carry the raw stored role name.
+   * Users and Roles is Owner-only on the garage-owner module; the admin's
+   * developer module retains its existing access.
    */
   const { user } = useAuth();
-  const role = String(user?.role || "").replace(/^ROLE_/, "").toUpperCase();
+  const role = String(user?.role || "").replace(/^ROLE_/i, "").toUpperCase();
   const isOwner = ["OWNER", "GARAGE_OWNER"].includes(role);
+  const isAdmin = role === "ADMIN";
 
   const menuItems = [
     {
@@ -106,9 +104,10 @@ function GarageOwnerLayout() {
     },
   ];
 
-  const visibleMenuItems = menuItems.filter(
-    (item) => !item.ownerOnly || isOwner
-  );
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (item.ownerOnly) return isOwner;
+    return isOwner || role === "MANAGER" || (isDeveloper && isAdmin);
+  });
 
   const getPageName = () => {
     const pathname = location.pathname;
@@ -290,7 +289,7 @@ function GarageOwnerLayout() {
           <div className="garage-owner-header-actions">
 
             <div className="garage-owner-role">
-              {isDeveloper ? "DEVELOPER" : "GARAGE OWNER"}
+              {role ? role.replace(/_/g, " ") : "UNKNOWN ROLE"}
             </div>
 
             <div className="garage-owner-alerts">

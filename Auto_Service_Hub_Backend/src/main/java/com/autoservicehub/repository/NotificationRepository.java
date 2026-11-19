@@ -17,6 +17,8 @@ import java.util.Optional;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long>, JpaSpecificationExecutor<Notification> {
 
+    long deleteByUser_Id(Long userId);
+
     /** One user's notifications, newest first. */
     List<Notification> findByUserIdOrderByCreatedAtDescIdDesc(Long userId);
 

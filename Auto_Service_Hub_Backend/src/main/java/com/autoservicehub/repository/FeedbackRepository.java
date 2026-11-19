@@ -33,6 +33,9 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long>, JpaSp
     @Query("SELECT AVG(f.rating) FROM Feedback f WHERE f.customer.id = :customerId")
     Double findAverageRatingByCustomerId(@Param("customerId") Long customerId);
 
+    @Query("SELECT AVG(f.rating) FROM Feedback f")
+    Double findAverageRating();
+
     // ══════════════════════════════════════════════════════════════════════
     // FR-REP-2: Mechanic performance — customer satisfaction
     //

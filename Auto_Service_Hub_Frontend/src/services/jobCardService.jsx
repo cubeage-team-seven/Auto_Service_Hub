@@ -27,17 +27,16 @@ async function requestData(path, options = {}) {
   } catch {
     throw new Error(
       response.ok
-        ? `Job card API returned invalid JSON (${response.status}).`
-        : `Job card API request failed (${response.status}).`
+        ? `Job card API returned invalid JSON (${response.status}) for ${options.method || "GET"} ${url}.`
+        : `${options.method || "GET"} ${url} failed with HTTP ${response.status}.`
     );
   }
 
   if (!response.ok) {
-    const message = payload?.message || `Job card API request failed (${response.status}).`;
-    if (response.status === 401 || response.status === 403) {
-      throw new Error(`${message} Sign in with an authorized account and try again.`);
-    }
-    throw new Error(message);
+    const message = payload?.message || payload?.error || "No error message was returned.";
+    throw new Error(
+      `${options.method || "GET"} ${url} failed with HTTP ${response.status}: ${message}`
+    );
   }
 
   if (response.status === 204) return null;
@@ -88,6 +87,7 @@ export const getJobCardPackageApplications = () =>
   getPages("/package-applications", "id,desc");
 
 export const getJobCardTasks = (id) => getPages(`/job-cards/${id}/tasks`, "id,asc");
+export const getAssignedJobTasks = () => getPages("/job-tasks/assigned-to-me", "id,asc");
 export const createJobCardTask = (id, task) =>
   requestData(`/job-cards/${id}/tasks`, sendJson("POST", task));
 export const updateJobCardTask = (id, task) =>

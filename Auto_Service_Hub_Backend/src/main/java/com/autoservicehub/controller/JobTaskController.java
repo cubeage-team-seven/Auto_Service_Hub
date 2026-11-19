@@ -36,14 +36,24 @@ public class JobTaskController {
 
     private final JobTaskService service;
 
-    @GetMapping("/{id}")
+    /**
+     * The authenticated mechanic's assigned tasks only.
+     * GET /api/v1/job-tasks/assigned-to-me?page=0&size=20
+     */
+    @GetMapping("/assigned-to-me")
+    @PreAuthorize("hasRole('MECHANIC')")
+    public ApiResponse<Page<JobTaskResponseDTO>> listAssignedToCurrentMechanic(Pageable pageable) {
+        return ApiResponse.ok(service.listAssignedToCurrentMechanic(pageable));
+    }
+
+    @GetMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<JobTaskResponseDTO> getById(@PathVariable Long id) {
         return ApiResponse.ok(service.getById(id));
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
+    @PutMapping("/{id:[0-9]+}")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     public ApiResponse<JobTaskResponseDTO> update(@PathVariable Long id,
                                                    @Valid @RequestBody JobTaskRequestDTO request) {
         return ApiResponse.ok("Updated", service.update(id, request));
@@ -57,7 +67,7 @@ public class JobTaskController {
      * labour cost. Returns 400 for a blank status, 409 for one outside
      * PENDING / IN_PROGRESS / COMPLETED / CANCELLED.
      */
-    @PutMapping("/{id}/status")
+    @PutMapping("/{id:[0-9]+}/status")
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
     public ApiResponse<JobTaskResponseDTO> updateStatus(
             @PathVariable Long id,
@@ -72,7 +82,7 @@ public class JobTaskController {
      * <p>Open to the same roles that can update the task. An empty
      * {@code workNotes} clears the notes rather than storing a blank string.
      */
-    @PutMapping("/{id}/work-notes")
+    @PutMapping("/{id:[0-9]+}/work-notes")
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
     public ApiResponse<JobTaskResponseDTO> updateWorkNotes(
             @PathVariable Long id,
@@ -88,7 +98,7 @@ public class JobTaskController {
      * un-assigns. Separate from the task update so reallocation cannot restate
      * the task's cost. Returns 404 for an unknown task or mechanic.
      */
-    @PutMapping("/{id}/mechanic")
+    @PutMapping("/{id:[0-9]+}/mechanic")
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     public ApiResponse<JobTaskResponseDTO> assignMechanic(
             @PathVariable Long id,
@@ -96,7 +106,7 @@ public class JobTaskController {
         return ApiResponse.ok("Mechanic assigned", service.assignMechanic(id, request.getMechanicId()));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:[0-9]+}")
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useApiLogin } from "../../hooks/useApiLogin";
+import ForgotPasswordLink from "../auth/ForgotPasswordLink";
 
 import "./InventoryLogin.css";
 
@@ -10,7 +11,15 @@ function InventoryLogin() {
 
   const [rememberMe, setRememberMe] = useState(true);
 
-  const { submitForm, error, loading } = useApiLogin("/inventory-dashboard");
+  const { submitForm, error, loading } = useApiLogin(
+    "/inventory-dashboard",
+    {
+      OWNER: "/inventory-dashboard",
+      MANAGER: "/inventory-dashboard",
+    },
+    undefined,
+    "INVENTORY_MANAGER"
+  );
 
 
   return (
@@ -255,15 +264,7 @@ function InventoryLogin() {
               </label>
 
 
-              <a
-                href="#forgot"
-                className="inventory-forgot"
-                onClick={(e) =>
-                  e.preventDefault()
-                }
-              >
-                Forgot password?
-              </a>
+              <ForgotPasswordLink loginPath="/inventory-login" className="inventory-forgot" />
 
             </div>
 

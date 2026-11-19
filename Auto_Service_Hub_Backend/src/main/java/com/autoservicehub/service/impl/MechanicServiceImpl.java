@@ -2,14 +2,21 @@ package com.autoservicehub.service.impl;
 
 import com.autoservicehub.dto.MechanicRequestDTO;
 import com.autoservicehub.dto.MechanicResponseDTO;
+import com.autoservicehub.dto.MechanicProfileOptionDTO;
+import com.autoservicehub.dto.MechanicAccountOptionDTO;
 import com.autoservicehub.entity.Mechanic;
 import com.autoservicehub.entity.MechanicSkill;
+import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.GovernmentIdKeyNotConfiguredException;
 import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.MechanicRepository;
+import com.autoservicehub.repository.UserRepository;
 import com.autoservicehub.security.GovernmentIdEncryptionService;
+import com.autoservicehub.service.MechanicAuthorizationService;
 import com.autoservicehub.service.MechanicService;
+import com.autoservicehub.service.MechanicAccountAssociationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -23,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -69,12 +77,18 @@ public class MechanicServiceImpl implements MechanicService {
 
     private final MechanicRepository          repository;
     private final GovernmentIdEncryptionService encryptionService;
+    private final MechanicAccountAssociationService mechanicAccountAssociationService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private MechanicAuthorizationService mechanicAuthorization;
     private final SecureRandom                secureRandom = new SecureRandom();
 
     // ── CRUD ──────────────────────────────────────────────────────────────
 
     @Override
     public MechanicResponseDTO create(MechanicRequestDTO request) {
+        MechanicAuthorizationService.assertNotMechanic("Mechanics cannot administer mechanic profiles.");
         Mechanic entity = new Mechanic();
         applyScalarFields(request, entity);
 
@@ -92,6 +106,7 @@ public class MechanicServiceImpl implements MechanicService {
 
     @Override
     public MechanicResponseDTO update(Long id, MechanicRequestDTO request) {
+        MechanicAuthorizationService.assertNotMechanic("Mechanics cannot administer mechanic profiles.");
         Mechanic existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mechanic not found: " + id));
 
@@ -117,8 +132,35 @@ public class MechanicServiceImpl implements MechanicService {
     }
 
     @Override
+    public MechanicResponseDTO associateUser(Long mechanicId, Long userId) {
+        mechanicAuthorization.assertOwnerOrManager();
+        return toResponse(mechanicAccountAssociationService.associate(mechanicId, userId));
+    }
+
+    @Override
+    public MechanicResponseDTO removeUserAssociation(Long mechanicId) {
+        mechanicAuthorization.assertOwnerOrManager();
+        Mechanic mechanic = repository.findById(mechanicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Mechanic not found: " + mechanicId));
+        mechanic.setUser(null);
+        return toResponse(repository.save(mechanic));
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public MechanicResponseDTO getById(Long id) {
+        if (MechanicAuthorizationService.isMechanicPrincipal()) {
+            if (mechanicAuthorization == null) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Mechanic profile authorization is unavailable.");
+            }
+            Mechanic current = mechanicAuthorization.requireCurrentMechanic();
+            if (!current.getId().equals(id)) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Mechanics may only view their own profile.");
+            }
+            return toResponse(current);
+        }
         return toResponse(repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mechanic not found: " + id)));
     }
@@ -126,11 +168,50 @@ public class MechanicServiceImpl implements MechanicService {
     @Override
     @Transactional(readOnly = true)
     public Page<MechanicResponseDTO> list(Pageable pageable) {
+        if (MechanicAuthorizationService.isMechanicPrincipal()) {
+            if (mechanicAuthorization == null) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Mechanic profile authorization is unavailable.");
+            }
+            return repository.findByUser_Id(mechanicAuthorization.requireCurrentMechanic().getUser().getId(), pageable)
+                    .map(this::toResponse);
+        }
         return repository.findAll(pageable).map(this::toResponse);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<MechanicProfileOptionDTO> listUnlinkedProfiles() {
+        return repository.findAllByUserIsNullOrderByEmployeeCodeAsc().stream()
+                .map(mechanic -> {
+                    MechanicProfileOptionDTO option = new MechanicProfileOptionDTO();
+                    option.setId(mechanic.getId());
+                    option.setEmployeeCode(mechanic.getEmployeeCode());
+                    option.setName(mechanic.getName());
+                    option.setStatus(mechanic.getStatus());
+                    return option;
+                })
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MechanicAccountOptionDTO> listUnlinkedMechanicAccounts() {
+        return userRepository.findUnlinkedMechanicAccounts().stream()
+                .map(user -> {
+                    MechanicAccountOptionDTO option = new MechanicAccountOptionDTO();
+                    option.setId(user.getId());
+                    option.setFullName(user.getFullName());
+                    option.setUsername(user.getUsername());
+                    option.setActive(user.getActive());
+                    return option;
+                })
+                .toList();
+    }
+
+    @Override
     public void delete(Long id) {
+        MechanicAuthorizationService.assertNotMechanic("Mechanics cannot administer mechanic profiles.");
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException("Mechanic not found: " + id);
         }
@@ -219,6 +300,9 @@ public class MechanicServiceImpl implements MechanicService {
     private MechanicResponseDTO toResponse(Mechanic e) {
         MechanicResponseDTO dto = new MechanicResponseDTO();
         dto.setId(e.getId());
+        if (callerCanReadSalary() && e.getUser() != null) {
+            dto.setUserId(e.getUser().getId());
+        }
         dto.setEmployeeCode(e.getEmployeeCode());
         dto.setName(e.getName());
         dto.setPhone(e.getPhone());

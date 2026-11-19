@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useApiLogin } from "../../hooks/useApiLogin";
+import ForgotPasswordLink from "../auth/ForgotPasswordLink";
 import "./DeveloperLogin.css";
 
 export default function DeveloperLogin() {
@@ -12,7 +13,12 @@ export default function DeveloperLogin() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const destination = isAdminLogin ? "/admin" : "/developer";
-  const { submit, error, loading } = useApiLogin(destination, { ADMIN: destination });
+  const { submit, error, loading } = useApiLogin(
+    destination,
+    { ADMIN: destination },
+    undefined,
+    isAdminLogin ? "ADMINISTRATOR" : "DEVELOPER"
+  );
 
   return (
     <div className="developer-login-container">
@@ -204,13 +210,10 @@ export default function DeveloperLogin() {
               </label>
 
 
-              <a
-                href="#forgot"
+              <ForgotPasswordLink
+                loginPath={isAdminLogin ? "/admin-login" : "/developer-login"}
                 className="developer-forgot-link"
-                onClick={(e) => e.preventDefault()}
-              >
-                Forgot password?
-              </a>
+              />
 
             </div>
 

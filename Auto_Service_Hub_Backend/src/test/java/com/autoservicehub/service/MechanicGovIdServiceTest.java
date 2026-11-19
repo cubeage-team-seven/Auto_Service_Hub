@@ -71,6 +71,9 @@ class MechanicGovIdServiceTest {
     @Mock
     MechanicRepository mechanicRepository;
 
+    @Mock
+    MechanicAccountAssociationService mechanicAccountAssociationService;
+
     GovernmentIdEncryptionService encryptionService;
     MechanicServiceImpl           service;
 
@@ -79,7 +82,7 @@ class MechanicGovIdServiceTest {
         encryptionService = new GovernmentIdEncryptionService();
         ReflectionTestUtils.setField(encryptionService, "encodedKey", TEST_KEY);
 
-        service = new MechanicServiceImpl(mechanicRepository, encryptionService);
+        service = new MechanicServiceImpl(mechanicRepository, encryptionService, mechanicAccountAssociationService);
 
         when(mechanicRepository.existsByEmployeeCode(anyString())).thenReturn(false);
         when(mechanicRepository.save(any(Mechanic.class))).thenAnswer(inv -> {

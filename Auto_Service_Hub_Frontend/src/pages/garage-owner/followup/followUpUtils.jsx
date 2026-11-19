@@ -4,7 +4,8 @@
    so every rule below is easy to reason about in isolation.
    ========================================================= */
 
-import { TODAY_KEY } from "./followUpDemoData";
+const now = new Date();
+const TODAY_KEY = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
 /* =========================================================
    DATE HELPERS
@@ -161,6 +162,7 @@ export const statusClassName = (status) => {
     case "Pending":
       return "pending";
     case "Scheduled":
+    case "In Progress":
       return "scheduled";
     case "Reminder Sent":
       return "sent";
@@ -276,17 +278,3 @@ export const sortFollowUps = (followUps, todayKey = TODAY_KEY) =>
 
     return String(first.id).localeCompare(String(second.id));
   });
-
-/* =========================================================
-   NEXT FOLLOW-UP ID
-   Keeps the demonstration identifiers sequential after a save.
-   ========================================================= */
-
-export const nextFollowUpId = (followUps) => {
-  const highest = followUps.reduce((max, entry) => {
-    const numeric = Number(String(entry.id || "").replace(/\D/g, ""));
-    return Number.isFinite(numeric) && numeric > max ? numeric : max;
-  }, 2000);
-
-  return `FU-${highest + 1}`;
-};

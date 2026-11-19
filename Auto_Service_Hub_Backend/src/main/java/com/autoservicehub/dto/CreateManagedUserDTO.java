@@ -33,4 +33,5 @@ public class CreateManagedUserDTO {
     @Size(max = 30)
     private String phone;
 
+    private Long mechanicId;
 }

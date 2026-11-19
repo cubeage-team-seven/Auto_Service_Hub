@@ -43,7 +43,7 @@ public class ReportExportController {
 
     /** FR-REP-1: daily workshop, as PDF. */
     @GetMapping("/daily-workshop.pdf")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     public ResponseEntity<byte[]> dailyWorkshopPdf(
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -57,7 +57,7 @@ public class ReportExportController {
 
     /** FR-REP-1: daily workshop, as Excel. */
     @GetMapping("/daily-workshop.xlsx")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     public ResponseEntity<byte[]> dailyWorkshopExcel(
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -97,7 +97,7 @@ public class ReportExportController {
 
     /** FR-REP-2: mechanic performance, as PDF. */
     @GetMapping("/mechanic-performance.pdf")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     public ResponseEntity<byte[]> mechanicPerformancePdf(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
@@ -108,7 +108,7 @@ public class ReportExportController {
 
     /** FR-REP-2: mechanic performance, as Excel. */
     @GetMapping("/mechanic-performance.xlsx")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     public ResponseEntity<byte[]> mechanicPerformanceExcel(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
@@ -190,17 +190,22 @@ public class ReportExportController {
      * for non-ASCII names.
      */
     private ResponseEntity<byte[]> download(ExportFileDTO file) {
+        byte[] content = file.getContent();
+        if (content == null || content.length == 0) {
+            throw new IllegalStateException("Report export renderer returned an empty file.");
+        }
+
         MediaType mediaType = MediaType.parseMediaType(file.getContentType());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(mediaType);
         headers.setContentDisposition(ContentDisposition.attachment()
                 .filename(file.getFilename(), StandardCharsets.UTF_8)
                 .build());
-        headers.setContentLength(file.size());
+        headers.setContentLength(content.length);
         // Reports are generated per request from live data; caching one would
         // serve stale figures that no longer match the database.
         headers.setCacheControl("no-store");
-        return new ResponseEntity<>(file.getContent(), headers, org.springframework.http.HttpStatus.OK);
+        return new ResponseEntity<>(content, headers, org.springframework.http.HttpStatus.OK);
     }
 
     /** Collects the supported query parameters, mirroring ReportController exactly. */

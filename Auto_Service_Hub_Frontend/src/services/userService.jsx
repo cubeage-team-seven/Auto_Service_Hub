@@ -55,8 +55,8 @@ async function requestData(path, options = {}) {
  * Create a user account: POST /api/v1/users
  *
  * The body is UserRequestDTO: fullName, username, email, phone, role,
- * password and the optional status. `confirmPassword` is a form
- * convenience and is never sent.
+ * password, optional status, and an explicitly selected mechanicId for
+ * MECHANIC accounts. `confirmPassword` is a form convenience and is never sent.
  *
  * The response body is UserResponseDTO: id, fullName, username, email,
  * phone, role, active and the timestamps - there is no credential field
@@ -78,6 +78,46 @@ export function createUser(account) {
 }
 
 /**
+ * Update a user account: PUT /api/v1/users/{id}
+ *
+ * The body is UserUpdateDTO: fullName, username, email, phone, role, optional
+ * status, and mechanicId when assigning an unlinked account the MECHANIC role.
+ * There is no password field on it — the API never echoes a
+ * credential, so the edit form has nothing to pre-fill and the update endpoint
+ * deliberately preserves the existing password hash.
+ *
+ * The response body is the same UserResponseDTO the create and list calls
+ * return: id, fullName, username, email, phone, role, active and the
+ * timestamps, with `role` as the name stored in the roles table.
+ *
+ * Authorization is enforced server-side (OWNER), like the other calls in this
+ * module. A caller without that role is answered 403. A 404 means the account
+ * no longer exists, a 400 carries the bean-validation text, and a 409 carries
+ * the business rule that refused the update — an unknown role, or a username
+ * or email that another account already uses. Messages are the backend's own
+ * and are surfaced here unchanged for the caller to display.
+ */
+export function updateUser(id, account) {
+  return requestData(`/users/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(account),
+  });
+}
+
+/**
+ * Permanently remove a workshop user: DELETE /api/v1/users/{id}
+ *
+ * The backend restricts this operation to the OWNER role and prevents
+ * self-removal. Linked business records are retained with their user
+ * assignments cleared.
+ */
+export function removeUser(id) {
+  return requestData(`/users/${id}`, {
+    method: "DELETE",
+  });
+}
+
+/**
  * The backend answers a list as a Spring Page, so the records are read
  * page by page and flattened in the order the API returned them. The
  * loop stops on the API's own `totalPages`, so it never guesses how many
@@ -90,7 +130,8 @@ async function getAllPages(path, sort) {
   for (let pageNumber = 0; ; pageNumber += 1) {
     const separator = path.includes("?") ? "&" : "?";
     const page = await requestData(
-      `${path}${separator}page=${pageNumber}&size=${pageSize}&sort=${sort}`
+      `${path}${separator}page=${pageNumber}&size=${pageSize}&sort=${sort}`,
+      { cache: "no-store" }
     );
 
     if (!Array.isArray(page?.content)) {

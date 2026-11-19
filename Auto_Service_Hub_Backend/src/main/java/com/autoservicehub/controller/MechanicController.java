@@ -3,6 +3,9 @@ package com.autoservicehub.controller;
 import com.autoservicehub.dto.ApiResponse;
 import com.autoservicehub.dto.MechanicRequestDTO;
 import com.autoservicehub.dto.MechanicResponseDTO;
+import com.autoservicehub.dto.MechanicProfileOptionDTO;
+import com.autoservicehub.dto.MechanicAccountOptionDTO;
+import com.autoservicehub.dto.MechanicUserAssociationRequestDTO;
 import com.autoservicehub.service.MechanicService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * Mechanic Management (SRS 4.6)
@@ -31,14 +36,40 @@ public class MechanicController {
         return ApiResponse.ok("Created", service.create(request));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     public ApiResponse<MechanicResponseDTO> update(@PathVariable Long id,
                                                     @Valid @RequestBody MechanicRequestDTO request) {
         return ApiResponse.ok("Updated", service.update(id, request));
     }
 
-    @GetMapping("/{id}")
+    @PutMapping("/{id:\\d+}/user")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
+    public ApiResponse<MechanicResponseDTO> associateUser(
+            @PathVariable Long id,
+            @Valid @RequestBody MechanicUserAssociationRequestDTO request) {
+        return ApiResponse.ok("Mechanic account linked", service.associateUser(id, request.getUserId()));
+    }
+
+    @DeleteMapping("/{id:\\d+}/user")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
+    public ApiResponse<MechanicResponseDTO> removeUserAssociation(@PathVariable Long id) {
+        return ApiResponse.ok("Mechanic account unlinked", service.removeUserAssociation(id));
+    }
+
+    @GetMapping("/unlinked-profiles")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'ADMIN')")
+    public ApiResponse<List<MechanicProfileOptionDTO>> listUnlinkedProfiles() {
+        return ApiResponse.ok(service.listUnlinkedProfiles());
+    }
+
+    @GetMapping("/unlinked-accounts")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER')")
+    public ApiResponse<List<MechanicAccountOptionDTO>> listUnlinkedMechanicAccounts() {
+        return ApiResponse.ok(service.listUnlinkedMechanicAccounts());
+    }
+
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<MechanicResponseDTO> getById(@PathVariable Long id) {
         return ApiResponse.ok(service.getById(id));
@@ -50,7 +81,7 @@ public class MechanicController {
         return ApiResponse.ok(service.list(pageable));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {

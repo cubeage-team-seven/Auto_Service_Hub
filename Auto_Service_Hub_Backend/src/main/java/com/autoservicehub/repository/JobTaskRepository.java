@@ -28,6 +28,11 @@ public interface JobTaskRepository extends JpaRepository<JobTask, Long>, JpaSpec
      */
     List<JobTask> findByJobCardIdOrderByIdAsc(Long jobCardId);
 
+    boolean existsByJobCardIdAndMechanicId(Long jobCardId, Long mechanicId);
+
+    /** Tasks assigned to one mechanic, in recorded order. */
+    Page<JobTask> findByMechanic_IdOrderByIdAsc(Long mechanicId, Pageable pageable);
+
     /** Paged variant of {@link #findByJobCardIdOrderByIdAsc(Long)}. */
     Page<JobTask> findByJobCardIdOrderByIdAsc(Long jobCardId, Pageable pageable);
 

@@ -2,6 +2,7 @@ package com.autoservicehub.service;
 
 import com.autoservicehub.dto.UserRequestDTO;
 import com.autoservicehub.dto.UserResponseDTO;
+import com.autoservicehub.dto.UserUpdateDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -59,4 +60,25 @@ public interface UserService {
      * @return one page of accounts, each with its stored role name and status
      */
     Page<UserResponseDTO> listUsers(Pageable pageable);
+
+    /**
+     * Updates one existing user account.
+     *
+     * <p>The editable fields are the profile fields, the role and the account
+     * status — the same safe projection the create flow returns. The password
+     * hash is deliberately untouched: the API never echoes a credential, so an
+     * edit has nothing to pre-fill and must not reset one silently.
+     *
+     * @return the updated account, without any credential field
+     * @throws com.autoservicehub.exception.ResourceNotFoundException the account
+     *         does not exist
+     * @throws com.autoservicehub.exception.BusinessRuleException the username or
+     *         email is already taken (case-insensitive) by a different account,
+     *         the requested role is not an assignable staff role, the role has no
+     *         row in the {@code roles} table, or the status is not
+     *         {@code Active} / {@code Inactive}
+     */
+    UserResponseDTO updateUser(Long id, UserUpdateDTO request);
+
+    void removeUser(Long id, String requestingUsername);
 }

@@ -76,6 +76,7 @@ const emptyForm = () => ({
   email: "",
   phone: "",
   role: "",
+  mechanicId: "",
   password: "",
   confirmPassword: "",
   status: DEFAULT_STATUS,
@@ -118,6 +119,7 @@ const REQUIRED_MESSAGES = {
   email: "Email is required.",
   phone: "Phone Number is required.",
   role: "Select a role.",
+  mechanicId: "Select the mechanic profile for this account.",
   password: "Password is required.",
   confirmPassword: "Confirm Password is required.",
 };
@@ -176,6 +178,8 @@ function GarageOwnerCreateUserModal(props) {
     onSubmit,
     onClearSubmitError,
     roleOptions,
+    mechanicProfiles,
+    mechanicProfilesError,
     statusOptions,
     submitting,
     submitError,
@@ -185,6 +189,7 @@ function GarageOwnerCreateUserModal(props) {
   const [errors, setErrors] = useState({});
 
   const roleChoices = optionsOrEmpty(roleOptions);
+  const profileChoices = optionsOrEmpty(mechanicProfiles);
   const statusChoices = optionsOrEmpty(statusOptions);
 
   /* Both props are optional, so a caller that passes neither gets
@@ -273,6 +278,10 @@ function GarageOwnerCreateUserModal(props) {
       if (!text) nextErrors.phone = REQUIRED_MESSAGES.phone;
     } else if (name === "role") {
       if (!text) nextErrors.role = REQUIRED_MESSAGES.role;
+    } else if (name === "mechanicId") {
+      if (currentForm.role === "Mechanic" && !text) {
+        nextErrors.mechanicId = REQUIRED_MESSAGES.mechanicId;
+      }
     } else if (name === "password") {
       if (!text) {
         nextErrors.password = REQUIRED_MESSAGES.password;
@@ -302,6 +311,9 @@ function GarageOwnerCreateUserModal(props) {
 
     setForm((previous) => {
       const nextForm = { ...previous, [name]: value };
+      if (name === "role" && value !== "Mechanic") {
+        nextForm.mechanicId = "";
+      }
 
       setErrors((previousErrors) => {
         const fieldErrors = validateField(name, value, nextForm);
@@ -351,6 +363,10 @@ function GarageOwnerCreateUserModal(props) {
       validationErrors.email = "Enter a valid email address.";
     }
 
+    if (currentForm.role === "Mechanic" && !currentForm.mechanicId) {
+      validationErrors.mechanicId = REQUIRED_MESSAGES.mechanicId;
+    }
+
     if (
       currentForm.password.trim() &&
       currentForm.confirmPassword.trim() &&
@@ -388,6 +404,7 @@ function GarageOwnerCreateUserModal(props) {
       email: currentForm.email.trim(),
       phone: currentForm.phone.trim(),
       role: requestedRoleValue(roleLabel),
+      ...(roleLabel === "Mechanic" ? { mechanicId: Number(currentForm.mechanicId) } : {}),
       password: currentForm.password,
       status: currentForm.status.trim(),
     };
@@ -710,6 +727,51 @@ function GarageOwnerCreateUserModal(props) {
 
             </div>
 
+            {form.role === "Mechanic" && (
+              <div className="garage-users-modal-row">
+                <div className={fieldClass("mechanicId")}>
+                  <label htmlFor="garage-users-create-mechanic-profile">
+                    MECHANIC PROFILE
+                    <span className="garage-users-modal-required" aria-hidden="true">*</span>
+                  </label>
+                  <select
+                    id="garage-users-create-mechanic-profile"
+                    name="mechanicId"
+                    value={form.mechanicId}
+                    onChange={handleChange}
+                    className={inputClass("mechanicId")}
+                    aria-invalid={isInvalid("mechanicId") ? "true" : undefined}
+                    aria-describedby={
+                      isInvalid("mechanicId")
+                        ? "garage-users-create-mechanic-profile-error"
+                        : undefined
+                    }
+                    required
+                  >
+                    <option value="">
+                      {profileChoices.length > 0
+                        ? "Select an unlinked mechanic profile"
+                        : "No unlinked mechanic profiles available"}
+                    </option>
+                    {profileChoices.map((profile) => (
+                      <option value={profile.id} key={profile.id}>
+                        {profile.employeeCode || `#${profile.id}`} — {profile.name}
+                        {profile.status ? ` (${profile.status})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {mechanicProfilesError && (
+                    <span className="garage-users-modal-error" role="alert">
+                      Mechanic profiles could not be loaded: {mechanicProfilesError}
+                    </span>
+                  )}
+                  <FieldError
+                    id="garage-users-create-mechanic-profile-error"
+                    message={errors.mechanicId}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* PASSWORD + CONFIRM PASSWORD */}
 

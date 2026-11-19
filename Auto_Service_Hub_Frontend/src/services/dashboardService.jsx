@@ -8,7 +8,9 @@ async function getData(path) {
     body = await response.json();
   } catch {
     if (!response.ok) {
-      throw new Error(`Dashboard API request failed (${response.status}).`);
+      throw new Error(
+        `GET /api/v1${path} failed with HTTP ${response.status}.`
+      );
     }
     if (response.status !== 204) {
       throw new Error(`Dashboard API returned invalid JSON (${response.status}).`);
@@ -16,12 +18,8 @@ async function getData(path) {
   }
 
   if (!response.ok) {
-    const message =
-      body?.message || `Dashboard API request failed (${response.status}).`;
-    if (response.status === 401 || response.status === 403) {
-      throw new Error(`${message} Sign in with an authorized account and try again.`);
-    }
-    throw new Error(message);
+    const message = body?.message || body?.error || "No error message was returned.";
+    throw new Error(`GET /api/v1${path} failed with HTTP ${response.status}: ${message}`);
   }
 
   if (!body?.success) {
@@ -68,6 +66,9 @@ async function getAllPages(path, sort) {
 
 export const getDashboardJobCards = () =>
   getAllPages("/job-cards", "createdAt,desc");
+
+export const getDashboardNotifications = () =>
+  getAllPages("/notifications", "createdAt,desc");
 
 export const getInvoices = () =>
   getAllPages("/invoices", "invoiceDate,desc");

@@ -66,7 +66,7 @@ public class ExportRenderer {
     public byte[] renderPdf(ExportDocumentDTO doc) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Document pdf = new Document(PageSize.A4, 36, 36, 42, 42);
-            PdfWriter.getInstance(pdf, out);
+            PdfWriter writer = PdfWriter.getInstance(pdf, out);
             pdf.open();
 
             pdf.add(new Paragraph(doc.getTitle(), new Font(STYLE_BOLD, FONT_TITLE, 0)));
@@ -96,8 +96,18 @@ public class ExportRenderer {
                 }
             }
 
+            if (writer.getPageNumber() == 0) {
+                pdf.add(new Paragraph("No report data is available for this selection.",
+                        new Font(STYLE_NORMAL, FONT_BODY, 0)));
+            }
             pdf.close();
-            return out.toByteArray();
+
+            byte[] content = out.toByteArray();
+            if (writer.getPageNumber() < 1 || !startsWith(content, "%PDF-")
+                    || !endsWithPdfMarker(content)) {
+                throw new IllegalStateException("PDF renderer produced an incomplete document.");
+            }
+            return content;
         } catch (Exception ex) {
             // Rendering must never surface a raw IO stack trace to the client.
             throw new IllegalStateException("Failed to render PDF document", ex);
@@ -193,7 +203,14 @@ public class ExportRenderer {
                     }
                 }
                 for (int c = 0; c < table.getHeaders().size(); c++) {
-                    sheet.setColumnWidth(c, 22 * 256);
+                    int maxCharacters = table.getHeaders().get(c).length();
+                    for (List<String> row : table.getRows()) {
+                        if (c < row.size() && row.get(c) != null) {
+                            maxCharacters = Math.max(maxCharacters, row.get(c).length());
+                        }
+                    }
+                    int width = Math.min(Math.max(maxCharacters + 2, 14), 45);
+                    sheet.setColumnWidth(c, width * 256);
                 }
                 if (table.isEmpty()) {
                     // An empty table still gets a visible, explicit marker row.
@@ -203,11 +220,55 @@ public class ExportRenderer {
             }
 
             workbook.write(out);
-            return out.toByteArray();
+            out.flush();
+            byte[] content = out.toByteArray();
+            if (!startsWith(content, "PK") || content.length < 4
+                    || content[2] != 0x03 || content[3] != 0x04
+                    || !containsMarkerFromEnd(content, new byte[]{0x50, 0x4b, 0x05, 0x06},
+                            65_557)) {
+                throw new IllegalStateException("Excel renderer produced an incomplete workbook.");
+            }
+            return content;
         } catch (Exception ex) {
             throw new IllegalStateException("Failed to render Excel document", ex);
         }
     }
+
+    private boolean startsWith(byte[] content, String marker) {
+        byte[] expected = marker.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1);
+        if (content.length < expected.length) {
+            return false;
+        }
+        for (int i = 0; i < expected.length; i++) {
+            if (content[i] != expected[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean endsWithPdfMarker(byte[] content) {
+        return containsMarkerFromEnd(content,
+                "%%EOF".getBytes(java.nio.charset.StandardCharsets.US_ASCII), 1024);
+    }
+
+    private boolean containsMarkerFromEnd(byte[] content, byte[] marker, int searchLimit) {
+        int searchStart = Math.max(0, content.length - searchLimit);
+        for (int i = content.length - marker.length; i >= searchStart; i--) {
+            boolean matches = true;
+            for (int j = 0; j < marker.length; j++) {
+                if (content[i + j] != marker[j]) {
+                    matches = false;
+                    break;
+                }
+            }
+            if (matches) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private int writeInfoRow(Sheet sheet, int rowIndex, CellStyle style, String label, String value) {
         Row row = sheet.createRow(rowIndex);
         if (label != null) {

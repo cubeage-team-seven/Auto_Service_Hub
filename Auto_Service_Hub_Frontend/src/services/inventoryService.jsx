@@ -104,6 +104,17 @@ export function getSuppliers() {
 }
 
 /**
+ * GET /api/v1/parts/{id}
+ *
+ * One part's full record, used to populate the edit form with the actual
+ * stored values (unit, selling price and supplier id are not present on
+ * the list rows).
+ */
+export function getPart(id) {
+  return requestData(`/parts/${id}`);
+}
+
+/**
  * POST /api/v1/parts
  *
  * The payload is the form's full state mapped onto PartRequestDTO's property
@@ -114,6 +125,19 @@ export function getSuppliers() {
 export function createPart(part) {
   return requestData("/parts", {
     method: "POST",
+    body: JSON.stringify(part),
+  });
+}
+
+/**
+ * PUT /api/v1/parts/{id}
+ *
+ * Same payload shape as createPart. The path id is authoritative, so the
+ * update is applied to exactly the part the user chose to edit.
+ */
+export function updatePart(id, part) {
+  return requestData(`/parts/${id}`, {
+    method: "PUT",
     body: JSON.stringify(part),
   });
 }

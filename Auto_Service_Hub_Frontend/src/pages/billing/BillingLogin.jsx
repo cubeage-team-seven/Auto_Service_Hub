@@ -1,11 +1,20 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useApiLogin } from "../../hooks/useApiLogin";
+import ForgotPasswordLink from "../auth/ForgotPasswordLink";
 import "./BillingPage.css";
 
 function BillingLogin() {
   const [showPassword, setShowPassword] = useState(false);
-  const { submitForm, error, loading } = useApiLogin("/billing/dashboard");
+  const { submitForm, error, loading } = useApiLogin(
+    "/billing/dashboard",
+    {
+      OWNER: "/billing/dashboard",
+      MANAGER: "/billing/dashboard",
+    },
+    undefined,
+    "BILLING"
+  );
 
   return (
     <div className="billing-login-container">
@@ -55,6 +64,8 @@ function BillingLogin() {
                 </button>
               </div>
             </div>
+
+            <ForgotPasswordLink loginPath="/billing" />
 
             <button type="submit" className="btn-access" disabled={loading}>
               {loading ? "SIGNING IN..." : "ACCESS PLATFORM →"}

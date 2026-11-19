@@ -1,13 +1,19 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useApiLogin } from "../../hooks/useApiLogin";
+import ForgotPasswordLink from "../auth/ForgotPasswordLink";
 import "./GarageOwnerLogin.css";
 
 function GarageOwnerLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const { submit, error, loading } = useApiLogin("/garage-owner/dashboard");
+  const { submit, error, loading } = useApiLogin(
+    "/garage-owner/dashboard",
+    undefined,
+    undefined,
+    "GARAGE_OWNER"
+  );
 
   return (
     <div className="garage-login-page">
@@ -215,15 +221,10 @@ function GarageOwnerLogin() {
 
               </label>
 
-              <button
-                type="button"
+              <ForgotPasswordLink
+                loginPath="/garage-owner-login"
                 className="garage-forgot-password"
-                onClick={() =>
-                  alert("Password recovery will be added later.")
-                }
-              >
-                Forgot password?
-              </button>
+              />
 
             </div>
 

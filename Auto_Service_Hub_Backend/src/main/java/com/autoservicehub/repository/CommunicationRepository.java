@@ -17,6 +17,9 @@ public interface CommunicationRepository extends JpaRepository<Communication, Lo
 
     /** Paged list of communications for a customer, newest first. */
     Page<Communication> findByCustomerIdOrderBySentAtDesc(Long customerId, Pageable pageable);
+    Page<Communication> findByFollowupIdOrderByCreatedAtDesc(Long followupId, Pageable pageable);
+    long countByDeliveryStatus(String deliveryStatus);
+    boolean existsByFollowupId(Long followupId);
 
     /** Full list for use inside Customer 360 (bounded in service to reasonable size). */
     List<Communication> findTop20ByCustomerIdOrderBySentAtDesc(Long customerId);

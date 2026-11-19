@@ -13,6 +13,7 @@ import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.AccessRequestRepository;
 import com.autoservicehub.repository.RoleRepository;
 import com.autoservicehub.repository.UserRepository;
+import com.autoservicehub.service.MechanicAccountAssociationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class AccessRequestService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final MechanicAccountAssociationService mechanicAccountAssociationService;
 
     @Transactional
     public AccessRequestResponseDTO submit(CreateAccessRequestDTO dto) {
@@ -75,7 +77,7 @@ public class AccessRequestService {
             throw new BusinessRuleException("The approved role must match the requested owner or staff role.");
         }
         createUser(request.getName(), request.getEmail(), request.getPhone(),
-                dto.getUsername(), dto.getPassword(), approvedRole);
+                dto.getUsername(), dto.getPassword(), approvedRole, dto.getMechanicId());
         review(request, reviewerName, "APPROVED", "Approved");
         return AccessRequestResponseDTO.from(requestRepository.save(request));
     }
@@ -95,12 +97,19 @@ public class AccessRequestService {
             throw new BusinessRuleException("Only owner and staff accounts can be created here.");
         }
         createUser(dto.getFullName(), dto.getEmail().trim().toLowerCase(Locale.ROOT), dto.getPhone(),
-                dto.getUsername(), dto.getPassword(), role);
+                dto.getUsername(), dto.getPassword(), role, dto.getMechanicId());
     }
 
     private void createUser(String fullName, String email, String phone,
-                            String usernameInput, String rawPassword, String roleName) {
+                            String usernameInput, String rawPassword, String roleName, Long mechanicId) {
         String username = usernameInput.trim().toLowerCase(Locale.ROOT);
+        boolean mechanicRole = "MECHANIC".equals(normalizeRole(roleName));
+        if (mechanicRole && mechanicId == null) {
+            throw new BusinessRuleException("Select the mechanic profile to link to this account.");
+        }
+        if (!mechanicRole && mechanicId != null) {
+            throw new BusinessRuleException("A mechanic profile can only be linked to a MECHANIC account.");
+        }
         if (userRepository.findByUsernameIgnoreCase(username).isPresent()) {
             throw new BusinessRuleException("This username is already in use.");
         }
@@ -119,7 +128,10 @@ public class AccessRequestService {
         user.setPhone(phone);
         user.setRole(role);
         user.setActive(true);
-        userRepository.save(user);
+        User saved = userRepository.save(user);
+        if (mechanicRole) {
+            mechanicAccountAssociationService.associate(mechanicId, saved.getId());
+        }
     }
 
     private AccessRequest getPendingRequest(Long id) {

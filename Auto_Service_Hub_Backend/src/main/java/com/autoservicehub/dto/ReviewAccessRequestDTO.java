@@ -20,4 +20,6 @@ public class ReviewAccessRequestDTO {
 
     @NotBlank
     private String role;
+
+    private Long mechanicId;
 }

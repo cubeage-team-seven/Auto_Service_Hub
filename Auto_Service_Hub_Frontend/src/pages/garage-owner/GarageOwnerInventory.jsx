@@ -3,8 +3,10 @@ import {
   createPart,
   createSupplier,
   getLowStockParts,
+  getPart,
   getParts,
   getSuppliers,
+  updatePart,
 } from "../../services/inventoryService";
 import "./GarageOwnerInventory.css";
 
@@ -143,6 +145,11 @@ function GarageOwnerInventory() {
   ===================================================== */
 
   const [showAddPart, setShowAddPart] = useState(false);
+  const [showEditPart, setShowEditPart] = useState(false);
+  const [editPartId, setEditPartId] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoadingEdit, setIsLoadingEdit] = useState(false);
+  const [updateError, setUpdateError] = useState("");
 
 
   /* =====================================================
@@ -324,6 +331,7 @@ const categories = useMemo(
     const { name, value } = e.target;
 
     setCreateError("");
+    setUpdateError("");
 
     if (name === "supplier" && value === "Add New Supplier...") {
       const newSupplierName = window.prompt("Enter new supplier name:");
@@ -432,6 +440,146 @@ const request = {
       );
     } finally {
       setIsCreating(false);
+    }
+  };
+
+
+  /* =====================================================
+     OPEN EDIT PART
+  ===================================================== */
+
+  const openEditPart = async (item) => {
+    if (!item?.id) {
+      return;
+    }
+
+    setCreateError("");
+    setUpdateError("");
+    setEditPartId(item.id);
+    setPartForm(EMPTY_PART_FORM);
+    setShowEditPart(true);
+    setIsLoadingEdit(true);
+
+    try {
+      // Load the real record for the clicked row so the form shows the
+      // stored values (unit, selling price and supplier id are not part
+      // of the list row shape) and never another item's data.
+      const part = await getPart(item.id);
+
+      setPartForm({
+        partName: part.name ?? "",
+        sku: part.sku ?? "",
+        category: part.category ?? "",
+        unit: part.unit ?? "Piece",
+        openingStock: part.stockQty == null ? "0" : String(part.stockQty),
+        minimumQty: part.minStock == null ? "0" : String(part.minStock),
+        unitPrice:
+          part.purchasePrice == null ? "" : String(part.purchasePrice),
+        sellingPrice:
+          part.sellingPrice == null ? "" : String(part.sellingPrice),
+        supplier:
+          part.supplierId == null ? "" : String(part.supplierId),
+        storageLocation: part.storageLocation ?? "",
+        hsnCode: part.hsnCode ?? "",
+      });
+    } catch (error) {
+      setUpdateError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load the spare part."
+      );
+    } finally {
+      setIsLoadingEdit(false);
+    }
+  };
+
+
+  /* =====================================================
+     CLOSE EDIT PART
+  ===================================================== */
+
+  const closeEditPart = () => {
+    if (isUpdating) {
+      return;
+    }
+    setUpdateError("");
+    setShowEditPart(false);
+    setEditPartId(null);
+    setPartForm(EMPTY_PART_FORM);
+  };
+
+
+  /* =====================================================
+     UPDATE PART
+  ===================================================== */
+
+  const handleUpdatePart = async (e) => {
+    e.preventDefault();
+
+    if (isUpdating || isLoadingEdit) {
+      return;
+    }
+
+    const partName = partForm.partName.trim();
+    const sku = partForm.sku.trim();
+
+    if (!partName || !sku) {
+      setUpdateError("Please enter Part Name and SKU.");
+      return;
+    }
+
+    const sellingPrice = partForm.sellingPrice.trim();
+
+    if (!sellingPrice) {
+      setUpdateError("Selling price is required by the backend.");
+      return;
+    }
+
+    setIsUpdating(true);
+    setUpdateError("");
+    setSuccessMessage("");
+
+    const request = {
+      name: partName,
+      sku,
+      unit: partForm.unit.trim() || null,
+      stockQty: toCount(partForm.openingStock),
+      minStock: toCount(partForm.minimumQty),
+      purchasePrice:
+        partForm.unitPrice.trim() === ""
+          ? null
+          : Number(partForm.unitPrice),
+      sellingPrice: Number(sellingPrice),
+      category: partForm.category || null,
+      supplierId:
+        !partForm.supplier || isNaN(Number(partForm.supplier))
+          ? null
+          : Number(partForm.supplier),
+      storageLocation: partForm.storageLocation.trim() || null,
+      hsnCode: partForm.hsnCode.trim() || null,
+    };
+
+    try {
+      const savedPart = await updatePart(editPartId, request);
+
+      setShowEditPart(false);
+      setEditPartId(null);
+      setPartForm(EMPTY_PART_FORM);
+      setSuccessMessage(
+        `${savedPart?.name || partName} (${savedPart?.sku || sku}) updated successfully.`
+      );
+
+      // Refresh the list and summary cards. Search, category and stock
+      // filters are left exactly as the user had them.
+      await loadInventory({ showLoading: false });
+    } catch (error) {
+      setUpdateError(
+        error instanceof Error
+          ? error.message
+          : "Unable to update the spare part."
+      );
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -784,7 +932,7 @@ const request = {
                         type="button"
                         className="inventory-edit"
                         onClick={() =>
-                          alert(`Edit ${item.sku}`)
+                          void openEditPart(item)
                         }
                       >
                         Edit
@@ -828,7 +976,7 @@ const request = {
           ADD PART MODAL
       ===================================================== */}
 
-      {showAddPart && (
+      {(showAddPart || showEditPart) && (
 
         <div
           className="inventory-modal-overlay"
@@ -837,7 +985,11 @@ const request = {
             if (
               e.target === e.currentTarget
             ) {
-              closeAddPart();
+              if (showEditPart) {
+                closeEditPart();
+              } else {
+                closeAddPart();
+              }
             }
 
           }}
@@ -858,13 +1010,13 @@ const request = {
             <div className="inventory-modal-header">
 
               <h2>
-                ADD SPARE PART
+                {showEditPart ? "EDIT SPARE PART" : "ADD SPARE PART"}
               </h2>
 
               <button
                 type="button"
                 className="inventory-modal-close"
-                onClick={closeAddPart}
+                onClick={showEditPart ? closeEditPart : closeAddPart}
                 aria-label="Close"
               >
                 ×
@@ -879,9 +1031,31 @@ const request = {
 
             <form
               className="inventory-add-form"
-              onSubmit={handleAddPart}
+              onSubmit={showEditPart ? handleUpdatePart : handleAddPart}
             >
 
+
+              {showEditPart && isLoadingEdit && (
+                <div
+                  className="inventory-feedback"
+                  role="status"
+                >
+                  <span>
+                    Loading part details…
+                  </span>
+                </div>
+              )}
+
+              {updateError && (
+                <div
+                  className="inventory-feedback inventory-feedback-error"
+                  role="alert"
+                >
+                  <span>
+                    {updateError}
+                  </span>
+                </div>
+              )}
 
               {createError && (
                 <div
@@ -952,6 +1126,12 @@ const request = {
                     value={partForm.category}
                     onChange={handlePartChange}
                   >
+
+                    {partForm.category === "" && (
+                      <option value="">
+                        Uncategorised
+                      </option>
+                    )}
 
                     {PART_CATEGORIES.map((option) => (
                       <option key={option}>
@@ -1158,16 +1338,24 @@ const request = {
                 <button
                   type="submit"
                   className="inventory-modal-add-button"
-                  disabled={isCreating}
+                  disabled={isCreating || isUpdating || isLoadingEdit}
                 >
-                  {isCreating ? "ADDING…" : "ADD PART"}
+                  {showEditPart
+                    ? isLoadingEdit
+                      ? "LOADING…"
+                      : isUpdating
+                      ? "SAVING…"
+                      : "SAVE CHANGES"
+                    : isCreating
+                    ? "ADDING…"
+                    : "ADD PART"}
                 </button>
 
                 <button
                   type="button"
                   className="inventory-modal-cancel-button"
-                  onClick={closeAddPart}
-                  disabled={isCreating}
+                  onClick={showEditPart ? closeEditPart : closeAddPart}
+                  disabled={isCreating || isUpdating}
                 >
                   Cancel
                 </button>

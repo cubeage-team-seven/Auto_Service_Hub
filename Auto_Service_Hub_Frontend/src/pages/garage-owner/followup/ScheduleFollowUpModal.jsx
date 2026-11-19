@@ -1,67 +1,81 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-import {
-  ASSIGNED_STAFF,
-  FOLLOW_UP_CHANNELS,
-  FOLLOW_UP_STATUSES,
-  FOLLOW_UP_TYPES,
-  TODAY_KEY,
-} from "./followUpDemoData";
 import { describeDueDate } from "./followUpUtils";
+
+const todayKey = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+};
+const TYPES = ["Service Reminder", "Post-Service Check", "Insurance Renewal", "Annual Maintenance", "Payment Reminder", "Tyre & Battery Check", "Feedback Request"];
+const CHANNELS = [
+  ["PHONE_CALL", "Phone Call"],
+  ["WHATSAPP", "WhatsApp"],
+  ["SMS", "SMS"],
+  ["EMAIL", "Email"],
+  ["IN_PERSON", "In Person"],
+];
 
 /* =========================================================
    EMPTY FORM
    ========================================================= */
 
-const emptyForm = () => ({
-  customer: "",
-  vehicle: "",
-  type: FOLLOW_UP_TYPES[0],
-  dueDate: TODAY_KEY,
-  channel: FOLLOW_UP_CHANNELS[0],
-  assignedTo: "Unassigned",
-  status: "Pending",
-  notes: "",
-});
+const emptyForm = () => {
+  const nextHour = new Date();
+  nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+  const dueDate = `${nextHour.getFullYear()}-${String(nextHour.getMonth() + 1).padStart(2, "0")}-${String(nextHour.getDate()).padStart(2, "0")}`;
+  return {
+    customerId: "",
+    vehicleId: "",
+    jobCardId: "",
+    type: TYPES[0],
+    dueDate,
+    dueTime: `${String(nextHour.getHours()).padStart(2, "0")}:00`,
+    channel: CHANNELS[0][0],
+    assignedUserId: "",
+    reason: "",
+  };
+};
 
-/* =========================================================
-   SCHEDULE FOLLOW-UP MODAL
-   Validation runs here so an invalid entry never reaches page
-   state. onSave receives the finished values and returns ""
-   when the record was stored, or a message to display when it
-   was not.
+/* Schedule and update a follow-up using persisted customer records. */
 
-   Nothing is transmitted: the record is added to the
-   demonstration list held in component state only.
-   ========================================================= */
-
-function ScheduleFollowUpModal({
-  open,
-  customers,
-  onClose,
-  onSave,
-  suggestedId,
-}) {
+function ScheduleFollowUpModal({ open, customers, vehicles, jobCards, assignees, initialFollowup, onClose, onSave, optionsLoading }) {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [saveError, setSaveError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   /* Reopening the modal always starts from a clean form. */
   useEffect(() => {
     if (open) {
-      setForm(emptyForm());
+      setForm(initialFollowup ? {
+        ...emptyForm(),
+        customerId: String(initialFollowup.customerId || ""),
+        vehicleId: initialFollowup.vehicleId ? String(initialFollowup.vehicleId) : "",
+        jobCardId: initialFollowup.jobCardId ? String(initialFollowup.jobCardId) : "",
+        type: initialFollowup.type || TYPES[0],
+        dueDate: initialFollowup.dueDate || todayKey(),
+        dueTime: initialFollowup.reminderAt?.slice(11, 16) || "09:00",
+        channel: initialFollowup.backendChannel || CHANNELS[0][0],
+        assignedUserId: initialFollowup.assignedUserId ? String(initialFollowup.assignedUserId) : "",
+        reason: initialFollowup.reason || "",
+      } : emptyForm());
       setErrors({});
       setSaveError("");
+      setSubmitting(false);
     }
-  }, [open]);
+  }, [open, initialFollowup]);
 
   const vehiclesForCustomer = useMemo(() => {
-    const match = customers.find((entry) => entry.customer === form.customer);
-    return match ? match.vehicles : [];
-  }, [customers, form.customer]);
+    return vehicles.filter((vehicle) => String(vehicle.customerId) === form.customerId);
+  }, [vehicles, form.customerId]);
+
+  const jobCardsForCustomer = useMemo(
+    () => jobCards.filter((job) => String(job.customerId) === form.customerId),
+    [jobCards, form.customerId]
+  );
 
   const dueNote = useMemo(
-    () => describeDueDate(form.dueDate, TODAY_KEY),
+    () => describeDueDate(form.dueDate, todayKey()),
     [form.dueDate]
   );
 
@@ -83,10 +97,8 @@ function ScheduleFollowUpModal({
     });
 
     setForm((previous) => {
-      if (name === "customer") {
-        /* The vehicle list belongs to the customer, so a new
-           customer always clears the previous selection. */
-        return { ...previous, customer: value, vehicle: "" };
+      if (name === "customerId") {
+        return { ...previous, customerId: value, vehicleId: "", jobCardId: "" };
       }
       return { ...previous, [name]: value };
     });
@@ -95,18 +107,24 @@ function ScheduleFollowUpModal({
   const validate = () => {
     const nextErrors = {};
 
-    if (!form.customer) {
+    if (!form.customerId) {
       nextErrors.customer = "Select the customer this follow-up belongs to.";
     }
-
-    if (!form.vehicle) {
+    if (vehiclesForCustomer.length > 0 && !form.vehicleId) {
       nextErrors.vehicle = "Select the customer's vehicle.";
     }
 
     if (!form.dueDate) {
       nextErrors.dueDate = "Choose the date the follow-up is due.";
-    } else if (form.dueDate < TODAY_KEY) {
-      nextErrors.dueDate = "The due date cannot be earlier than today.";
+    } else if (!form.dueTime) {
+      nextErrors.dueDate = "Choose the reminder time.";
+    } else {
+      const selectedReminder = `${form.dueDate}T${form.dueTime}`;
+      const originalReminder = initialFollowup?.reminderAt?.slice(0, 16);
+      if (new Date(selectedReminder).getTime() < Date.now()
+          && (!initialFollowup || selectedReminder !== originalReminder)) {
+        nextErrors.dueDate = "The reminder cannot be scheduled in the past.";
+      }
     }
 
     if (!form.type) {
@@ -120,7 +138,7 @@ function ScheduleFollowUpModal({
     return nextErrors;
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const nextErrors = validate();
@@ -131,10 +149,20 @@ function ScheduleFollowUpModal({
       return;
     }
 
-    const message = onSave(form);
-
-    if (message) {
-      setSaveError(message);
+    try {
+      setSubmitting(true);
+      const message = await onSave({
+        ...form,
+        customerId: Number(form.customerId),
+        vehicleId: form.vehicleId ? Number(form.vehicleId) : null,
+        jobCardId: form.jobCardId ? Number(form.jobCardId) : null,
+        assignedUserId: form.assignedUserId ? Number(form.assignedUserId) : null,
+      });
+      if (message) setSaveError(message);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Unable to save follow-up.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -150,7 +178,7 @@ function ScheduleFollowUpModal({
       <div className="followup-modal">
 
         <div className="followup-modal-header">
-          <h2>SCHEDULE FOLLOW-UP</h2>
+          <h2>{initialFollowup ? "UPDATE FOLLOW-UP" : "SCHEDULE FOLLOW-UP"}</h2>
 
           <button
             type="button"
@@ -166,11 +194,7 @@ function ScheduleFollowUpModal({
 
           <div className="followup-form-scroll">
 
-            <p className="followup-form-note">
-              Demonstration form — the new record is added to this screen only
-              and is never saved to the backend.
-              {suggestedId ? ` It will be listed as ${suggestedId}.` : ""}
-            </p>
+            <p className="followup-form-note">Schedule a customer follow-up and persistent reminder.</p>
 
             {saveError && (
               <div
@@ -188,15 +212,15 @@ function ScheduleFollowUpModal({
 
                 <select
                   id="followup-customer"
-                  name="customer"
-                  value={form.customer}
+                  name="customerId"
+                  value={form.customerId}
                   onChange={handleChange}
                 >
                   <option value="">Select customer</option>
 
                   {customers.map((entry) => (
-                    <option value={entry.customer} key={entry.customer}>
-                      {entry.customer}
+                    <option value={entry.id} key={entry.id}>
+                      {entry.name}
                     </option>
                   ))}
                 </select>
@@ -215,18 +239,18 @@ function ScheduleFollowUpModal({
 
                 <select
                   id="followup-vehicle"
-                  name="vehicle"
-                  value={form.vehicle}
+                  name="vehicleId"
+                  value={form.vehicleId}
                   onChange={handleChange}
-                  disabled={!form.customer || vehiclesForCustomer.length === 0}
+                  disabled={!form.customerId || vehiclesForCustomer.length === 0}
                 >
                   <option value="">
-                    {form.customer ? "Select vehicle" : "Select customer first"}
+                    {form.customerId ? "Select vehicle (optional)" : "Select customer first"}
                   </option>
 
                   {vehiclesForCustomer.map((entry) => (
-                    <option value={entry.registration} key={entry.registration}>
-                      {entry.vehicle} — {entry.registration}
+                    <option value={entry.id} key={entry.id}>
+                      {entry.make} {entry.model} — {entry.registrationNo}
                     </option>
                   ))}
                 </select>
@@ -250,7 +274,7 @@ function ScheduleFollowUpModal({
                   value={form.type}
                   onChange={handleChange}
                 >
-                  {FOLLOW_UP_TYPES.map((type) => (
+                  {TYPES.map((type) => (
                     <option value={type} key={type}>
                       {type}
                     </option>
@@ -270,7 +294,7 @@ function ScheduleFollowUpModal({
                   type="date"
                   name="dueDate"
                   value={form.dueDate}
-                  min={TODAY_KEY}
+                  min={todayKey()}
                   onChange={handleChange}
                 />
 
@@ -281,6 +305,36 @@ function ScheduleFollowUpModal({
                     {dueNote.label}
                   </span>
                 )}
+              </div>
+
+              <div className="followup-form-row">
+                <div className="followup-form-group">
+                  <label htmlFor="followup-due-time">REMINDER TIME</label>
+                  <input
+                    id="followup-due-time"
+                    type="time"
+                    name="dueTime"
+                    value={form.dueTime}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="followup-form-group">
+                  <label htmlFor="followup-job-card">RELATED JOB CARD</label>
+                  <select
+                    id="followup-job-card"
+                    name="jobCardId"
+                    value={form.jobCardId}
+                    onChange={handleChange}
+                    disabled={!form.customerId}
+                  >
+                    <option value="">No job card</option>
+                    {jobCardsForCustomer.map((job) => (
+                      <option value={job.id} key={job.id}>
+                        {job.jobCardNumber} — {job.serviceType || job.status}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
             </div>
@@ -297,9 +351,9 @@ function ScheduleFollowUpModal({
                   value={form.channel}
                   onChange={handleChange}
                 >
-                  {FOLLOW_UP_CHANNELS.map((channel) => (
-                    <option value={channel} key={channel}>
-                      {channel}
+                  {CHANNELS.map(([value, label]) => (
+                    <option value={value} key={value}>
+                      {label}
                     </option>
                   ))}
                 </select>
@@ -314,13 +368,14 @@ function ScheduleFollowUpModal({
 
                 <select
                   id="followup-assigned"
-                  name="assignedTo"
-                  value={form.assignedTo}
+                  name="assignedUserId"
+                  value={form.assignedUserId}
                   onChange={handleChange}
                 >
-                  {ASSIGNED_STAFF.map((staff) => (
-                    <option value={staff} key={staff}>
-                      {staff}
+                  <option value="">Unassigned</option>
+                  {assignees.map((staff) => (
+                    <option value={staff.id} key={staff.id}>
+                      {staff.name}
                     </option>
                   ))}
                 </select>
@@ -330,35 +385,12 @@ function ScheduleFollowUpModal({
 
 
             <div className="followup-form-group">
-              <label htmlFor="followup-status">STATUS</label>
-
-              <select
-                id="followup-status"
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-              >
-                {FOLLOW_UP_STATUSES.map((status) => (
-                  <option value={status} key={status}>
-                    {status}
-                  </option>
-                ))}
-              </select>
-
-              <span className="followup-field-hint">
-                &quot;Overdue&quot; is worked out from the follow-up date, so it
-                is not stored on the record.
-              </span>
-            </div>
-
-
-            <div className="followup-form-group">
-              <label htmlFor="followup-notes">MESSAGE / INTERNAL NOTES</label>
+              <label htmlFor="followup-notes">FOLLOW-UP DETAILS</label>
 
               <textarea
                 id="followup-notes"
-                name="notes"
-                value={form.notes}
+                name="reason"
+                value={form.reason}
                 onChange={handleChange}
                 maxLength={500}
                 rows="3"
@@ -366,7 +398,7 @@ function ScheduleFollowUpModal({
               />
 
               <span className="followup-field-hint">
-                {form.notes.length} / 500 characters
+                {form.reason.length} / 500 characters
               </span>
             </div>
 
@@ -376,8 +408,8 @@ function ScheduleFollowUpModal({
 
           <div className="followup-modal-actions">
 
-            <button type="submit" className="followup-save-button">
-              SAVE FOLLOW-UP
+            <button type="submit" className="followup-save-button" disabled={optionsLoading || submitting}>
+              {optionsLoading ? "LOADING OPTIONS..." : submitting ? "SAVING..." : initialFollowup ? "UPDATE FOLLOW-UP" : "SAVE FOLLOW-UP"}
             </button>
 
             <button
@@ -398,4 +430,3 @@ function ScheduleFollowUpModal({
 }
 
 export default ScheduleFollowUpModal;
-

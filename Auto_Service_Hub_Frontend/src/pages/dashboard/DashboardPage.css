@@ -50,7 +50,7 @@
 .garage-dashboard-stats {
     width: 100%;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
     gap: 12px;
     margin-bottom: 24px;
 }
@@ -97,7 +97,7 @@
 .garage-dashboard-middle {
     width: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 2.8fr) minmax(300px, 1.25fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 24px;
     margin-bottom: 24px;
 }
@@ -124,6 +124,31 @@
     font-weight: 500;
     letter-spacing: 0.6px;
     border-bottom: 1px solid #292b2c;
+}
+
+.garage-dashboard-refresh {
+    border: 1px solid #414445;
+    border-radius: 4px;
+    padding: 6px 10px;
+    background: #202222;
+    color: #b9ff00;
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.garage-dashboard-refresh:disabled {
+    color: #777c7e;
+    cursor: default;
+}
+
+.garage-dashboard-state {
+    height: 100px !important;
+    text-align: center;
+}
+
+.garage-dashboard-state.error {
+    color: #ff9a9a !important;
 }
 
 
@@ -590,7 +615,7 @@
         grid-template-columns: 1fr;
     }
     .garage-dashboard-table {
-        min-width: 900px;
+        min-width: 760px;
     }
     .garage-dashboard-heading h1 {
         font-size: 32px;

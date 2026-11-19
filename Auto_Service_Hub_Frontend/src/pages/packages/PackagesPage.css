@@ -927,4 +927,50 @@
 
 .package-apply-dialog {
     width: min(460px, 100%);
+}
+
+/* =========================================================
+   DELETE PACKAGE CONFIRMATION DIALOG
+========================================================= */
+
+.package-delete-dialog {
+    width: min(460px, 100%);
+}
+
+.package-delete-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 22px 24px;
+}
+
+.package-delete-body .packages-feedback {
+    margin: 0;
+}
+
+.package-delete-question {
+    margin: 0;
+    color: #dddddd;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.package-delete-question strong {
+    color: #ffffff;
+}
+
+.package-delete-hint {
+    margin: 8px 0 0;
+    color: #777d80;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.package-delete-confirm-button {
+    background: #f5425b;
+    color: #ffffff;
+}
+
+.package-delete-confirm-button:hover {
+    background: #ff687d;
 }

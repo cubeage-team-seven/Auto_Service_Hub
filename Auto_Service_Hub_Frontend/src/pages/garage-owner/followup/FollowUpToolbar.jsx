@@ -1,8 +1,19 @@
 import React from "react";
 
-import { FOLLOW_UP_CHANNELS, FOLLOW_UP_STATUSES, FOLLOW_UP_TYPES } from "./followUpDemoData";
 import { FOLLOW_UP_BUCKETS } from "./followUpUtils";
 
+const FOLLOW_UP_CHANNELS = [
+  ["PHONE_CALL", "Phone Call"], ["WHATSAPP", "WhatsApp"], ["SMS", "SMS"],
+  ["EMAIL", "Email"], ["IN_PERSON", "In Person"],
+];
+const FOLLOW_UP_STATUSES = [
+  ["PENDING", "Pending"], ["IN_PROGRESS", "In Progress"],
+  ["COMPLETED", "Completed"], ["CANCELLED", "Cancelled"],
+];
+const FOLLOW_UP_TYPES = [
+  "Service Reminder", "Post-Service Check", "Insurance Renewal",
+  "Annual Maintenance", "Payment Reminder", "Tyre & Battery Check", "Feedback Request",
+];
 /* =========================================================
    FOLLOW-UP TOOLBAR
    View tabs plus the search and filter controls. Every control
@@ -21,8 +32,6 @@ function FollowUpToolbar({
   onChannelFilterChange,
   typeFilter,
   onTypeFilterChange,
-  onResetFilters,
-  filtersActive,
   resultCount,
   totalCount,
   activeTabLabel,
@@ -85,9 +94,9 @@ function FollowUpToolbar({
           aria-label="Filter by status"
         >
           <option value="ALL">All Statuses</option>
-          {FOLLOW_UP_STATUSES.map((status) => (
-            <option value={status} key={status}>
-              {status}
+          {FOLLOW_UP_STATUSES.map(([value, label]) => (
+            <option value={value} key={value}>
+              {label}
             </option>
           ))}
         </select>
@@ -99,9 +108,9 @@ function FollowUpToolbar({
           aria-label="Filter by channel"
         >
           <option value="ALL">All Channels</option>
-          {FOLLOW_UP_CHANNELS.map((channel) => (
-            <option value={channel} key={channel}>
-              {channel}
+          {FOLLOW_UP_CHANNELS.map(([value, label]) => (
+            <option value={value} key={value}>
+              {label}
             </option>
           ))}
         </select>
@@ -120,15 +129,6 @@ function FollowUpToolbar({
           ))}
         </select>
 
-        <button
-          type="button"
-          className="followup-reset"
-          onClick={onResetFilters}
-          disabled={!filtersActive}
-        >
-          RESET
-        </button>
-
       </div>
 
 
@@ -138,7 +138,7 @@ function FollowUpToolbar({
 
       <p className="followup-result-meta">
         Showing <strong>{resultCount}</strong> of{" "}
-        <strong>{totalCount}</strong> demonstration follow-ups
+        <strong>{totalCount}</strong> follow-ups
         <span className="followup-result-sep">·</span>
         {activeTabLabel}
       </p>

@@ -23,4 +23,13 @@ public class PasswordResetOtp extends BaseEntity {
 
     @Column(name = "used", nullable = false)
     private Boolean used = false;
+
+    @Column(name = "attempt_count", nullable = false)
+    private int attemptCount = 0;
+
+    @Column(name = "reset_token_hash", length = 100)
+    private String resetTokenHash;
+
+    @Column(name = "reset_token_expires_at")
+    private LocalDateTime resetTokenExpiresAt;
 }

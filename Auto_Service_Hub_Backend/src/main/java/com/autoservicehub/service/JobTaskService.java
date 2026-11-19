@@ -36,6 +36,9 @@ public interface JobTaskService {
     /** One job card's tasks, in recorded order. */
     Page<JobTaskResponseDTO> listByJobCard(Long jobCardId, Pageable pageable);
 
+    /** Tasks assigned only to the authenticated mechanic. */
+    Page<JobTaskResponseDTO> listAssignedToCurrentMechanic(Pageable pageable);
+
     /**
      * Updates a task's own fields.
      *

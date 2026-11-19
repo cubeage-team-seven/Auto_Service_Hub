@@ -6,6 +6,8 @@ import com.autoservicehub.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -20,11 +22,9 @@ import java.util.Map;
  *   filters -> ReportService (the JSON path) -> ExportDocumentDTO -> PDF | Excel
  * </pre>
  *
- * <p>No total, rate or count is recomputed here. {@code buildDocument} only
- * reshapes values the report already computed into labelled rows, so an export
- * cannot disagree with its JSON counterpart. Formatting decisions — how a null
- * prints, how a rate is scaled — are made once, in {@link #cell}, so both output
- * formats render identically too.
+ * <p>Report values come from the same {@link ReportService} methods used by the
+ * JSON endpoints. Summary metrics derived from a collection of report rows use
+ * the same aggregation as the screen, so exports cannot disagree with it.
  */
 @Service
 @RequiredArgsConstructor
@@ -112,6 +112,8 @@ public class ReportExportServiceImpl implements ReportExportService {
                 .addRow("Invoiced revenue", cell(r.getInvoicedRevenue()))
                 .addRow("Invoice count", cell(r.getInvoiceCount()))
                 .addRow("Average invoice value", cell(r.getAverageInvoiceValue()))
+                .addRow("Total discount", cell(r.getTotalDiscount()))
+                .addRow("GST charged", cell(r.getTotalGst()))
                 .addRow("Collected amount (SUCCESS payments)", cell(r.getCollectedAmount()))
                 .addRow("Payment count", cell(r.getPaymentCount()))
                 .addRow("Average payment value", cell(r.getAveragePaymentValue()))
@@ -141,14 +143,44 @@ public class ReportExportServiceImpl implements ReportExportService {
 
     private void addMechanicPerformance(ExportDocumentDTO doc,
                                          List<MechanicPerformanceReportDTO> rows) {
+        long assigned = 0;
+        long completed = 0;
+        long open = 0;
+        BigDecimal revenue = BigDecimal.ZERO;
+        for (MechanicPerformanceReportDTO mechanic : rows) {
+            assigned += mechanic.getAssignedJobs();
+            completed += mechanic.getCompletedJobs();
+            open += mechanic.getOpenJobs();
+            revenue = revenue.add(
+                    mechanic.getTotalRevenue() == null ? BigDecimal.ZERO : mechanic.getTotalRevenue());
+        }
+
+        String completionRate = assigned == 0
+                ? "—"
+                : BigDecimal.valueOf(completed)
+                        .multiply(BigDecimal.valueOf(100))
+                        .divide(BigDecimal.valueOf(assigned), 1, RoundingMode.HALF_UP)
+                        .toPlainString() + "%";
+        doc.addTable(new ExportTableDTO("Summary", List.of("Metric", "Value"))
+                .addRow("Mechanics", cell(rows.size()))
+                .addRow("Jobs assigned", cell(assigned))
+                .addRow("Jobs completed", cell(completed))
+                .addRow("Still open", cell(open))
+                .addRow("Completion rate", completionRate)
+                .addRow("Revenue on completed jobs", cell(revenue)));
+
         ExportTableDTO t = new ExportTableDTO("Per mechanic",
                 List.of("Mechanic", "Employee code", "Assigned", "Completed", "Open",
-                        "Completion rate", "Revenue", "Avg revenue/job", "Avg rating", "Ratings"));
+                        "Completion rate", "Revenue", "Avg revenue/job", "Turnaround (days)",
+                        "Avg rating", "Ratings"));
         for (MechanicPerformanceReportDTO m : rows) {
             t.addRow(m.getMechanicName(), m.getEmployeeCode(),
                     cell(m.getAssignedJobs()), cell(m.getCompletedJobs()), cell(m.getOpenJobs()),
-                    cell(m.getCompletionRate()), cell(m.getTotalRevenue()),
-                    cell(m.getAverageRevenuePerJob()),
+                    m.getAssignedJobs() > 0 ? percentage(m.getCompletionRate()) : "—",
+                    cell(m.getTotalRevenue()),
+                    m.getCompletedJobs() > 0 ? cell(m.getAverageRevenuePerJob()) : "—",
+                    m.getAverageTurnaroundDays() == null
+                            ? BLANK : cell(m.getAverageTurnaroundDays()),
                     // Null rating stays null: "not rated" is not "rated zero".
                     m.getAverageCustomerRating() == null ? BLANK : cell(m.getAverageCustomerRating()),
                     cell(m.getRatingCount()));
@@ -164,18 +196,21 @@ public class ReportExportServiceImpl implements ReportExportService {
                 .addRow("Period", cell(r.getFrom()) + " to " + cell(r.getTo()))
                 .addRow("Distinct parts", cell(r.getDistinctPartCount()))
                 .addRow("Total quantity consumed", cell(r.getTotalQuantityConsumed()))
-                .addRow("Total estimated cost", cell(r.getTotalEstimatedCost()));
+                .addRow("Total estimated cost", cell(r.getTotalEstimatedCost()))
+                .addRow("Parts on the list", cell(r.getParts().size()));
 
         ExportTableDTO parts = new ExportTableDTO("Parts consumed",
                 List.of("SKU", "Part", "Unit", "Quantity", "Movements",
-                        "Current purchase price", "Estimated cost"));
+                        "Current purchase price", "Estimated cost", "Job cards", "Mechanics"));
         for (PartsUsageRowDTO p : r.getParts()) {
             parts.addRow(p.getSku(), p.getPartName(), p.getUnit(),
                     cell(p.getQuantityConsumed()), cell(p.getMovementCount()),
                     // A part with no recorded price shows blank, never 0.00,
                     // which would read as "free" rather than "unknown".
                     p.getCurrentPurchasePrice() == null ? BLANK : cell(p.getCurrentPurchasePrice()),
-                    cell(p.getEstimatedCost()));
+                    cell(p.getEstimatedCost()),
+                    p.getJobCardNumbers() == null ? BLANK : String.join(", ", p.getJobCardNumbers()),
+                    p.getMechanicNames() == null ? BLANK : String.join(", ", p.getMechanicNames()));
         }
 
         doc.addTable(totals).addTable(parts);
@@ -190,18 +225,28 @@ public class ReportExportServiceImpl implements ReportExportService {
                 .addRow("Repeat customers", cell(r.getRepeatCustomerCount()))
                 .addRow("Customers served in period", cell(r.getCustomersServedInPeriod()))
                 .addRow("Jobs in period", cell(r.getJobsInPeriod()))
-                .addRow("Repeat rate", r.getRepeatRate() == null ? BLANK : cell(r.getRepeatRate())));
+                .addRow("Repeat rate", percentage(r.getRepeatRate())));
         doc.addNote(r.getNotes());
     }
 
     private void addProfitAnalysis(ExportDocumentDTO doc, ProfitAnalysisReportDTO r) {
+        doc.addTable(new ExportTableDTO("Summary", List.of("Metric", "Value"))
+                .addRow("Invoiced revenue", cell(r.getInvoicedRevenue()))
+                .addRow("Collected", cell(r.getCollectedAmount()))
+                .addRow("Outstanding", cell(r.getOutstandingAmount()))
+                .addRow("Parts cost (lower bound)", cell(r.getPartsCostEstimate()))
+                .addRow("Gross profit", r.isProfitAvailable()
+                        ? cell(r.getGrossProfit()) : "Not computable"));
+
         doc.addTable(new ExportTableDTO("Revenue", List.of("Metric", "Value"))
                 .addRow("Period", cell(r.getFrom()) + " to " + cell(r.getTo()))
                 .addRow("Invoiced revenue", cell(r.getInvoicedRevenue()))
                 .addRow("Invoice count", cell(r.getInvoiceCount()))
                 .addRow("Collected amount", cell(r.getCollectedAmount()))
                 .addRow("Payment count", cell(r.getPaymentCount()))
-                .addRow("Outstanding", cell(r.getOutstandingAmount())));
+                .addRow("Outstanding", cell(r.getOutstandingAmount()))
+                .addRow("Revenue less known cost (not profit)",
+                        cell(r.getInvoicedRevenue().subtract(r.getPartsCostEstimate()))));
 
         doc.addTable(new ExportTableDTO("Cost", List.of("Metric", "Value"))
                 .addRow("Estimated parts cost (OUT movements)", cell(r.getPartsCostEstimate()))
@@ -230,6 +275,14 @@ public class ReportExportServiceImpl implements ReportExportService {
      */
     private String cell(Object value) {
         return ExportRenderer.cell(value);
+    }
+
+    private String percentage(BigDecimal fraction) {
+        return fraction == null
+                ? BLANK
+                : fraction.multiply(BigDecimal.valueOf(100))
+                        .setScale(1, RoundingMode.HALF_UP)
+                        .toPlainString() + "%";
     }
 
     /**
