@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import { appointmentsApi, customersApi, jobCardsApi, mechanicsApi, vehiclesApi } from "../../services/resources";
 import { getErrorMessage } from "../../services/api";
 import "./GarageOwnerJobCards.css";
@@ -9,6 +10,9 @@ function GarageOwnerJobCards({
   showAppointment = false,
   openCreateOnMount = false,
 }) {
+  const { user } = useAuth();
+  const role = String(user?.role || "").replace(/^ROLE_/i, "").toUpperCase();
+  const isMechanic = role === "MECHANIC";
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [showModal, setShowModal] = useState(openCreateOnMount);
   const [jobCards, setJobCards] = useState([]);
@@ -36,10 +40,10 @@ function GarageOwnerJobCards({
   useEffect(() => {
     Promise.all([
       jobCardsApi.list(),
-      customersApi.list(),
-      vehiclesApi.list(),
-      mechanicsApi.list(),
-      showAppointment ? appointmentsApi.list() : Promise.resolve([]),
+      isMechanic ? Promise.resolve([]) : customersApi.list(),
+      isMechanic ? Promise.resolve([]) : vehiclesApi.list(),
+      isMechanic ? Promise.resolve([]) : mechanicsApi.list(),
+      showAppointment && !isMechanic ? appointmentsApi.list() : Promise.resolve([]),
     ])
       .then(([jobCardRecords, customerRecords, vehicleRecords, mechanicRecords, appointmentRecords]) => {
         setJobCards(jobCardRecords);
@@ -50,7 +54,7 @@ function GarageOwnerJobCards({
       })
       .catch((requestError) => setError(getErrorMessage(requestError)))
       .finally(() => setLoading(false));
-  }, [showAppointment]);
+  }, [isMechanic, showAppointment]);
 
   const filterMap = {
     RECEIVED: "RECEIVED",

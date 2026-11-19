@@ -300,6 +300,36 @@
   text-align: center;
 }
 
+.mechanic-account-link {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+  color: #929995;
+  font-size: 0.72rem;
+}
+
+.mechanic-account-link-controls {
+  display: flex;
+  min-width: 0;
+  gap: 0.45rem;
+}
+
+.mechanic-account-link-controls select {
+  min-width: 0;
+  flex: 1;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #343a36;
+  border-radius: 0.25rem;
+  background: #101311;
+  color: #dce1dc;
+  font: inherit;
+}
+
+.mechanic-account-link-controls select:focus {
+  outline: 1px solid #b7ef20;
+  outline-offset: 1px;
+}
+
 .mechanic-card-stat {
   display: flex;
   min-width: 0;

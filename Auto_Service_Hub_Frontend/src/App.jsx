@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { AuthProvider } from "./context/AuthContext";
 import {
   BrowserRouter,
+  Link,
   Navigate,
   Outlet,
   Routes,
@@ -20,6 +21,7 @@ import LandingPage from "./pages/landing/LandingPage";
 ========================= */
 import ModulePage from "./pages/auth/ModulePage";
 import AccessRequestPage from "./pages/auth/AccessRequestPage";
+import PasswordResetPage from "./pages/auth/PasswordResetPage";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
@@ -55,6 +57,8 @@ import Appointments from "./pages/customers/Appointments";
    BILLING
 ========================= */
 import BillingLogin from "./pages/billing/BillingLogin";
+import BillingLayout from "./pages/billing/BillingLayout";
+import BillingDashboard from "./pages/billing/BillingDashboard";
 import BillingPage from "./pages/billing/BillingPage";
 
 /* =========================
@@ -121,7 +125,7 @@ import ServiceAdvisorPackages from "./pages/Service Advisor/Packages";
  */
 function OwnerOnlyRoute({ to, children }) {
   const { user } = useAuth();
-  const role = String(user?.role || "").replace(/^ROLE_/, "").toUpperCase();
+  const role = normalizeRole(user?.role);
 
   if (role === "OWNER" || role === "GARAGE_OWNER") {
     return children;
@@ -130,30 +134,62 @@ function OwnerOnlyRoute({ to, children }) {
   return <Navigate to={to} replace />;
 }
 
+function AccessDeniedPage() {
+  return (
+    <main role="alert" style={{ padding: "2rem" }}>
+      <h1>Access denied</h1>
+      <p>Your account is not authorized to access the Owner workspace.</p>
+      <Link to="/modules">Return to module selection</Link>
+    </main>
+  );
+}
+
 const homeByRole = {
   ADMIN: "/admin",
   OWNER: "/garage-owner/dashboard",
   MANAGER: "/garage-owner/dashboard",
+  GARAGE_OWNER: "/garage-owner/dashboard",
   SERVICE_ADVISOR: "/service-advisor",
   MECHANIC: "/mechanic-dashboard",
   INVENTORY_MANAGER: "/inventory-dashboard",
   BILLING_USER: "/billing/dashboard",
+  CUSTOMER: "/customer-dashboard",
 };
 
-function RequireRole({ roles }) {
-  const { user, isAuthenticated } = useContext(AuthContext);
-  if (!isAuthenticated) return <Navigate to="/modules" replace />;
-  return roles.includes(user?.role)
-    ? <Outlet />
-    : <Navigate to={homeByRole[user?.role] || "/modules"} replace />;
+const specialistRoles = new Set([
+  "SERVICE_ADVISOR",
+  "MECHANIC",
+  "INVENTORY_MANAGER",
+  "BILLING_USER",
+]);
+
+function normalizeRole(role) {
+  const normalized = String(role || "").replace(/^ROLE_/i, "").toUpperCase();
+  return normalized === "GARAGE_OWNER" ? "OWNER" : normalized;
 }
 
-function PublicOnly({ children, roleRedirectOverrides = {} }) {
+function RequireRole({ roles, deniedSpecialistTo }) {
   const { user, isAuthenticated } = useContext(AuthContext);
+  if (!isAuthenticated) return <Navigate to="/modules" replace />;
+  const role = normalizeRole(user?.role);
+  const fallback = specialistRoles.has(role) && deniedSpecialistTo
+    ? deniedSpecialistTo
+    : homeByRole[role] || "/modules";
+  return roles.map(normalizeRole).includes(role)
+    ? <Outlet />
+    : <Navigate to={fallback} replace />;
+}
+
+function PublicOnly({ children, roleRedirectOverrides = {}, workspace }) {
+  const { user, isAuthenticated } = useContext(AuthContext);
+  const role = normalizeRole(user?.role);
+  const isSpecialistLogin =
+    Boolean(workspace && specialistRoles.has(role));
   const roleRedirects = { ...homeByRole, ...roleRedirectOverrides };
-  return isAuthenticated
-    ? <Navigate to={roleRedirects[user?.role] || "/"} replace />
-    : children;
+  if (isAuthenticated && !isSpecialistLogin) {
+    return <Navigate to={roleRedirects[role] || "/"} replace />;
+  }
+  return children;
 }
 
 function App() {
@@ -182,6 +218,8 @@ function App() {
           element={<ModulePage />}
         />
         <Route path="/access-request" element={<PublicOnly><AccessRequestPage /></PublicOnly>} />
+        <Route path="/forgot-password" element={<PasswordResetPage />} />
+        <Route path="/access-denied" element={<AccessDeniedPage />} />
 
 
         {/* =====================================================
@@ -190,10 +228,20 @@ function App() {
 
         <Route
           path="/mechanic"
-          element={<MechanicLogin />}
+          element={
+            <PublicOnly
+              workspace="MECHANIC"
+              roleRedirectOverrides={{
+                OWNER: "/mechanic-dashboard",
+                MANAGER: "/mechanic-dashboard",
+              }}
+            >
+              <MechanicLogin />
+            </PublicOnly>
+          }
         />
 
-        <Route element={<RequireRole roles={["MECHANIC"]} />}>
+        <Route element={<RequireRole roles={["MECHANIC", "OWNER", "MANAGER"]} />}>
         <Route element={<MechanicLayout />}>
 
           <Route
@@ -226,7 +274,17 @@ function App() {
 
         <Route
           path="/inventory-login"
-          element={<PublicOnly><InventoryLogin /></PublicOnly>}
+          element={
+            <PublicOnly
+              workspace="INVENTORY_MANAGER"
+              roleRedirectOverrides={{
+                OWNER: "/inventory-dashboard",
+                MANAGER: "/inventory-dashboard",
+              }}
+            >
+              <InventoryLogin />
+            </PublicOnly>
+          }
         />
 
 
@@ -234,7 +292,7 @@ function App() {
             INVENTORY MODULE
         ===================================================== */}
 
-        <Route element={<RequireRole roles={["INVENTORY_MANAGER"]} />}>
+        <Route element={<RequireRole roles={["INVENTORY_MANAGER", "OWNER", "MANAGER"]} />}>
         <Route element={<InventoryLayout />}>
 
           <Route
@@ -254,10 +312,15 @@ function App() {
             CUSTOMERS
         ===================================================== */}
 
-        <Route path="/customers" element={<CustomerLogin />} />
-        <Route path="/dashboard" element={<CustomerDashboard />} />
-        <Route path="/customer-dashboard" element={<CustomerDashboard />} />
-        <Route path="/appointments" element={<Appointments />} />
+        <Route
+          path="/customers"
+          element={<PublicOnly workspace="CUSTOMER"><CustomerLogin /></PublicOnly>}
+        />
+        <Route element={<RequireRole roles={["CUSTOMER"]} />}>
+          <Route path="/dashboard" element={<CustomerDashboard />} />
+          <Route path="/customer-dashboard" element={<CustomerDashboard />} />
+          <Route path="/appointments" element={<Appointments />} />
+        </Route>
 
 
         {/* =====================================================
@@ -266,11 +329,24 @@ function App() {
 
         <Route
           path="/billing"
-          element={<PublicOnly><BillingLogin /></PublicOnly>}
+          element={
+            <PublicOnly
+              workspace="BILLING"
+              roleRedirectOverrides={{
+                OWNER: "/billing/dashboard",
+                MANAGER: "/billing/dashboard",
+              }}
+            >
+              <BillingLogin />
+            </PublicOnly>
+          }
         />
 
-        <Route element={<RequireRole roles={["BILLING_USER"]} />}>
-          <Route path="/billing/dashboard" element={<BillingPage />} />
+        <Route element={<RequireRole roles={["BILLING_USER", "OWNER", "MANAGER"]} />}>
+          <Route element={<BillingLayout />}>
+            <Route path="/billing/dashboard" element={<BillingDashboard />} />
+            <Route path="/billing/invoices" element={<BillingPage />} />
+          </Route>
         </Route>
 
 
@@ -280,7 +356,7 @@ function App() {
 
         <Route
           path="/garage-owner-login"
-          element={<PublicOnly><GarageOwnerLogin /></PublicOnly>}
+          element={<PublicOnly workspace="GARAGE_OWNER"><GarageOwnerLogin /></PublicOnly>}
         />
 
 
@@ -290,29 +366,21 @@ function App() {
 
         <Route
           path="/service-advisor-login"
-          element={<PublicOnly><ServiceAdvisorLogin /></PublicOnly>}
+          element={
+            <PublicOnly
+              workspace="SERVICE_ADVISOR"
+              roleRedirectOverrides={{
+                OWNER: "/service-advisor",
+                MANAGER: "/service-advisor",
+              }}
+            >
+              <ServiceAdvisorLogin />
+            </PublicOnly>
+          }
         />
 
-        <Route path="/service-advisor" element={<RequireRole roles={["SERVICE_ADVISOR"]} />}>
+        <Route path="/service-advisor" element={<RequireRole roles={["SERVICE_ADVISOR", "OWNER", "MANAGER"]} />}>
           <Route element={<ServiceAdvisorLayout />}>
-            <Route index element={<GarageOwnerDashboard />} />
-            <Route path="customers" element={<GarageOwnerCustomers />} />
-            <Route path="vehicles" element={<GarageOwnerVehicles />} />
-            <Route path="appointments" element={<GarageOwnerAppointments />} />
-            <Route path="jobcards" element={<GarageOwnerJobCards />} />
-            <Route path="packages" element={<PackagesPage />} />
-          </Route>
-        </Route>
-
-
-        {/* =====================================================
-            SERVICE ADVISOR MODULE
-        ===================================================== */}
-
-        <Route
-          path="/service-advisor"
-          element={<ServiceAdvisorLayout />}
-        >
 
           <Route
             index
@@ -344,6 +412,7 @@ function App() {
             element={<ServiceAdvisorPackages />}
           />
 
+          </Route>
         </Route>
 
 
@@ -353,9 +422,19 @@ function App() {
 
         <Route
           path="/developer-login"
-          element={<PublicOnly roleRedirectOverrides={{ ADMIN: "/developer" }}><DeveloperLogin /></PublicOnly>}
+          element={
+            <PublicOnly
+              workspace="DEVELOPER"
+              roleRedirectOverrides={{ ADMIN: "/developer" }}
+            >
+              <DeveloperLogin />
+            </PublicOnly>
+          }
         />
-        <Route path="/admin-login" element={<PublicOnly><DeveloperLogin /></PublicOnly>} />
+        <Route
+          path="/admin-login"
+          element={<PublicOnly workspace="ADMINISTRATOR"><DeveloperLogin /></PublicOnly>}
+        />
 
 
         {/* =====================================================
@@ -364,7 +443,12 @@ function App() {
 
         <Route
           path="/garage-owner"
-          element={<RequireRole roles={["OWNER", "MANAGER"]} />}
+          element={
+            <RequireRole
+              roles={["OWNER", "MANAGER", "GARAGE_OWNER"]}
+              deniedSpecialistTo="/access-denied"
+            />
+          }
         >
           <Route element={<GarageOwnerLayout />}>
 

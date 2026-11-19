@@ -1,26 +1,21 @@
 import React from "react";
 
-import {
-  describeDueDate,
-  formatDisplayDate,
-  isCompleted,
-  priorityClassName,
-  statusClassName,
-} from "./followUpUtils";
+import { describeDueDate, formatDisplayDate, isCompleted, statusClassName } from "./followUpUtils";
 
 /* =========================================================
    FOLLOW-UP TABLE
-   Presentation only. Completing or reopening a row is handed
-   back to the page through onToggleComplete so the single
-   source of truth stays in one place.
+   Presentation only. Mutations are delegated to the page.
    ========================================================= */
 
 function FollowUpTable({
   followUps,
   todayKey,
   emptyMessage,
+  loading,
   onOpenCommunication,
   onToggleComplete,
+  onCancel,
+  onEdit,
 }) {
   return (
     <div className="followup-table-panel">
@@ -52,8 +47,10 @@ function FollowUpTable({
               </tr>
             ) : (
               followUps.map((entry) => {
-                const due = describeDueDate(entry.dueDate, todayKey);
-                const completed = isCompleted(entry);
+                const closed = isCompleted(entry) || entry.status === "Cancelled";
+                const due = closed
+                  ? { label: entry.status, tone: "" }
+                  : describeDueDate(entry.dueDate, todayKey);
 
                 return (
                   <tr key={entry.rowId}>
@@ -82,13 +79,7 @@ function FollowUpTable({
                     <td>
                       <div className="followup-type">
                         <strong>{entry.type}</strong>
-                        <span
-                          className={`followup-priority ${priorityClassName(
-                            entry.priority
-                          )}`}
-                        >
-                          {entry.priority} priority
-                        </span>
+                        <span>{entry.notes}</span>
                       </div>
                     </td>
 
@@ -130,18 +121,32 @@ function FollowUpTable({
                         <button
                           type="button"
                           className="followup-action primary"
+                          disabled={loading}
                           onClick={() => onOpenCommunication(entry)}
                         >
                           Message
                         </button>
+                        {!closed && <button
+                          type="button"
+                          className="followup-action"
+                          disabled={loading}
+                          onClick={() => onEdit(entry)}
+                        >Edit</button>}
 
                         <button
                           type="button"
                           className="followup-action"
+                          disabled={closed || loading}
                           onClick={() => onToggleComplete(entry)}
                         >
-                          {completed ? "Reopen" : "Complete"}
+                          Complete
                         </button>
+                        {!closed && <button
+                          type="button"
+                          className="followup-action"
+                          disabled={loading}
+                          onClick={() => onCancel(entry)}
+                        >Cancel</button>}
 
                       </div>
                     </td>

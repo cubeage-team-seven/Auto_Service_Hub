@@ -5,6 +5,7 @@ import com.autoservicehub.dto.ExportFileDTO;
 import com.autoservicehub.dto.ExportTableDTO;
 import com.autoservicehub.dto.InvoiceItemResponseDTO;
 import com.autoservicehub.dto.InvoiceResponseDTO;
+import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.service.InvoiceDocumentService;
 import com.autoservicehub.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,7 @@ public class InvoiceDocumentServiceImpl implements InvoiceDocumentService {
     @Override
     @Transactional(readOnly = true)
     public ExportFileDTO toPdf(Long invoiceId) {
-        InvoiceResponseDTO invoice = invoiceService.getById(invoiceId);
+        InvoiceResponseDTO invoice = loadInvoiceOrThrow(invoiceId);
         return new ExportFileDTO(renderer.renderPdf(build(invoice)),
                 ExportRenderer.CONTENT_TYPE_PDF, filename(invoice, "pdf"));
     }
@@ -51,9 +52,23 @@ public class InvoiceDocumentServiceImpl implements InvoiceDocumentService {
     @Override
     @Transactional(readOnly = true)
     public ExportFileDTO toExcel(Long invoiceId) {
-        InvoiceResponseDTO invoice = invoiceService.getById(invoiceId);
+        InvoiceResponseDTO invoice = loadInvoiceOrThrow(invoiceId);
         return new ExportFileDTO(renderer.renderExcel(build(invoice)),
                 ExportRenderer.CONTENT_TYPE_EXCEL, filename(invoice, "xlsx"));
+    }
+
+    /**
+     * The invoice service already answers 404 for an unknown id, so this null
+     * branch is defensive: a null invoice would otherwise fail at
+     * {@code invoice.getId()} with an opaque 500 instead of a meaningful error,
+     * and could not be told apart from a genuinely missing invoice.
+     */
+    private InvoiceResponseDTO loadInvoiceOrThrow(Long invoiceId) {
+        InvoiceResponseDTO invoice = invoiceService.getById(invoiceId);
+        if (invoice == null) {
+            throw new ResourceNotFoundException("Invoice not found: " + invoiceId);
+        }
+        return invoice;
     }
 
     /** Reshapes the stored invoice into the shared, format-neutral export document. */

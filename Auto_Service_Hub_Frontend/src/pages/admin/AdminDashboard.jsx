@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { adminApi } from "../../services/resources";
 import { getErrorMessage } from "../../services/api";
+import { getUnlinkedMechanicProfiles } from "../../services/mechanicService";
 import "./Admin.css";
 
 const staffRoles = [
@@ -12,11 +13,24 @@ const staffRoles = [
   ["BILLING_USER", "Billing staff"],
 ];
 
-const emptyForm = { fullName: "", username: "", email: "", phone: "", role: "OWNER", password: "" };
+const emptyForm = {
+  fullName: "",
+  username: "",
+  email: "",
+  phone: "",
+  role: "OWNER",
+  mechanicId: "",
+  password: "",
+};
+
+const isMechanicRole = (role) =>
+  String(role || "").trim().replace(/^ROLE_/i, "").toUpperCase() === "MECHANIC";
 
 export default function AdminDashboard() {
   const [requests, setRequests] = useState([]);
   const [users, setUsers] = useState([]);
+  const [mechanicProfiles, setMechanicProfiles] = useState([]);
+  const [mechanicProfilesError, setMechanicProfilesError] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [reviewCredentials, setReviewCredentials] = useState({});
   const [message, setMessage] = useState("");
@@ -33,6 +47,15 @@ export default function AdminDashboard() {
       ]);
       setRequests(requestRows);
       setUsers(userRows);
+      try {
+        setMechanicProfiles(await getUnlinkedMechanicProfiles());
+        setMechanicProfilesError("");
+      } catch (profileError) {
+        setMechanicProfiles([]);
+        setMechanicProfilesError(
+          getErrorMessage(profileError, "Could not load unlinked mechanic profiles.")
+        );
+      }
     } catch (requestError) {
       setError(getErrorMessage(requestError, "Could not load administrator data."));
     } finally {
@@ -44,11 +67,18 @@ export default function AdminDashboard() {
 
   const createUser = async (event) => {
     event.preventDefault();
+    if (isMechanicRole(form.role) && !form.mechanicId) {
+      setError("Select the mechanic profile for this account.");
+      return;
+    }
     setSaving(true);
     setError("");
     setMessage("");
     try {
-      await adminApi.createUser(form);
+      await adminApi.createUser({
+        ...form,
+        mechanicId: isMechanicRole(form.role) ? Number(form.mechanicId) : null,
+      });
       setCredentials({ name: form.fullName || form.username, username: form.username, email: form.email, password: form.password });
       setForm(emptyForm);
       setMessage("Account created.");
@@ -71,10 +101,17 @@ export default function AdminDashboard() {
           setError("Enter a username and an initial password of at least 12 characters before approving.");
           return;
         }
+        if (isMechanicRole(request.requestedRole) && !credentialsForRequest.mechanicId) {
+          setError("Select the mechanic profile for this access request.");
+          return;
+        }
         await adminApi.approveAccessRequest(request.id, {
           username: credentialsForRequest.username,
           password: credentialsForRequest.password,
           role: request.requestedRole,
+          mechanicId: isMechanicRole(request.requestedRole)
+            ? Number(credentialsForRequest.mechanicId)
+            : null,
         });
         setCredentials({
           name: request.name,
@@ -129,7 +166,11 @@ export default function AdminDashboard() {
         {requests.filter((request) => request.status === "PENDING").length === 0
           ? <p>No requests awaiting review.</p>
           : requests.filter((request) => request.status === "PENDING").map((request) => {
-            const values = reviewCredentials[request.id] || { username: request.email, password: "" };
+            const values = reviewCredentials[request.id] || {
+              username: request.email,
+              password: "",
+              mechanicId: "",
+            };
             const update = (field, value) => setReviewCredentials((current) => ({
               ...current,
               [request.id]: { ...values, [field]: value },
@@ -140,6 +181,29 @@ export default function AdminDashboard() {
                   <span>{request.requestedRole.replaceAll("_", " ")} · {request.message || "No message"}</span></div>
                 <label>Username<input required value={values.username} onChange={(event) => update("username", event.target.value)} /></label>
                 <label>Initial password<input type="password" minLength="12" maxLength="72" autoComplete="new-password" value={values.password} onChange={(event) => update("password", event.target.value)} /></label>
+                {isMechanicRole(request.requestedRole) && (
+                  <label>
+                    Mechanic profile
+                    <select
+                      value={values.mechanicId}
+                      onChange={(event) => update("mechanicId", event.target.value)}
+                      required
+                    >
+                      <option value="">
+                        {mechanicProfiles.length > 0
+                          ? "Select an unlinked mechanic profile"
+                          : "No unlinked mechanic profiles available"}
+                      </option>
+                      {mechanicProfiles.map((profile) => (
+                        <option value={profile.id} key={profile.id}>
+                          {profile.employeeCode || `#${profile.id}`} — {profile.name}
+                          {profile.status ? ` (${profile.status})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                    {mechanicProfilesError && <span className="admin-error">{mechanicProfilesError}</span>}
+                  </label>
+                )}
                 <div className="admin-actions">
                   <button type="button" className="admin-primary-button" disabled={saving} onClick={() => void reviewRequest(request, true)}>Approve</button>
                   <button type="button" className="admin-secondary-button" disabled={saving} onClick={() => void reviewRequest(request, false)}>Reject</button>
@@ -157,7 +221,30 @@ export default function AdminDashboard() {
           <label>Username<input required minLength="3" maxLength="100" value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} /></label>
           <label>Email<input required type="email" maxLength="150" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} /></label>
           <label>Phone<input maxLength="30" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></label>
-          <label>Role<select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>{staffRoles.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label>Role<select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value, mechanicId: "" })}>{staffRoles.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          {isMechanicRole(form.role) && (
+            <label>
+              Mechanic profile
+              <select
+                required
+                value={form.mechanicId}
+                onChange={(event) => setForm({ ...form, mechanicId: event.target.value })}
+              >
+                <option value="">
+                  {mechanicProfiles.length > 0
+                    ? "Select an unlinked mechanic profile"
+                    : "No unlinked mechanic profiles available"}
+                </option>
+                {mechanicProfiles.map((profile) => (
+                  <option value={profile.id} key={profile.id}>
+                    {profile.employeeCode || `#${profile.id}`} — {profile.name}
+                    {profile.status ? ` (${profile.status})` : ""}
+                  </option>
+                ))}
+              </select>
+              {mechanicProfilesError && <span className="admin-error">{mechanicProfilesError}</span>}
+            </label>
+          )}
           <label>Initial password<input required type="password" minLength="12" maxLength="72" autoComplete="new-password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} /></label>
           <button type="submit" className="admin-primary-button" disabled={saving}>{saving ? "Creating…" : "Create account"}</button>
         </form>

@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import GarageOwnerCreateUserModal from "./GarageOwnerCreateUserModal";
-import { createUser, getUsers } from "../../services/userService";
+import GarageOwnerUserViewModal from "./GarageOwnerUserViewModal";
+import GarageOwnerEditUserModal from "./GarageOwnerEditUserModal";
+import { getMechanics } from "../../services/mechanicService";
+import { createUser, getUsers, removeUser, updateUser } from "../../services/userService";
+import { useAuth } from "../../hooks/useAuth";
 import "./GarageOwnerUsers.css";
 
 /* =========================================================
@@ -20,10 +24,14 @@ import "./GarageOwnerUsers.css";
    are optional on an account, so a row keeps an empty string for
    them and the table shows a dash rather than a hole.
 
-   Creating a user is the page's one write: POST /api/v1/users
-   through userService, followed by a reload of this same list.
-   Nothing here edits or deletes a record — the row actions stay
-   placeholders.
+   Create and Remove are writes through userService, each followed by
+   a reload of this same list.
+   View and Edit each open the selected row in a dialog of its
+   own — View shows the account as the list holds it, Edit
+   updates the profile fields, role and account status through
+   PUT /api/v1/users/{id} and reloads this same list. An update
+   never touches the password hash. Removal is confirmed in a dialog
+   and is limited to workshop accounts other than the signed-in owner.
 ========================================================= */
 
 const ROLE_LABELS = {
@@ -36,6 +44,15 @@ const ROLE_LABELS = {
   BILLING_USER: "Billing User",
   CUSTOMER: "Customer",
 };
+
+const WORKSHOP_USER_ROLE_LABELS = new Set([
+  "Owner",
+  "Manager",
+  "Service Advisor",
+  "Mechanic",
+  "Inventory Manager",
+  "Billing User",
+]);
 
 /* The order the Role filter offers its labels in: the roles the roles
    table seeds first, so the filter reads the way it always has, and
@@ -77,11 +94,15 @@ const toRoleLabel = (role) => {
     .join(" ");
 };
 
-const mapUser = (user) => {
+const mapUser = (user, mechanics = []) => {
   const isActive = user?.active === true;
+  const linkedMechanic = mechanics.find(
+    (mechanic) => String(mechanic.userId) === String(user?.id)
+  );
 
   return {
     id: user?.id ?? null,
+    fullName: String(user?.fullName ?? "").trim(),
     name:
       String(user?.fullName ?? "").trim() ||
       String(user?.username ?? "").trim() ||
@@ -92,6 +113,7 @@ const mapUser = (user) => {
     role: toRoleLabel(user?.role),
     active: isActive,
     status: isActive ? "Active" : "Inactive",
+    mechanicId: linkedMechanic?.id ?? null,
   };
 };
 
@@ -146,31 +168,46 @@ const STATUS_OPTIONS = STATUS_FILTERS.filter(
 );
 
 /* =========================================================
-   PLACEHOLDER COPY
+   EDIT DIALOG OPTIONS
 
-   The row actions are still UI only, so they explain that
-   instead of pretending to save something.
+   The edit dialog offers the same role and status choices as
+   the create dialog: the role choices describe what the
+   backend's assignable staff roles are, and the status choices
+   are the account values minus the filter's "All Status"
+   sentinel.
 ========================================================= */
-
-const createActionPlaceholder = (user) =>
-  `View ${user.name} is a placeholder in this build — no user details are opened.`;
-
-const editActionPlaceholder = (user) =>
-  `Edit ${user.name} is a placeholder in this build — no user record is changed.`;
 
 
 function GarageOwnerUsers() {
+  const { user: authenticatedUser } = useAuth();
+  const authenticatedRole = String(authenticatedUser?.role ?? "")
+    .trim()
+    .replace(/^ROLE_/i, "")
+    .toUpperCase();
+  const canRemoveUsers =
+    authenticatedRole === "OWNER" || authenticatedRole === "GARAGE_OWNER";
+  const authenticatedUsername = String(authenticatedUser?.username ?? "")
+    .trim()
+    .toLowerCase();
   const [users, setUsers] = useState([]);
+  const [mechanicProfiles, setMechanicProfiles] = useState([]);
+  const [mechanicProfileError, setMechanicProfileError] = useState("");
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState(ALL_ROLES);
   const [statusFilter, setStatusFilter] = useState(ALL_STATUSES);
-  const [placeholderMessage, setPlaceholderMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [createUserError, setCreateUserError] = useState("");
+  const [viewUser, setViewUser] = useState(null);
+  const [editUser, setEditUser] = useState(null);
+  const [isSavingUser, setIsSavingUser] = useState(false);
+  const [updateUserError, setUpdateUserError] = useState("");
+  const [removeUserCandidate, setRemoveUserCandidate] = useState(null);
+  const [isRemovingUser, setIsRemovingUser] = useState(false);
+  const [removeUserError, setRemoveUserError] = useState("");
 
   /* =========================================================
      LOAD THE LIST — GET /api/v1/users
@@ -185,7 +222,7 @@ function GarageOwnerUsers() {
   ========================================================= */
 
   const loadUsers = useCallback(
-    async ({ showLoading = true, savedUser = null } = {}) => {
+    async ({ showLoading = true, savedUser = null, savedVerb = "created" } = {}) => {
       if (showLoading) {
         setIsLoadingUsers(true);
       }
@@ -193,9 +230,24 @@ function GarageOwnerUsers() {
       setLoadError("");
 
       try {
-        const fetchedUsers = await getUsers();
+        const [usersResult, mechanicsResult] = await Promise.allSettled([
+          getUsers(),
+          getMechanics(),
+        ]);
+        if (usersResult.status === "rejected") {
+          throw usersResult.reason;
+        }
 
-        setUsers(fetchedUsers.map(mapUser));
+        const profiles = mechanicsResult.status === "fulfilled"
+          ? mechanicsResult.value
+          : [];
+        setMechanicProfiles(profiles);
+        setMechanicProfileError(
+          mechanicsResult.status === "rejected"
+            ? mechanicsResult.reason?.message || "Mechanic profiles could not be loaded."
+            : ""
+        );
+        setUsers(usersResult.value.map((user) => mapUser(user, profiles)));
 
         return true;
       } catch (error) {
@@ -204,7 +256,7 @@ function GarageOwnerUsers() {
 
         setLoadError(
           savedUser
-            ? `${describeUser(savedUser)} was created, but the list could not be refreshed. ${message}`
+            ? `${describeUser(savedUser)} was ${savedVerb}, but the list could not be refreshed. ${message}`
             : message
         );
 
@@ -371,6 +423,134 @@ function GarageOwnerUsers() {
     }
   };
 
+  /* =========================================================
+     VIEW USER DIALOG
+
+     The row's own data is the API's data: the list was loaded
+     from GET /api/v1/users, so the dialog displays whatever the
+     selected row already holds. View is a pure read — nothing is
+     fetched again and nothing is written.
+  ========================================================= */
+
+  const closeViewUser = () => setViewUser(null);
+
+  /* =========================================================
+     EDIT USER DIALOG
+
+     The dialog opens pre-filled from the selected row, validates
+     its own fields and hands the account up in the shape
+     UserUpdateDTO expects; the API owns the account itself (it
+     resolves the role name against the roles table and preserves
+     the password hash).
+
+     On success the dialog closes, the account is confirmed in
+     the banner, and the list is reloaded so the change is
+     reflected in it. The two outcomes are reported apart from
+     each other: if that reload fails, the confirmation above
+     still stands on its own and the error banner names the list
+     — not the save — as the part that failed.
+
+     On failure the dialog stays open and the API's own message
+     is shown inside it — the validation text for a field the
+     backend refused, or the conflict raised because the username
+     or email is already in use.
+  ========================================================= */
+
+  const openEditUser = (user) => {
+    setUpdateUserError("");
+    setEditUser(user);
+  };
+
+  const closeEditUser = () => {
+    if (isSavingUser) {
+      return;
+    }
+
+    setUpdateUserError("");
+    setEditUser(null);
+  };
+
+  const handleEditUserSubmit = async (account) => {
+    if (isSavingUser || !editUser) {
+      return;
+    }
+
+    setIsSavingUser(true);
+    setUpdateUserError("");
+    setSuccessMessage("");
+
+    try {
+      const savedUser = await updateUser(editUser.id, account);
+
+      setEditUser(null);
+      setSuccessMessage(
+        `${describeUser(savedUser, "User")} updated successfully.`
+      );
+
+      await loadUsers({ showLoading: false, savedUser, savedVerb: "updated" });
+    } catch (error) {
+      setUpdateUserError(
+        error instanceof Error ? error.message : "Unable to update the user."
+      );
+    } finally {
+      setIsSavingUser(false);
+    }
+  };
+
+  const openRemoveUser = (user) => {
+    if (!canRemoveUsers) {
+      return;
+    }
+    setRemoveUserError("");
+    setSuccessMessage("");
+    setRemoveUserCandidate(user);
+  };
+
+  const closeRemoveUser = () => {
+    if (isRemovingUser) {
+      return;
+    }
+    setRemoveUserCandidate(null);
+    setRemoveUserError("");
+  };
+
+  const handleRemoveUser = async () => {
+    if (!canRemoveUsers || isRemovingUser || !removeUserCandidate) {
+      return;
+    }
+
+    setIsRemovingUser(true);
+    setRemoveUserError("");
+    try {
+      const removedId = await removeUser(removeUserCandidate.id);
+      setUsers((currentUsers) =>
+        currentUsers.filter((user) => String(user.id) !== String(removedId))
+      );
+      setLoadError("");
+      setRemoveUserCandidate(null);
+      setSuccessMessage(
+        `${describeUser(removeUserCandidate)} removed successfully.`
+      );
+      try {
+        const profiles = await getMechanics();
+        setMechanicProfiles(profiles);
+        setMechanicProfileError("");
+      } catch (error) {
+        setMechanicProfileError(
+          error instanceof Error
+            ? error.message
+            : "Mechanic profiles could not be refreshed."
+        );
+      }
+    } catch (error) {
+      setRemoveUserError(
+        error instanceof Error ? error.message : "Unable to remove the user."
+      );
+    } finally {
+      setIsRemovingUser(false);
+    }
+  };
+
   return (
     <div className="garage-users-page">
 
@@ -438,21 +618,6 @@ function GarageOwnerUsers() {
             onClick={() => void loadUsers()}
           >
             Retry
-          </button>
-        </div>
-      )}
-
-      {placeholderMessage && (
-        <div className="garage-users-feedback" role="status">
-          <span>
-            {placeholderMessage}
-          </span>
-
-          <button
-            type="button"
-            onClick={() => setPlaceholderMessage("")}
-          >
-            Dismiss
           </button>
         </div>
       )}
@@ -703,9 +868,7 @@ function GarageOwnerUsers() {
                         <button
                           type="button"
                           className="garage-users-action-button"
-                          onClick={() =>
-                            setPlaceholderMessage(createActionPlaceholder(user))
-                          }
+                          onClick={() => setViewUser(user)}
                         >
                           View
                         </button>
@@ -713,12 +876,39 @@ function GarageOwnerUsers() {
                         <button
                           type="button"
                           className="garage-users-action-button"
-                          onClick={() =>
-                            setPlaceholderMessage(editActionPlaceholder(user))
-                          }
+                          onClick={() => openEditUser(user)}
                         >
                           Edit
                         </button>
+
+                        {canRemoveUsers && (() => {
+                          const isCurrentUser =
+                            authenticatedUsername !== "" &&
+                            user.username.toLowerCase() === authenticatedUsername;
+                          const canRemoveTarget =
+                            WORKSHOP_USER_ROLE_LABELS.has(user.role);
+                          const disabled =
+                            isCurrentUser || !canRemoveTarget || isRemovingUser;
+
+                          return (
+                            <button
+                              type="button"
+                              className="garage-users-action-button remove"
+                              onClick={() => openRemoveUser(user)}
+                              disabled={disabled}
+                              title={
+                                isCurrentUser
+                                  ? "You cannot remove your own account."
+                                  : !canRemoveTarget
+                                    ? "Only workshop user accounts can be removed."
+                                    : undefined
+                              }
+                              aria-label={`Remove ${user.name}`}
+                            >
+                              Remove
+                            </button>
+                          );
+                        })()}
 
                       </div>
 
@@ -783,7 +973,7 @@ function GarageOwnerUsers() {
 
 
       {/* =====================================================
-          CREATE USER DIALOG
+          USER DIALOGS
       ===================================================== */}
 
       <GarageOwnerCreateUserModal
@@ -792,10 +982,91 @@ function GarageOwnerUsers() {
         onSubmit={handleCreateUserSubmit}
         onClearSubmitError={() => setCreateUserError("")}
         roleOptions={ROLE_OPTIONS}
+        mechanicProfiles={mechanicProfiles.filter((profile) => !profile.userId)}
+        mechanicProfilesError={mechanicProfileError}
         statusOptions={STATUS_OPTIONS}
         submitting={isCreatingUser}
         submitError={createUserError}
       />
+
+      <GarageOwnerUserViewModal
+        open={Boolean(viewUser)}
+        user={viewUser}
+        onClose={closeViewUser}
+      />
+
+      <GarageOwnerEditUserModal
+        open={Boolean(editUser)}
+        user={editUser}
+        onClose={closeEditUser}
+        onSubmit={handleEditUserSubmit}
+        onClearSubmitError={() => setUpdateUserError("")}
+        roleOptions={ROLE_OPTIONS}
+        mechanicProfiles={mechanicProfiles.filter(
+          (profile) =>
+            !profile.userId ||
+            String(profile.userId) === String(editUser?.id)
+        )}
+        mechanicProfilesError={mechanicProfileError}
+        statusOptions={STATUS_OPTIONS}
+        submitting={isSavingUser}
+        submitError={updateUserError}
+      />
+
+      {removeUserCandidate && (
+        <div className="garage-users-modal-overlay">
+          <section
+            className="garage-users-modal garage-users-remove-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="garage-users-remove-title"
+            aria-describedby="garage-users-remove-description"
+          >
+            <header className="garage-users-modal-header">
+              <h2 id="garage-users-remove-title">REMOVE USER</h2>
+              <button
+                type="button"
+                className="garage-users-modal-close"
+                onClick={closeRemoveUser}
+                disabled={isRemovingUser}
+                aria-label="Close dialog"
+              >
+                ×
+              </button>
+            </header>
+
+            <div className="garage-users-remove-body">
+              <p id="garage-users-remove-description">
+                Are you sure you want to remove this user? This action cannot be undone.
+              </p>
+              <strong>{describeUser(removeUserCandidate)}</strong>
+              {removeUserError && (
+                <p className="garage-users-modal-api-error" role="alert">
+                  {removeUserError}
+                </p>
+              )}
+              <div className="garage-users-modal-footer">
+                <button
+                  type="button"
+                  className="garage-users-modal-cancel"
+                  onClick={closeRemoveUser}
+                  disabled={isRemovingUser}
+                >
+                  CANCEL
+                </button>
+                <button
+                  type="button"
+                  className="garage-users-remove-submit"
+                  onClick={() => void handleRemoveUser()}
+                  disabled={isRemovingUser}
+                >
+                  {isRemovingUser ? "REMOVING..." : "REMOVE USER"}
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
 
     </div>
   );

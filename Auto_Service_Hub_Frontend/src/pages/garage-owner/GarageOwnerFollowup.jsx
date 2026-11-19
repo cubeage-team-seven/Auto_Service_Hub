@@ -1,27 +1,23 @@
-import React, { useMemo, useState } from "react";
-
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  COMMUNICATION_HISTORY_SEED,
-  DEMO_NOTICE,
-  FEEDBACK_SEED,
-  FOLLOW_UP_SEED,
-  RETENTION_ACTIVITIES_SEED,
-  RETENTION_SEED,
-  TODAY_KEY,
-} from "./followup/followUpDemoData";
-import {
-  FOLLOW_UP_BUCKETS,
-  averageRating,
-  bucketFor,
-  countByBucket,
-  dayDifference,
-  formatDisplayDate,
-  isClosed,
-  isCompleted,
-  nextFollowUpId,
-  sortFollowUps,
-} from "./followup/followUpUtils";
-
+  cancelFollowup,
+  completeFollowup,
+  createFeedback,
+  createFollowup,
+  getFeedback,
+  getFollowupAssignees,
+  getFollowupBucketCounts,
+  getFollowupDashboard,
+  getFollowupMessages,
+  getFollowupReminders,
+  getFollowups,
+  recordFollowupMessage,
+  updateFollowup,
+} from "../../services/followUpService";
+import { getCustomers } from "../../services/customerService";
+import { getVehicles } from "../../services/vehicleService";
+import { getJobCards } from "../../services/jobCardService";
+import { FOLLOW_UP_BUCKETS } from "./followup/followUpUtils";
 import FollowUpSummaryCards from "./followup/FollowUpSummaryCards";
 import FollowUpToolbar from "./followup/FollowUpToolbar";
 import FollowUpTable from "./followup/FollowUpTable";
@@ -29,479 +25,346 @@ import ScheduleFollowUpModal from "./followup/ScheduleFollowUpModal";
 import CommunicationModal from "./followup/CommunicationModal";
 import FeedbackPanel from "./followup/FeedbackPanel";
 import RetentionPanel from "./followup/RetentionPanel";
-
+import RecordFeedbackModal from "./followup/RecordFeedbackModal";
 import "./GarageOwnerFollowup.css";
 
-/* =========================================================
-   GARAGE OWNER — FOLLOW-UP & RETENTION
-   =========================================================
-   FRONTEND DEMONSTRATION PAGE
+const PAGE_SIZE = 20;
+const toDateKey = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+};
 
-   This screen is built entirely from the sample records in
-   followup/followUpDemoData.jsx. It issues no HTTP request,
-   sends no message and persists nothing:
+const channelLabel = (channel) => ({
+  PHONE_CALL: "Phone Call",
+  CALL: "Phone Call",
+  WHATSAPP: "WhatsApp",
+  SMS: "SMS",
+  EMAIL: "Email",
+  IN_PERSON: "In Person",
+}[channel] || channel || "—");
 
-     · Reminders, feedback and retention records are sample data.
-     · Scheduling a follow-up, completing it, "sending" a message
-       and replying to feedback only update local component state.
-     · Reloading the page restores the original sample records.
+const statusLabel = (status) => ({
+  PENDING: "Pending",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
+}[status] || status || "Pending");
 
-   The existing design language of the module is reused
-   throughout (page header, stat cards, tabs, table panel,
-   status pills and modal shell), so nothing new is introduced
-   visually.
-   ========================================================= */
+function mapFollowup(record, vehicles) {
+  const vehicle = vehicles.find((entry) => entry.id === record.vehicleId);
+  return {
+    ...record,
+    recordId: record.id,
+    rowId: String(record.id),
+    id: `FU-${record.id}`,
+    backendStatus: record.status,
+    customer: record.customerName || "Customer",
+    phone: record.customerPhone || "—",
+    vehicle: [record.vehicleMake || vehicle?.make, record.vehicleModel || vehicle?.model]
+      .filter(Boolean).join(" ") || "—",
+    registration: record.registrationNumber || vehicle?.registrationNo || "—",
+    type: record.type || record.reason || "Follow-up",
+    channel: channelLabel(record.channel),
+    backendChannel: record.channel,
+    assignedTo: record.assignedUserName || "Unassigned",
+    status: statusLabel(record.status),
+    priority: "Normal",
+    dueDate: record.dueDate,
+    notes: record.reason || "",
+  };
+}
 
 function GarageOwnerFollowup() {
-  /* =====================================================
-     DEMONSTRATION DATA
-  ===================================================== */
-
-  const [followUps, setFollowUps] = useState(FOLLOW_UP_SEED);
-  const [history, setHistory] = useState(COMMUNICATION_HISTORY_SEED);
-  const [feedback, setFeedback] = useState(FEEDBACK_SEED);
-
-  /* =====================================================
-     VIEW STATE
-  ===================================================== */
-
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [jobCards, setJobCards] = useState([]);
+  const [assignees, setAssignees] = useState([]);
+  const [followUps, setFollowUps] = useState([]);
+  const [feedback, setFeedback] = useState([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(true);
+  const [feedbackTotal, setFeedbackTotal] = useState(0);
+  const [feedbackSearch, setFeedbackSearch] = useState("");
+  const [dashboard, setDashboard] = useState({
+    dueFollowups: 0,
+    pendingReminders: 0,
+    feedbackReceived: 0,
+    messagesSent: 0,
+    averageRating: 0,
+  });
+  const [bucketCounts, setBucketCounts] = useState({});
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [channelFilter, setChannelFilter] = useState("ALL");
   const [typeFilter, setTypeFilter] = useState("ALL");
-
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [optionsLoading, setOptionsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
   const [showSchedule, setShowSchedule] = useState(false);
   const [showCommunication, setShowCommunication] = useState(false);
-  const [selectedRowId, setSelectedRowId] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [selectedFollowUp, setSelectedFollowUp] = useState(null);
+  const [editingFollowUp, setEditingFollowUp] = useState(null);
+  const [messageHistory, setMessageHistory] = useState([]);
+  const [reminderHistory, setReminderHistory] = useState([]);
 
-  /* =====================================================
-     CUSTOMER / VEHICLE OPTIONS FOR THE SCHEDULE MODAL
-     Built from the demonstration records so the dropdowns stay
-     in step with whatever is currently on screen.
-  ===================================================== */
+  const filters = useMemo(() => ({
+    bucket: activeTab,
+    status: statusFilter === "ALL" ? undefined : statusFilter,
+    channel: channelFilter === "ALL" ? undefined : channelFilter,
+    type: typeFilter === "ALL" ? undefined : typeFilter,
+    q: search.trim() || undefined,
+  }), [activeTab, statusFilter, channelFilter, typeFilter, search]);
 
-  const customerOptions = useMemo(() => {
-    const map = new Map();
+  useEffect(() => {
+    let active = true;
+    setOptionsLoading(true);
+    Promise.all([
+      getCustomers(),
+      getVehicles(),
+      getJobCards(),
+      getFollowupAssignees(),
+    ]).then(([customerRows, vehicleRows, jobRows, staffRows]) => {
+      if (!active) return;
+      setCustomers(customerRows);
+      setVehicles(vehicleRows);
+      setJobCards(jobRows);
+      setAssignees(staffRows);
+    }).catch((loadError) => {
+      if (active) setError(loadError.message || "Unable to load follow-up options.");
+    }).finally(() => {
+      if (active) setOptionsLoading(false);
+    });
+    return () => { active = false; };
+  }, []);
 
-    followUps.forEach((entry) => {
-      const vehicle = {
-        vehicle: entry.vehicle,
-        registration: entry.registration,
-      };
-      const existing = map.get(entry.customer);
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError("");
+    Promise.all([
+      getFollowups({ ...filters, page, size: PAGE_SIZE, sort: "dueDate,asc" }),
+      getFollowupBucketCounts({
+        status: filters.status,
+        channel: filters.channel,
+        type: filters.type,
+        q: filters.q,
+      }),
+    ]).then(([result, counts]) => {
+      if (!active) return;
+      const rows = Array.isArray(result?.content) ? result.content : [];
+      setFollowUps(rows.map((entry) => mapFollowup(entry, vehicles)));
+      setTotalPages(result.totalPages || 0);
+      setTotalElements(result.totalElements || 0);
+      setBucketCounts(counts);
+    }).catch((loadError) => {
+      if (active) setError(loadError.message || "Unable to load follow-ups.");
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [filters, page, refreshKey, vehicles]);
 
-      if (existing) {
-        const alreadyListed = existing.vehicles.some(
-          (item) => item.registration === vehicle.registration
-        );
-
-        if (!alreadyListed) {
-          existing.vehicles.push(vehicle);
-        }
-        return;
-      }
-
-      map.set(entry.customer, {
-        customer: entry.customer,
-        phone: entry.phone,
-        vehicles: [vehicle],
+  useEffect(() => {
+    let active = true;
+    getFollowupDashboard()
+      .then((stats) => {
+        if (!active) return;
+        setDashboard(stats);
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError.message || "Unable to load dashboard data.");
       });
-    });
+    return () => { active = false; };
+  }, [refreshKey]);
 
-    return [...map.values()].sort((first, second) =>
-      first.customer.localeCompare(second.customer)
-    );
-  }, [followUps]);
+  useEffect(() => {
+    let active = true;
+    setFeedbackLoading(true);
+    getFeedback(feedbackSearch, 0, 50)
+      .then((feedbackPage) => {
+        if (!active) return;
+        setFeedback(feedbackPage?.content || []);
+        setFeedbackTotal(feedbackPage?.totalElements || 0);
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError.message || "Unable to load feedback.");
+      })
+      .finally(() => {
+        if (active) setFeedbackLoading(false);
+      });
+    return () => { active = false; };
+  }, [feedbackSearch, refreshKey]);
 
-  /* =====================================================
-     FILTERING
-     The tab, the search box and the three dropdowns all narrow
-     the same in-memory list.
-  ===================================================== */
+  useEffect(() => {
+    setPage(0);
+  }, [activeTab, statusFilter, channelFilter, typeFilter, search]);
 
-  const filtersActive =
-    search.trim() !== "" ||
-    statusFilter !== "ALL" ||
-    channelFilter !== "ALL" ||
-    typeFilter !== "ALL";
-
-  const visibleFollowUps = useMemo(() => {
-    const term = search.trim().toLowerCase();
-
-    const matched = followUps.filter((entry) => {
-      if (activeTab !== "all" && bucketFor(entry) !== activeTab) {
-        return false;
-      }
-
-      if (statusFilter !== "ALL" && entry.status !== statusFilter) {
-        return false;
-      }
-
-      if (channelFilter !== "ALL" && entry.channel !== channelFilter) {
-        return false;
-      }
-
-      if (typeFilter !== "ALL" && entry.type !== typeFilter) {
-        return false;
-      }
-
-      if (!term) {
-        return true;
-      }
-
-      return [
-        entry.id,
-        entry.customer,
-        entry.phone,
-        entry.vehicle,
-        entry.registration,
-        entry.assignedTo,
-        entry.type,
-      ].some((value) => String(value || "").toLowerCase().includes(term));
-    });
-
-    return sortFollowUps(matched);
-  }, [followUps, activeTab, search, statusFilter, channelFilter, typeFilter]);
-
-  const bucketCounts = useMemo(
-    () =>
-      FOLLOW_UP_BUCKETS.reduce((counts, bucket) => {
-        counts[bucket.key] = countByBucket(followUps, bucket.key);
-        return counts;
-      }, {}),
-    [followUps]
-  );
-
-  const activeTabLabel =
-    FOLLOW_UP_BUCKETS.find((bucket) => bucket.key === activeTab)?.label ||
-    "All Follow-ups";
-
-  const emptyMessage = useMemo(() => {
-    if (activeTab === "overdue") {
-      return "Nothing is overdue — every scheduled reminder is on time.";
-    }
-
-    if (activeTab === "due-today") {
-      return "No follow-ups are due today.";
-    }
-
-    if (activeTab === "upcoming") {
-      return "No upcoming follow-ups are scheduled.";
-    }
-
-    if (activeTab === "completed") {
-      return "No follow-ups have been completed yet.";
-    }
-
-    if (filtersActive) {
-      return "No follow-ups match the current search or filters.";
-    }
-
-    return "No follow-ups found.";
-  }, [activeTab, filtersActive]);
-
-  /* =====================================================
-     SUMMARY FIGURES
-     Every number is counted from the records held in state, so
-     the cards always agree with the table below them.
-  ===================================================== */
-
-  const summary = useMemo(() => {
-    const dueFollowUps = followUps.filter(
-      (entry) =>
-        !isClosed(entry) && dayDifference(TODAY_KEY, entry.dueDate) <= 0
-    ).length;
-
-    const pendingReminders = followUps.filter(
-      (entry) => entry.status === "Pending"
-    ).length;
-
-    const messagesSent = Object.values(history)
-      .flat()
-      .filter((entry) => entry.status === "Sent" || entry.status === "Delivered")
-      .length;
-
-    const rating = averageRating(feedback);
-
-    return {
-      dueFollowUps,
-      pendingReminders,
-      feedbackReceived: feedback.length,
-      messagesSent,
-      averageRatingLabel: rating
-        ? `Average rating ${rating.toFixed(1)} of 5`
-        : "No ratings recorded yet",
-    };
-  }, [followUps, history, feedback]);
-
-  const retentionSummary = useMemo(
-    () =>
-      RETENTION_SEED.reduce(
-        (counts, entry) => {
-          if (entry.status === "Active") {
-            counts.active += 1;
-          } else if (entry.status === "At Risk") {
-            counts.atRisk += 1;
-          } else {
-            counts.newCustomers += 1;
-          }
-          return counts;
-        },
-        { active: 0, atRisk: 0, newCustomers: 0 }
-      ),
-    []
-  );
-
-  const selectedFollowUp =
-    followUps.find((entry) => entry.rowId === selectedRowId) || null;
-
-  const selectedHistory = selectedFollowUp
-    ? history[selectedFollowUp.id] || []
-    : [];
-
-  const feedbackRespondedCount = feedback.filter(
-    (entry) => entry.responded
-  ).length;
-
-  const averageRatingValue = averageRating(feedback);
-
-  /* =====================================================
-     HANDLERS
-  ===================================================== */
-
-  const resetFilters = () => {
-    setSearch("");
-    setStatusFilter("ALL");
-    setChannelFilter("ALL");
-    setTypeFilter("ALL");
+  const refresh = () => {
+    setRefreshKey((current) => current + 1);
   };
 
-  const openScheduleModal = () => {
-    setSuccessMessage("");
-    setShowSchedule(true);
-  };
-
-  /* Adds the schedule form's values to the demonstration list.
-     Returns "" on success, or a message for the modal to show. */
-  const handleSaveFollowUp = (values) => {
-    const customer = customerOptions.find(
-      (entry) => entry.customer === values.customer
-    );
-
-    if (!customer) {
-      return "That customer is no longer available in the demonstration data.";
-    }
-
-    const vehicle = customer.vehicles.find(
-      (entry) => entry.registration === values.vehicle
-    );
-
-    if (!vehicle) {
-      return "That vehicle is no longer available for the selected customer.";
-    }
-
-    const id = nextFollowUpId(followUps);
-
-    const record = {
-      id,
-      rowId: `followup-${id.toLowerCase()}-local-${followUps.length + 1}`,
-      customer: customer.customer,
-      phone: customer.phone,
-      vehicle: vehicle.vehicle,
-      registration: vehicle.registration,
+  const handleSaveFollowUp = async (values) => {
+    const request = {
+      customerId: values.customerId,
+      vehicleId: values.vehicleId,
+      jobCardId: values.jobCardId,
+      assignedUserId: values.assignedUserId,
       type: values.type,
       channel: values.channel,
-      assignedTo: values.assignedTo,
-      status: values.status,
-      priority: "Normal",
       dueDate: values.dueDate,
-      notes: values.notes.trim(),
+      reminderAt: `${values.dueDate}T${values.dueTime}:00`,
+      reason: values.reason.trim() || values.type,
+      status: editingFollowUp?.backendStatus || "PENDING",
     };
-
-    setFollowUps((current) => [record, ...current]);
+    if (editingFollowUp) {
+      await updateFollowup(editingFollowUp.recordId, request);
+    } else {
+      await createFollowup(request);
+    }
     setShowSchedule(false);
-    setActiveTab("all");
-    setSuccessMessage(
-      `Follow-up ${id} scheduled for ${values.customer} on ` +
-        `${formatDisplayDate(values.dueDate)}. Demonstration record only — ` +
-        "nothing was saved to the backend."
-    );
-
+    setSuccessMessage(editingFollowUp ? "Follow-up updated." : "Follow-up and reminder scheduled.");
+    setEditingFollowUp(null);
+    refresh();
     return "";
   };
 
-  /* Completing a reminder is a local state change: the row moves
-     to the Completed tab and stops counting as overdue. */
-  const handleToggleComplete = (entry) => {
-    const reopening = isCompleted(entry);
-
-    setFollowUps((current) =>
-      current.map((item) =>
-        item.rowId === entry.rowId
-          ? { ...item, status: reopening ? "Pending" : "Completed" }
-          : item
-      )
-    );
-
-    setSuccessMessage(
-      reopening
-        ? `${entry.id} reopened for ${entry.customer} and returned to Pending.`
-        : `${entry.id} for ${entry.customer} marked as completed.`
-    );
-  };
-
-  const openCommunication = (entry) => {
-    setSelectedRowId(entry.rowId);
-    setShowCommunication(true);
-  };
-
-  const closeCommunication = () => {
-    setShowCommunication(false);
-  };
-
-  /* Records a simulated message. The history entry lives in page
-     state only: no SMS, WhatsApp message, e-mail or call is
-     actually placed. */
-  const handleSendCommunication = (entry, payload) => {
-    setHistory((current) => {
-      const existing = current[entry.id] || [];
-      const preview =
-        payload.message.length > 140
-          ? `${payload.message.slice(0, 140)}…`
-          : payload.message;
-
-      const record = {
-        id: `${entry.id}-comm-local-${existing.length + 1}`,
-        channel: payload.channel,
-        status: "Sent",
-        at: TODAY_KEY,
-        note: `Simulated send from the Follow-up workspace. Message: ${preview}`,
-      };
-
-      return { ...current, [entry.id]: [record, ...existing] };
-    });
-
-    if (!isClosed(entry)) {
-      setFollowUps((current) =>
-        current.map((item) =>
-          item.rowId === entry.rowId
-            ? { ...item, status: "Reminder Sent" }
-            : item
-        )
-      );
+  const handleComplete = async (entry) => {
+    try {
+      await completeFollowup(entry.recordId);
+      setSuccessMessage(`${entry.id} marked completed.`);
+      refresh();
+    } catch (actionError) {
+      setError(actionError.message || "Unable to complete follow-up.");
     }
-
-    setSuccessMessage(
-      `Communication recorded for ${entry.customer}. This was simulated — ` +
-        "no message left the browser."
-    );
   };
 
-  const handleRespondFeedback = (feedbackId, reply) => {
-    setFeedback((current) =>
-      current.map((entry) =>
-        entry.id === feedbackId
-          ? { ...entry, responded: true, response: reply }
-          : entry
-      )
-    );
-
-    setSuccessMessage(
-      "Reply saved against the demonstration feedback record. " +
-        "No e-mail or message was sent to the customer."
-    );
+  const handleCancel = async (entry) => {
+    try {
+      await cancelFollowup(entry.recordId);
+      setSuccessMessage(`${entry.id} cancelled.`);
+      refresh();
+    } catch (actionError) {
+      setError(actionError.message || "Unable to cancel follow-up.");
+    }
   };
 
+  const openCommunication = async (entry) => {
+    setSelectedFollowUp(entry);
+    setMessageHistory([]);
+    setReminderHistory([]);
+    setShowCommunication(true);
+    try {
+      const [historyPage, reminderPage] = await Promise.all([
+        getFollowupMessages(entry.recordId),
+        getFollowupReminders(entry.recordId),
+      ]);
+      setMessageHistory(historyPage?.content || []);
+      setReminderHistory(reminderPage?.content || []);
+    } catch (loadError) {
+      setError(loadError.message || "Unable to load communication history.");
+    }
+  };
+
+  const handleRecordMessage = async (entry, payload) => {
+    const id = entry.recordId;
+    await recordFollowupMessage(id, payload);
+    const updatedHistory = await getFollowupMessages(id);
+    setMessageHistory(updatedHistory?.content || []);
+    setSuccessMessage("Message recorded; no external message was sent.");
+    refresh();
+  };
+
+  const handleRecordFeedback = async (values) => {
+    await createFeedback(values);
+    setShowFeedbackForm(false);
+    setSuccessMessage("Customer feedback saved.");
+    refresh();
+  };
+
+  const activeTabLabel =
+    FOLLOW_UP_BUCKETS.find((bucket) => bucket.key === activeTab)?.label || "All Follow-ups";
+  const filtersActive =
+    Boolean(search.trim()) || statusFilter !== "ALL" ||
+    channelFilter !== "ALL" || typeFilter !== "ALL";
+  const emptyMessage = loading ? "Loading follow-ups..." : filtersActive
+    ? "No follow-ups match the current search or filters."
+    : `No ${activeTabLabel.toLowerCase()} found.`;
+  const feedbackRating = dashboard.averageRating;
+
+  const retention = useMemo(() => {
+    const byCustomer = new Map(customers.map((customer) => [customer.id, {
+      id: customer.id,
+      customer: customer.name,
+      phone: customer.phone,
+      loyaltyTier: customer.loyaltyTier || "—",
+      visits: 0,
+      lastVisit: null,
+    }]));
+    jobCards.forEach((job) => {
+      const customer = byCustomer.get(job.customerId);
+      if (!customer || job.status !== "DELIVERED") return;
+      customer.visits += 1;
+      const date = job.completedDate || job.assignedDate;
+      if (date && (!customer.lastVisit || date > customer.lastVisit)) customer.lastVisit = date;
+    });
+    return [...byCustomer.values()]
+      .sort((a, b) => b.visits - a.visits || a.customer.localeCompare(b.customer))
+      .map((customer) => ({
+        ...customer,
+        note: customer.phone || "Customer record",
+      }));
+  }, [customers, jobCards]);
+
+  const retentionSummary = useMemo(() => retention.reduce((result, entry) => {
+    if (entry.visits > 0) result.active += 1;
+    else result.newCustomers += 1;
+    return result;
+  }, { active: 0, atRisk: 0, newCustomers: 0 }), [retention]);
 
   return (
     <>
       <div className="followup-page">
-
-        {/* =====================================================
-            PAGE HEADER
-        ===================================================== */}
-
         <div className="followup-page-top">
-
           <div className="followup-page-title">
-
-            <div className="followup-eyebrow">
-              — FOLLOW-UP &amp; RETENTION
-            </div>
-
-            <h1>
-              FOLLOW-UP &amp; RETENTION
-            </h1>
-
-            <p>
-              Manage service reminders, customer communication, feedback, and
-              retention.
-            </p>
-
+            <div className="followup-eyebrow">— FOLLOW-UP &amp; RETENTION</div>
+            <h1>FOLLOW-UP &amp; RETENTION</h1>
+            <p>Manage service reminders, customer communication, feedback, and retention.</p>
           </div>
-
-
           <div className="followup-page-actions">
-
-            <span className="followup-demo-flag">
-              DEMO DATA
-            </span>
-
-            <button
-              type="button"
-              className="followup-new-button"
-              onClick={openScheduleModal}
-            >
+            <button type="button" className="followup-action" onClick={() => {
+              setSuccessMessage("");
+              refresh();
+            }} disabled={loading}>
+              REFRESH
+            </button>
+            <button type="button" className="followup-new-button" onClick={() => setShowSchedule(true)}>
               + SCHEDULE FOLLOW-UP
             </button>
-
           </div>
-
         </div>
 
+        {error && <div className="followup-feedback followup-feedback-error" role="alert">
+          <span>{error}</span><button type="button" onClick={() => setError("")}>Dismiss</button>
+        </div>}
+        {successMessage && <div className="followup-feedback followup-feedback-success" role="status">
+          <span>{successMessage}</span><button type="button" onClick={() => setSuccessMessage("")}>Dismiss</button>
+        </div>}
 
-        {/* =====================================================
-            DEMONSTRATION NOTICE
-        ===================================================== */}
-
-        <div className="followup-demo-notice" role="note">
-          {DEMO_NOTICE}
-        </div>
-
-
-        {/* =====================================================
-            FEEDBACK
-        ===================================================== */}
-
-        {successMessage && (
-          <div
-            className="followup-feedback followup-feedback-success"
-            role="status"
-          >
-            <span>{successMessage}</span>
-
-            <button
-              type="button"
-              onClick={() => setSuccessMessage("")}
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
-
-
-        {/* =====================================================
-            SUMMARY CARDS
-        ===================================================== */}
-
-        <FollowUpSummaryCards summary={summary} />
-
-
-        {/* =====================================================
-            TABS + SEARCH + FILTERS
-        ===================================================== */}
+        <FollowUpSummaryCards summary={{
+          dueFollowUps: dashboard.dueFollowups,
+          pendingReminders: dashboard.pendingReminders,
+          feedbackReceived: dashboard.feedbackReceived,
+          messagesSent: dashboard.messagesSent,
+          averageRatingLabel: dashboard.feedbackReceived
+            ? `Average rating ${feedbackRating.toFixed(1)} of 5`
+            : "No ratings recorded yet",
+        }} />
 
         <FollowUpToolbar
           activeTab={activeTab}
@@ -515,80 +378,75 @@ function GarageOwnerFollowup() {
           onChannelFilterChange={setChannelFilter}
           typeFilter={typeFilter}
           onTypeFilterChange={setTypeFilter}
-          onResetFilters={resetFilters}
-          filtersActive={filtersActive}
-          resultCount={visibleFollowUps.length}
-          totalCount={followUps.length}
+          resultCount={followUps.length}
+          totalCount={totalElements}
           activeTabLabel={activeTabLabel}
         />
 
-
-        {/* =====================================================
-            FOLLOW-UP TABLE
-        ===================================================== */}
-
         <FollowUpTable
-          followUps={visibleFollowUps}
-          todayKey={TODAY_KEY}
+          followUps={followUps}
+          todayKey={toDateKey()}
           emptyMessage={emptyMessage}
+          loading={loading}
           onOpenCommunication={openCommunication}
-          onToggleComplete={handleToggleComplete}
+          onToggleComplete={handleComplete}
+          onCancel={handleCancel}
+          onEdit={(entry) => {
+            setEditingFollowUp(entry);
+            setShowSchedule(true);
+          }}
         />
-
-
-        {/* =====================================================
-            FEEDBACK SECTION
-        ===================================================== */}
+        {totalPages > 1 && <div className="followup-pagination">
+          <button type="button" className="followup-action" disabled={page === 0 || loading}
+            onClick={() => setPage((current) => Math.max(0, current - 1))}>Previous</button>
+          <span>Page {page + 1} of {totalPages}</span>
+          <button type="button" className="followup-action" disabled={page + 1 >= totalPages || loading}
+            onClick={() => setPage((current) => current + 1)}>Next</button>
+        </div>}
 
         <FeedbackPanel
           feedback={feedback}
-          averageRatingValue={averageRatingValue}
-          respondedCount={feedbackRespondedCount}
-          onRespond={handleRespondFeedback}
+          averageRatingValue={feedbackRating}
+          totalCount={feedbackTotal}
+          search={feedbackSearch}
+          onSearchChange={setFeedbackSearch}
+          onRecord={() => setShowFeedbackForm(true)}
+          loading={feedbackLoading}
         />
-
-
-        {/* =====================================================
-            RETENTION SECTION
-        ===================================================== */}
-
-        <RetentionPanel
-          retention={RETENTION_SEED}
-          activities={RETENTION_ACTIVITIES_SEED}
-          summary={retentionSummary}
-        />
-
+        <RetentionPanel retention={retention} summary={retentionSummary} />
       </div>
-
-
-      {/* =====================================================
-          SCHEDULE FOLLOW-UP MODAL
-      ===================================================== */}
 
       <ScheduleFollowUpModal
         open={showSchedule}
-        customers={customerOptions}
-        suggestedId={nextFollowUpId(followUps)}
-        onClose={() => setShowSchedule(false)}
+        initialFollowup={editingFollowUp}
+        customers={customers}
+        vehicles={vehicles}
+        jobCards={jobCards}
+        assignees={assignees}
+        optionsLoading={optionsLoading}
+        onClose={() => {
+          setShowSchedule(false);
+          setEditingFollowUp(null);
+        }}
         onSave={handleSaveFollowUp}
       />
-
-
-      {/* =====================================================
-          COMMUNICATION MODAL
-      ===================================================== */}
-
       <CommunicationModal
         open={showCommunication}
         followUp={selectedFollowUp}
-        history={selectedHistory}
-        onClose={closeCommunication}
-        onSend={handleSendCommunication}
+        history={messageHistory}
+        reminders={reminderHistory}
+        onClose={() => setShowCommunication(false)}
+        onSend={handleRecordMessage}
       />
-
+      <RecordFeedbackModal
+        open={showFeedbackForm}
+        customers={customers}
+        jobCards={jobCards.filter((job) => job.status === "DELIVERED")}
+        onClose={() => setShowFeedbackForm(false)}
+        onSave={handleRecordFeedback}
+      />
     </>
   );
 }
 
 export default GarageOwnerFollowup;
-

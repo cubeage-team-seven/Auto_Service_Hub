@@ -1,5 +1,6 @@
 import React from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import "./ServiceAdvisor.css";
 import "./ServiceAdvisorTheme.css";
 
@@ -15,6 +16,12 @@ const nav = [
 export default function ServiceAdvisorLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const role = String(user?.role || "")
+    .replace(/^ROLE_/i, "")
+    .replace(/^GARAGE_OWNER$/, "OWNER")
+    .replace(/_/g, " ")
+    .toUpperCase();
 
   const currentPage = nav.find(([, , to]) =>
     to === "/service-advisor"
@@ -55,7 +62,7 @@ export default function ServiceAdvisorLayout() {
             <span>Auto_Service_Hub</span><b>/</b><strong>{currentPage}</strong>
           </div>
           <div className="sa-top-actions">
-            <span className="sa-role">SERVICE ADVISOR</span>
+            <span className="sa-role">{role || "UNKNOWN ROLE"}</span>
             <span className="sa-alert-count"><i /> AI insights</span>
             <button className="sa-avatar">▣</button>
           </div>

@@ -291,6 +291,12 @@ export function deletePayment(id) {
    DOCUMENTS — /api/v1/invoices/{id}/pdf | /xlsx
    ================================================================== */
 
+/** The two formats InvoiceController renders, matched exactly by content type. */
+const DOCUMENT_CONTENT_TYPES = {
+  pdf: "application/pdf",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+};
+
 /**
  * Fetches a generated document through the authenticated client, so the
  * download carries the same Bearer token (and the same 401 refresh/retry) as
@@ -300,9 +306,15 @@ export function deletePayment(id) {
  * InvoiceController serves an OpenPDF document and a POI workbook. There is no
  * equivalent endpoint for estimates, and no print endpoint - the browser's own
  * print dialog is the only way to print one of these, once downloaded.
+ *
+ * The response is checked before a blob is handed back: a document endpoint
+ * that answers with a 200 but a non-document body (an error page, a JSON
+ * envelope, an empty body or a truncated file) must never be saved as a .pdf
+ * or .xlsx that opens blank - the user gets a meaningful error instead.
  */
 async function downloadDocument(id, extension) {
   const url = `${API_BASE_URL}/invoices/${id}/${extension}`;
+  const expectedContentType = DOCUMENT_CONTENT_TYPES[extension];
   let response;
 
   try {
@@ -335,10 +347,44 @@ async function downloadDocument(id, extension) {
     throw new Error(message);
   }
 
-  const blob = await response.blob();
+  const contentType = (response.headers.get("Content-Type") || "")
+    .split(";", 1)[0]
+    .trim()
+    .toLowerCase();
+  if (contentType !== expectedContentType) {
+    const message =
+      contentType.includes("json") ||
+      contentType.includes("text") ||
+      contentType.includes("html")
+        ? await responseErrorMessage(response)
+        : `The billing service returned ${contentType || "an unknown content type"} instead of ${expectedContentType}.`;
+    throw new Error(message);
+  }
+
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.length === 0) {
+    throw new Error("The billing service returned an empty file.");
+  }
+
+  if (extension === "pdf") {
+    const pdfText = new TextDecoder("ascii").decode(bytes);
+    const hasPdfHeader = hasBytesAtStart(bytes, [0x25, 0x50, 0x44, 0x46, 0x2d]);
+    const hasPdfPage = /\/Type\s*\/Page\b/.test(pdfText);
+    const hasPdfEndMarker = pdfText.lastIndexOf("%%EOF") >= Math.max(0, pdfText.length - 2048);
+    if (!hasPdfHeader || !hasPdfPage || !hasPdfEndMarker) {
+      throw new Error("The billing service returned an invalid or incomplete PDF.");
+    }
+  } else if (
+    !hasBytesAtStart(bytes, [0x50, 0x4b, 0x03, 0x04]) ||
+    !hasZipEndRecord(bytes)
+  ) {
+    throw new Error("The billing service returned an invalid Excel workbook.");
+  }
+
   const filename =
     parseContentDispositionFilename(response.headers.get("Content-Disposition")) ||
     `invoice-${id}.${extension}`;
+  const blob = new Blob([bytes], { type: expectedContentType });
 
   return { blob, filename };
 }
@@ -368,6 +414,61 @@ function parseContentDispositionFilename(header) {
 
   const bare = header.match(/filename=([^;]+)/i);
   return bare ? bare[1].trim() : null;
+}
+
+/**
+ * Reads a meaningful message out of a 200 response that claimed to be a
+ * document but is actually an error page (HTML/text/JSON) - so the caller
+ * surfaces what the server said instead of saving the page as a .pdf.
+ */
+async function responseErrorMessage(response) {
+  let responseText;
+  try {
+    responseText = await response.text();
+  } catch {
+    return `Billing API request failed (${response.status} ${response.statusText}).`;
+  }
+
+  if (!responseText) {
+    return `Billing API request failed (${response.status} ${response.statusText}).`;
+  }
+
+  try {
+    const body = JSON.parse(responseText);
+    if (typeof body === "string") {
+      return body;
+    }
+    return (
+      body?.message ||
+      body?.error ||
+      `Billing API request failed (${response.status} ${response.statusText}).`
+    );
+  } catch {
+    const plainText = responseText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    return (
+      plainText.slice(0, 500) ||
+      `Billing API request failed (${response.status} ${response.statusText}).`
+    );
+  }
+}
+
+function hasBytesAtStart(bytes, signature) {
+  return signature.every((byte, index) => bytes[index] === byte);
+}
+
+function hasZipEndRecord(bytes) {
+  const searchStart = Math.max(0, bytes.length - 65557);
+  for (let index = bytes.length - 4; index >= searchStart; index -= 1) {
+    if (
+      bytes[index] === 0x50 &&
+      bytes[index + 1] === 0x4b &&
+      bytes[index + 2] === 0x05 &&
+      bytes[index + 3] === 0x06
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export function downloadInvoicePdf(id) {

@@ -10,8 +10,10 @@ import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.*;
 import com.autoservicehub.service.AuditService;
 import com.autoservicehub.service.JobCardService;
+import com.autoservicehub.service.MechanicAuthorizationService;
 import com.autoservicehub.util.BillingCalculator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -48,12 +50,15 @@ public class JobCardServiceImpl implements JobCardService {
     private final JobTaskRepository jobTaskRepository;
     private final BillingCalculator calculator;
     private final AuditService auditService;
+    @Autowired
+    private MechanicAuthorizationService mechanicAuthorization;
 
     /** Entity name recorded on this module's audit entries. */
     private static final String AUDIT_ENTITY = "JOB_CARD";
 
     @Override
     public JobCardResponseDTO create(JobCardRequestDTO request) {
+        MechanicAuthorizationService.assertNotMechanic("Mechanics cannot create job cards.");
         JobCard entity = new JobCard();
         mapToEntity(request, entity);
         entity.setStatus("RECEIVED");
@@ -74,6 +79,7 @@ public class JobCardServiceImpl implements JobCardService {
 
     @Override
     public JobCardResponseDTO update(Long id, JobCardRequestDTO request) {
+        MechanicAuthorizationService.assertNotMechanic("Mechanics cannot edit job card details.");
         JobCard existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("JobCard not found: " + id));
         // Captured before mapToEntity overwrites it.
@@ -106,24 +112,45 @@ public class JobCardServiceImpl implements JobCardService {
     @Override
     @Transactional(readOnly = true)
     public JobCardResponseDTO getById(Long id) {
-        return toResponse(repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("JobCard not found: " + id)));
+        JobCard jobCard = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("JobCard not found: " + id));
+        assertMechanicAssignment(jobCard);
+        return toResponse(jobCard);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<JobCardResponseDTO> list(Pageable pageable) {
+        if (MechanicAuthorizationService.isMechanicPrincipal()) {
+            if (mechanicAuthorization == null) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Mechanic assignment authorization is unavailable.");
+            }
+            Mechanic mechanic = mechanicAuthorization.requireCurrentMechanic();
+            return repository.findAssignedToMechanic(mechanic.getId(), pageable).map(this::toResponse);
+        }
         return repository.findAll(pageable).map(this::toResponse);
     }
 
     @Override
     public void delete(Long id) {
+        MechanicAuthorizationService.assertNotMechanic("Mechanics cannot delete job cards.");
         if (!repository.existsById(id)) throw new ResourceNotFoundException("JobCard not found: " + id);
 
         // Tasks are owned by the job card, so they go with it. Left behind they
         // would be orphans pointing at a row that no longer exists.
         jobTaskRepository.deleteAll(jobTaskRepository.findByJobCardIdOrderByIdAsc(id));
         repository.deleteById(id);
+    }
+
+    private void assertMechanicAssignment(JobCard jobCard) {
+        if (MechanicAuthorizationService.isMechanicPrincipal()) {
+            if (mechanicAuthorization == null) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Mechanic assignment authorization is unavailable.");
+            }
+            mechanicAuthorization.assertJobCardAssigned(jobCard);
+        }
     }
 
     /**
@@ -297,6 +324,14 @@ public class JobCardServiceImpl implements JobCardService {
 
         // Same idea for an applied package: report what the job is covered by.
         applyPackageApplication(e, dto);
+
+        if (MechanicAuthorizationService.isMechanicPrincipal()) {
+            dto.setEstimatedCost(null);
+            dto.setTotalLabourCost(null);
+            dto.setPackagePrice(null);
+            dto.setPackageGstRate(null);
+            dto.setPackageDiscountPercentage(null);
+        }
 
         return dto;
     }

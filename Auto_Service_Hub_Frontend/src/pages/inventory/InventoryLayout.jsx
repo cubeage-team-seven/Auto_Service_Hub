@@ -5,13 +5,19 @@ import {
   Link,
   useLocation,
 } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 import "./InventoryLayout.css";
 
 function InventoryLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
+  const { user } = useAuth();
   const location = useLocation();
+  const role = String(user?.role || "")
+    .replace(/^ROLE_/i, "")
+    .replace(/^GARAGE_OWNER$/, "OWNER")
+    .replace(/_/g, " ")
+    .toUpperCase();
 
   const isDashboard =
     location.pathname === "/inventory-dashboard";
@@ -169,7 +175,7 @@ function InventoryLayout() {
             {/* ROLE */}
 
             <span className="inventory-layout-role">
-              INVENTORY MANAGER
+              {role || "UNKNOWN ROLE"}
             </span>
 
 

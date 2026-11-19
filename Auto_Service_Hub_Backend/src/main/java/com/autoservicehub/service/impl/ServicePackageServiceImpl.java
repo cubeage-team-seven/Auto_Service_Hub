@@ -9,6 +9,7 @@ import com.autoservicehub.entity.PackageItemType;
 import com.autoservicehub.entity.ServicePackage;
 import com.autoservicehub.exception.BusinessRuleException;
 import com.autoservicehub.exception.ResourceNotFoundException;
+import com.autoservicehub.repository.PackageApplicationRepository;
 import com.autoservicehub.repository.ServicePackageRepository;
 import com.autoservicehub.service.ServicePackageService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class ServicePackageServiceImpl implements ServicePackageService {
             Set.of("lime", "blue", "purple", "orange", "green", "red");
 
     private final ServicePackageRepository repository;
+    private final PackageApplicationRepository packageApplicationRepository;
 
     @Override
     public ServicePackageResponseDTO create(ServicePackageRequestDTO request) {
@@ -88,6 +90,15 @@ public class ServicePackageServiceImpl implements ServicePackageService {
     @Override
     public void delete(Long id) {
         if (!repository.existsById(id)) throw new ResourceNotFoundException("ServicePackage not found: " + id);
+        // package_applications.service_package_id is a restrictive foreign key
+        // (V14), and job cards reach packages through those applications. An
+        // unguarded delete would fail at the database and surface as an opaque
+        // 500, so refuse it as a business rule instead and point the caller at
+        // deactivation — the package's `active` flag already supports it.
+        if (packageApplicationRepository.existsByServicePackageId(id)) {
+            throw new BusinessRuleException(
+                    "ServicePackage has been applied to vehicles and cannot be deleted. Deactivate it instead.");
+        }
         // Cascade + orphanRemoval on ServicePackage.items removes the package's
         // item rows with it.
         repository.deleteById(id);

@@ -50,6 +50,16 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.UNAUTHORIZED, "INVALID_REFRESH_TOKEN", ex.getMessage());
     }
 
+    @ExceptionHandler(PasswordResetRejectedException.class)
+    public ResponseEntity<ApiErrorResponse> handlePasswordResetRejected(PasswordResetRejectedException ex) {
+        return build(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_REJECTED", ex.getMessage());
+    }
+
+    @ExceptionHandler(PasswordResetValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handlePasswordResetValidation(PasswordResetValidationException ex) {
+        return build(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_VALIDATION", ex.getMessage());
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(ResourceNotFoundException ex) {
         return build(HttpStatus.NOT_FOUND, "NOT_FOUND", ex.getMessage());
@@ -93,6 +103,13 @@ public class GlobalExceptionHandler {
                         : authentication.getPrincipal().getClass().getSimpleName(),
                 authorities);
         return build(HttpStatus.FORBIDDEN, "FORBIDDEN", "You do not have permission to perform this action.");
+    }
+
+    @ExceptionHandler(WorkspaceAccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleWorkspaceAccessDenied(
+            WorkspaceAccessDeniedException ex) {
+        log.warn("Login rejected for the requested workspace [{}]", currentCorrelationId());
+        return build(HttpStatus.FORBIDDEN, "WORKSPACE_ACCESS_DENIED", ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

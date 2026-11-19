@@ -56,13 +56,13 @@ public class InvoiceController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<InvoiceResponseDTO> getById(@PathVariable Long id) {
         return ApiResponse.ok(service.getById(id));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<Page<InvoiceResponseDTO>> list(Pageable pageable) {
         return ApiResponse.ok(service.list(pageable));
     }
@@ -72,7 +72,7 @@ public class InvoiceController {
      * GET /api/v1/invoices/job-card/{jobCardId}?page=0&size=20
      */
     @GetMapping("/job-card/{jobCardId}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<Page<InvoiceResponseDTO>> listByJobCard(
             @PathVariable Long jobCardId,
             Pageable pageable) {
@@ -87,7 +87,7 @@ public class InvoiceController {
      * invoice is never more permissive than reading one.
      */
     @GetMapping("/{id}/pdf")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ResponseEntity<byte[]> pdf(@PathVariable Long id) {
         return download(documentService.toPdf(id));
     }
@@ -97,7 +97,7 @@ public class InvoiceController {
      * GET /api/v1/invoices/{id}/xlsx
      */
     @GetMapping("/{id}/xlsx")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ResponseEntity<byte[]> excel(@PathVariable Long id) {
         return download(documentService.toExcel(id));
     }
@@ -108,14 +108,22 @@ public class InvoiceController {
      * inline, and no-store because the figures are live at request time.
      */
     private ResponseEntity<byte[]> download(ExportFileDTO file) {
+        byte[] content = file.getContent();
+        // A 200 response with a null or empty body would download as a blank
+        // PDF/Excel file with no error shown, hiding a failed render behind a
+        // file that opens empty. Fail loudly instead, like the report exports.
+        if (content == null || content.length == 0) {
+            throw new IllegalStateException("Invoice document renderer returned an empty file.");
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType(file.getContentType()));
         headers.setContentDisposition(ContentDisposition.attachment()
                 .filename(file.getFilename(), StandardCharsets.UTF_8)
                 .build());
-        headers.setContentLength(file.size());
+        headers.setContentLength(content.length);
         headers.setCacheControl("no-store");
-        return new ResponseEntity<>(file.getContent(), headers, HttpStatus.OK);
+        return new ResponseEntity<>(content, headers, HttpStatus.OK);
     }
 
     /**
@@ -145,7 +153,7 @@ public class InvoiceController {
      * GET /api/v1/invoices/{id}/outstanding
      */
     @GetMapping("/{id}/outstanding")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<BigDecimal> getOutstandingAmount(@PathVariable Long id) {
         return ApiResponse.ok(service.getOutstandingAmount(id));
     }

@@ -8,7 +8,9 @@ import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.AttendanceRepository;
 import com.autoservicehub.repository.MechanicRepository;
 import com.autoservicehub.service.AttendanceService;
+import com.autoservicehub.service.MechanicAuthorizationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,20 +41,23 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
     private final MechanicRepository    mechanicRepository;
+    @Autowired
+    private MechanicAuthorizationService mechanicAuthorization;
 
     @Override
     @Transactional
     public AttendanceResponseDTO checkIn(Long mechanicId, LocalDate date) {
         LocalDate day = date == null ? LocalDate.now() : date;
-        requireMechanic(mechanicId);
+        Long targetMechanicId = resolveMechanicId(mechanicId);
+        requireMechanic(targetMechanicId);
 
-        if (attendanceRepository.findByMechanicIdAndAttendanceDate(mechanicId, day).isPresent()) {
+        if (attendanceRepository.findByMechanicIdAndAttendanceDate(targetMechanicId, day).isPresent()) {
             throw new BusinessRuleException(
-                    "Mechanic " + mechanicId + " has already checked in on " + day + ".");
+                    "Mechanic " + targetMechanicId + " has already checked in on " + day + ".");
         }
 
         Attendance attendance = new Attendance();
-        attendance.setMechanic(mechanicRepository.getReferenceById(mechanicId));
+        attendance.setMechanic(mechanicRepository.getReferenceById(targetMechanicId));
         attendance.setAttendanceDate(day);
         attendance.setCheckIn(LocalDateTime.now());
 
@@ -63,20 +68,21 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Transactional
     public AttendanceResponseDTO checkOut(Long mechanicId, LocalDate date) {
         LocalDate day = date == null ? LocalDate.now() : date;
-        requireMechanic(mechanicId);
+        Long targetMechanicId = resolveMechanicId(mechanicId);
+        requireMechanic(targetMechanicId);
 
-        Attendance attendance = attendanceRepository.findByMechanicIdAndAttendanceDate(mechanicId, day)
+        Attendance attendance = attendanceRepository.findByMechanicIdAndAttendanceDate(targetMechanicId, day)
                 .orElseThrow(() -> new BusinessRuleException(
-                        "Mechanic " + mechanicId + " has no check-in on " + day
+                        "Mechanic " + targetMechanicId + " has no check-in on " + day
                         + ", so there is nothing to check out of."));
 
         if (attendance.getCheckIn() == null) {
             throw new BusinessRuleException(
-                    "Mechanic " + mechanicId + " has no check-in on " + day + ".");
+                    "Mechanic " + targetMechanicId + " has no check-in on " + day + ".");
         }
         if (attendance.getCheckOut() != null) {
             throw new BusinessRuleException(
-                    "Mechanic " + mechanicId + " has already checked out on " + day + ".");
+                    "Mechanic " + targetMechanicId + " has already checked out on " + day + ".");
         }
 
         attendance.setCheckOut(LocalDateTime.now());
@@ -86,15 +92,16 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional(readOnly = true)
     public List<AttendanceResponseDTO> list(Long mechanicId, LocalDate from, LocalDate to) {
+        Long targetMechanicId = resolveMechanicId(mechanicId);
         LocalDate start = from == null ? LocalDate.now() : from;
         LocalDate end   = to   == null ? start : to;
         // Inclusive of both ends, expressed the same way the reports do.
-        List<Attendance> rows = mechanicId == null
+        List<Attendance> rows = targetMechanicId == null
                 ? attendanceRepository.findByAttendanceDateBetweenOrderByAttendanceDateDescIdDesc(
                         start, end.plusDays(1).minusDays(1))
                 : attendanceRepository
                         .findByAttendanceDateBetweenAndMechanicIdInOrderByAttendanceDateDescIdDesc(
-                                start, end.plusDays(1).minusDays(1), List.of(mechanicId));
+                                start, end.plusDays(1).minusDays(1), List.of(targetMechanicId));
 
         return rows.stream().map(this::toResponse).toList();
     }
@@ -106,6 +113,22 @@ public class AttendanceServiceImpl implements AttendanceService {
         if (!mechanicRepository.existsById(mechanicId)) {
             throw new ResourceNotFoundException("Mechanic not found: " + mechanicId);
         }
+    }
+
+    private Long resolveMechanicId(Long requestedMechanicId) {
+        if (!MechanicAuthorizationService.isMechanicPrincipal()) {
+            return requestedMechanicId;
+        }
+        if (mechanicAuthorization == null) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Mechanic account authorization is unavailable.");
+        }
+        Long authenticatedMechanicId = mechanicAuthorization.requireCurrentMechanic().getId();
+        if (requestedMechanicId != null && !authenticatedMechanicId.equals(requestedMechanicId)) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Mechanics may only access their own attendance.");
+        }
+        return authenticatedMechanicId;
     }
 
     private AttendanceResponseDTO toResponse(Attendance attendance) {

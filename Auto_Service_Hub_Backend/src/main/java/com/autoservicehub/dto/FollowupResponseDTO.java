@@ -14,7 +14,16 @@ public class FollowupResponseDTO {
     private String customerPhone;
     private Long jobCardId;
     private String jobCardNumber;
+    private Long vehicleId;
+    private String vehicleMake;
+    private String vehicleModel;
+    private String registrationNumber;
+    private Long assignedUserId;
+    private String assignedUserName;
     private LocalDate dueDate;
+    private java.time.LocalDateTime reminderAt;
+    private String type;
+    private String channel;
     private String reason;
     private String status;
 

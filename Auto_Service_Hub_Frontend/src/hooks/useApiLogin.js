@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { getErrorMessage } from "../services/api";
 
-export function useApiLogin(redirectPath, roleRedirectOverrides = {}, expectedRole) {
+const normalizeRole = (role) => {
+  const normalized = String(role || "").replace(/^ROLE_/i, "").toUpperCase();
+  return normalized === "GARAGE_OWNER" ? "OWNER" : normalized;
+};
+
+export function useApiLogin(redirectPath, roleRedirectOverrides = {}, expectedRole, workspace) {
   const { login, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [error, setError] = useState("");
@@ -14,11 +19,15 @@ export function useApiLogin(redirectPath, roleRedirectOverrides = {}, expectedRo
     setError("");
     setLoading(true);
     try {
-      const user = await login(username.trim(), password, rememberMe);
-      if (expectedRole && user.role !== expectedRole) {
+      const user = await login(username.trim(), password, rememberMe, workspace);
+      const role = normalizeRole(user.role);
+      const expectedRoles = expectedRole
+        ? (Array.isArray(expectedRole) ? expectedRole : [expectedRole]).map(normalizeRole)
+        : [];
+      if (expectedRoles.length && !expectedRoles.includes(role)) {
         logout();
         setError(
-          `This account is assigned to ${user.role || "another role"}, not ${expectedRole}. Sign in with a ${expectedRole} account.`
+          `This account is assigned to ${role || "another role"}, not ${expectedRoles.join(" or ")}. Sign in with an allowed account.`
         );
         return;
       }
@@ -26,13 +35,15 @@ export function useApiLogin(redirectPath, roleRedirectOverrides = {}, expectedRo
         ADMIN: "/admin",
         OWNER: "/garage-owner/dashboard",
         MANAGER: "/garage-owner/dashboard",
+        GARAGE_OWNER: "/garage-owner/dashboard",
         SERVICE_ADVISOR: "/service-advisor",
         MECHANIC: "/mechanic-dashboard",
         INVENTORY_MANAGER: "/inventory-dashboard",
         BILLING_USER: "/billing/dashboard",
+        CUSTOMER: "/customer-dashboard",
         ...roleRedirectOverrides,
       };
-      navigate(roleRedirects[user.role] || redirectPath);
+      navigate(roleRedirects[role] || redirectPath);
     } catch (requestError) {
       setError(getErrorMessage(requestError, "Sign in failed."));
     } finally {

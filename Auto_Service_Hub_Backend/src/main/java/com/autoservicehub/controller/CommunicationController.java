@@ -55,7 +55,7 @@ public class CommunicationController {
      * GET /api/v1/communications/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'BILLING_USER')")
     public ApiResponse<CommunicationResponseDTO> getById(@PathVariable Long id) {
         return ApiResponse.ok(service.getById(id));
     }
@@ -67,7 +67,7 @@ public class CommunicationController {
      * customerId is required — prevents loading the entire communications table.
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'BILLING_USER')")
     public ApiResponse<Page<CommunicationResponseDTO>> listByCustomer(
             @RequestParam Long customerId,
             Pageable pageable) {

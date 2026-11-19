@@ -2,8 +2,7 @@ import React from "react";
 
 /* =========================================================
    FOLLOW-UP SUMMARY CARDS
-   Four read-only counters derived from the demonstration
-   records held in page state. Nothing here is fetched.
+   Read-only counters from the follow-up dashboard API.
    ========================================================= */
 
 function FollowUpSummaryCards({ summary }) {
@@ -19,7 +18,7 @@ function FollowUpSummaryCards({ summary }) {
       key: "pending",
       label: "PENDING REMINDERS",
       value: summary.pendingReminders,
-      description: "Awaiting first customer contact",
+      description: "Scheduled and not yet resolved",
     },
     {
       key: "feedback",
@@ -31,7 +30,7 @@ function FollowUpSummaryCards({ summary }) {
       key: "messages",
       label: "MESSAGES SENT",
       value: summary.messagesSent,
-      description: "Simulated, across all channels",
+      description: "Provider-confirmed delivery",
     },
   ];
 

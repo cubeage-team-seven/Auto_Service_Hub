@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApiLogin } from "../../hooks/useApiLogin";
+import ForgotPasswordLink from "../auth/ForgotPasswordLink";
 import "./ServiceAdvisorLogin.css";
 
 export default function ServiceAdvisorLogin() {
@@ -8,7 +9,15 @@ export default function ServiceAdvisorLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
-  const { submit, error, loading } = useApiLogin("/service-advisor");
+  const { submit, error, loading } = useApiLogin(
+    "/service-advisor",
+    {
+      OWNER: "/service-advisor",
+      MANAGER: "/service-advisor",
+    },
+    undefined,
+    "SERVICE_ADVISOR"
+  );
 
   return (
     <div className="sa-login-container">
@@ -104,9 +113,7 @@ export default function ServiceAdvisorLogin() {
                 />
                 <span>Remember me</span>
               </label>
-              <a href="#forgot" className="sa-forgot-link" onClick={(e) => e.preventDefault()}>
-                Forgot password?
-              </a>
+              <ForgotPasswordLink loginPath="/service-advisor-login" className="sa-forgot-link" />
             </div>
 
             <button type="submit" className="sa-submit-btn" disabled={loading}>

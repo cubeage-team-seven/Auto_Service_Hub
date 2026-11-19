@@ -247,8 +247,8 @@ const vehicleLabel = (vehicle) =>
 
 /**
  * Hands a fetched blob to the browser. Same approach the billing screen uses for
- * invoice PDFs: an object URL on a temporary anchor, revoked once the click is
- * dispatched.
+ * invoice PDFs: an object URL on a temporary anchor. Keep the URL alive long
+ * enough for the browser to start reading it after the click is dispatched.
  */
 const triggerBrowserDownload = (blob, filename) => {
   const url = URL.createObjectURL(blob);
@@ -258,7 +258,7 @@ const triggerBrowserDownload = (blob, filename) => {
   document.body.appendChild(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
 /* =========================================
@@ -542,9 +542,18 @@ function GarageOwnerReports() {
     Boolean(requestFilters.to) &&
     requestFilters.from > requestFilters.to;
 
+  const reportRequestKey = JSON.stringify([activeTabKey, requestFilters]);
+  const reportMatchesRequest = report.requestKey === reportRequestKey;
+  const visibleReport = reportMatchesRequest
+    ? report
+    : { ...IDLE_SECTION, status: "loading" };
+
   /* ---- one request per tab + filter combination ---- */
 
   const loadReport = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     if (rangeInvalid) {
       // Caught here rather than shipped to the API, which rejects a reversed range
       // with a 409. Naming the reason keeps the two paths reading alike.
@@ -553,13 +562,18 @@ function GarageOwnerReports() {
         data: null,
         statusCode: 409,
         error: "The start date is after the end date, so the range was not requested.",
+        requestKey: reportRequestKey,
       });
       return;
     }
 
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    setReport({ status: "loading", data: null, error: null, statusCode: null });
+    setReport({
+      status: "loading",
+      data: null,
+      error: null,
+      statusCode: null,
+      requestKey: reportRequestKey,
+    });
 
     try {
       const data = await FETCHERS[activeTabKey](requestFilters);
@@ -575,6 +589,7 @@ function GarageOwnerReports() {
         error: null,
         statusCode: null,
         empty: Boolean(data?.empty),
+        requestKey: reportRequestKey,
       });
       setRefreshedAt(new Date());
     } catch (error) {
@@ -587,9 +602,10 @@ function GarageOwnerReports() {
         data: null,
         error: error?.message || "The report could not be loaded.",
         statusCode: error?.status ?? null,
+        requestKey: reportRequestKey,
       });
     }
-  }, [activeTabKey, requestFilters, rangeInvalid]);
+  }, [activeTabKey, requestFilters, rangeInvalid, reportRequestKey]);
 
   useEffect(() => {
     loadReport();
@@ -660,6 +676,10 @@ function GarageOwnerReports() {
   };
 
   const handleExport = async (format) => {
+    if (visibleReport.status !== "success" || exporting !== null || rangeInvalid) {
+      return;
+    }
+
     setExporting(format);
 
     try {
@@ -686,12 +706,13 @@ function GarageOwnerReports() {
 
   /* ---- derived view state ---- */
 
-  const data = report.status === "success" ? report.data : null;
-  const isReady = report.status === "success";
+  const data = visibleReport.status === "success" ? visibleReport.data : null;
+  const isReady = visibleReport.status === "success";
   const kpi = (value) =>
-    isReady ? value : report.status === "loading" ? "…" : "—";
+    isReady ? value : visibleReport.status === "loading" ? "…" : "—";
   const roleHint =
-    report.status === "error" && (report.statusCode === 401 || report.statusCode === 403)
+    visibleReport.status === "error" &&
+    (visibleReport.statusCode === 401 || visibleReport.statusCode === 403)
       ? `Reports of this type are readable by: ${TAB_ROLES[activeTab.key]}.`
       : null;
 
@@ -752,7 +773,7 @@ function GarageOwnerReports() {
         </KpiGrid>
 
         <PanelState
-          state={report}
+          state={visibleReport}
           loadingText="Loading the daily workshop report…"
           emptyText="No job cards were assigned on this day, so there is nothing to break down."
           isEmpty={!hasStatusRows}
@@ -845,7 +866,7 @@ function GarageOwnerReports() {
         </KpiGrid>
 
         <PanelState
-          state={report}
+          state={visibleReport}
           loadingText="Loading the revenue report…"
           emptyText="No invoices were raised and no payments were received in this range, so there is no revenue to report."
           isEmpty={!hasAnyRows}
@@ -968,7 +989,7 @@ function GarageOwnerReports() {
         </KpiGrid>
 
         <PanelState
-          state={report}
+          state={visibleReport}
           loadingText="Loading mechanic performance…"
           emptyText="No mechanic had a job card assigned inside this range."
           isEmpty={rows.length === 0}
@@ -1103,7 +1124,7 @@ function GarageOwnerReports() {
         </KpiGrid>
 
         <PanelState
-          state={report}
+          state={visibleReport}
           loadingText="Loading parts usage…"
           emptyText="No parts left the shelf as OUT stock movements in this range."
           isEmpty={rows.length === 0}
@@ -1252,7 +1273,7 @@ function GarageOwnerReports() {
         </KpiGrid>
 
         <PanelState
-          state={report}
+          state={visibleReport}
           loadingText="Loading customer growth…"
           emptyText="Nobody was created or served in this range, so there is no growth to report."
           isEmpty={isEmptyReport}
@@ -1337,7 +1358,7 @@ function GarageOwnerReports() {
         </KpiGrid>
 
         <PanelState
-          state={report}
+          state={visibleReport}
           loadingText="Loading profit analysis…"
           emptyText="Nothing was invoiced, collected or consumed in this range, so there is no result to analyse."
           isEmpty={isEmptyReport}
@@ -1456,7 +1477,11 @@ function GarageOwnerReports() {
                 type="button"
                 className="reports-button-primary"
                 onClick={() => handleExport("pdf")}
-                disabled={exporting !== null || rangeInvalid}
+                disabled={
+                  exporting !== null ||
+                  visibleReport.status !== "success" ||
+                  rangeInvalid
+                }
               >
                 {exporting === "pdf" ? "GENERATING…" : "PDF"}
               </button>
@@ -1464,7 +1489,11 @@ function GarageOwnerReports() {
                 type="button"
                 className="reports-button-ghost"
                 onClick={() => handleExport("xlsx")}
-                disabled={exporting !== null || rangeInvalid}
+                disabled={
+                  exporting !== null ||
+                  visibleReport.status !== "success" ||
+                  rangeInvalid
+                }
               >
                 {exporting === "xlsx" ? "GENERATING…" : "EXCEL"}
               </button>
@@ -1484,9 +1513,9 @@ function GarageOwnerReports() {
               type="button"
               className="reports-button-ghost"
               onClick={reload}
-              disabled={report.status === "loading"}
+              disabled={visibleReport.status === "loading"}
             >
-              {report.status === "loading" ? "LOADING…" : "REFRESH"}
+              {visibleReport.status === "loading" ? "LOADING…" : "REFRESH"}
             </button>
           </div>
         </div>

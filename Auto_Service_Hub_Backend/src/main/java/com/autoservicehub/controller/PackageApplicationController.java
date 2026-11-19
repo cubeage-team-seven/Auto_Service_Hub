@@ -44,7 +44,7 @@ public class PackageApplicationController {
 
     /** Every application, newest first. */
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<Page<PackageApplicationResponseDTO>> list(Pageable pageable) {
         return ApiResponse.ok(service.list(pageable));
     }
@@ -54,7 +54,7 @@ public class PackageApplicationController {
      * GET /api/v1/package-applications/package/{servicePackageId}
      */
     @GetMapping("/package/{servicePackageId}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<Page<PackageApplicationResponseDTO>> listByPackage(
             @PathVariable Long servicePackageId, Pageable pageable) {
         return ApiResponse.ok(service.listByPackage(servicePackageId, pageable));
@@ -62,7 +62,7 @@ public class PackageApplicationController {
 
     /** One application by id. */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<PackageApplicationResponseDTO> getById(@PathVariable Long id) {
         return ApiResponse.ok(service.getById(id));
     }

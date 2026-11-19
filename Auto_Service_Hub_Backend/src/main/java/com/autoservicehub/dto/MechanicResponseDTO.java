@@ -25,6 +25,7 @@ import java.util.List;
 public class MechanicResponseDTO {
 
     private Long id;
+    private Long userId;
     private String employeeCode;
     private String name;
     private String phone;

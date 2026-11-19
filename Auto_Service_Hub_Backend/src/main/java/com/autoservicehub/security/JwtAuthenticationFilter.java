@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -49,19 +50,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             if (valid) {
                 String username = tokenProvider.getUsername(token);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
-                if (diagnoseRequest) {
-                    log.info("JWT authentication established path={} subjectMatchesPrincipal={} authorities={}",
-                            path,
-                            username.equalsIgnoreCase(userDetails.getUsername()),
-                            auth.getAuthorities().stream()
-                                    .map(authority -> authority.getAuthority())
-                                    .sorted()
-                                    .collect(Collectors.joining(",")));
+                try {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    if (userDetails.isEnabled()) {
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails, null, userDetails.getAuthorities());
+                        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                        if (diagnoseRequest) {
+                            log.info("JWT authentication established path={} subjectMatchesPrincipal={} authorities={}",
+                                    path,
+                                    username.equalsIgnoreCase(userDetails.getUsername()),
+                                    auth.getAuthorities().stream()
+                                            .map(authority -> authority.getAuthority())
+                                            .sorted()
+                                            .collect(Collectors.joining(",")));
+                        }
+                    }
+                } catch (UsernameNotFoundException ex) {
+                    SecurityContextHolder.clearContext();
                 }
             }
         }

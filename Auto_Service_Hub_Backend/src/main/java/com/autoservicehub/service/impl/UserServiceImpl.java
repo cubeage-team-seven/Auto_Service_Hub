@@ -2,13 +2,22 @@ package com.autoservicehub.service.impl;
 
 import com.autoservicehub.dto.UserRequestDTO;
 import com.autoservicehub.dto.UserResponseDTO;
+import com.autoservicehub.dto.UserUpdateDTO;
 import com.autoservicehub.entity.AuditAction;
+import com.autoservicehub.entity.Mechanic;
 import com.autoservicehub.entity.Role;
 import com.autoservicehub.entity.User;
 import com.autoservicehub.exception.BusinessRuleException;
+import com.autoservicehub.exception.ResourceNotFoundException;
 import com.autoservicehub.repository.RoleRepository;
+import com.autoservicehub.repository.AccessRequestRepository;
+import com.autoservicehub.repository.AppointmentRepository;
+import com.autoservicehub.repository.FollowupRepository;
+import com.autoservicehub.repository.NotificationRepository;
+import com.autoservicehub.repository.PasswordResetOtpRepository;
 import com.autoservicehub.repository.UserRepository;
 import com.autoservicehub.service.AuditService;
+import com.autoservicehub.service.MechanicAccountAssociationService;
 import com.autoservicehub.service.UserService;
 import com.autoservicehub.util.AppConstants;
 import lombok.RequiredArgsConstructor;
@@ -114,8 +123,14 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository  userRepository;
     private final RoleRepository  roleRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final FollowupRepository followupRepository;
+    private final AccessRequestRepository accessRequestRepository;
+    private final NotificationRepository notificationRepository;
+    private final PasswordResetOtpRepository passwordResetOtpRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService    auditService;
+    private final MechanicAccountAssociationService mechanicAccountAssociationService;
 
     // ── Create ────────────────────────────────────────────────────────────
 
@@ -128,6 +143,13 @@ public class UserServiceImpl implements UserService {
         assertEmailAvailable(email);
 
         Role role = resolveRole(request.getRole());
+        boolean mechanicRole = "MECHANIC".equals(canonicalRoleName(role.getName()));
+        if (mechanicRole && request.getMechanicId() == null) {
+            throw new BusinessRuleException("Select the mechanic profile to link to this account.");
+        }
+        if (!mechanicRole && request.getMechanicId() != null) {
+            throw new BusinessRuleException("A mechanic profile can only be linked to a MECHANIC account.");
+        }
 
         User entity = new User();
         entity.setUsername(username);
@@ -139,6 +161,9 @@ public class UserServiceImpl implements UserService {
         entity.setPasswordHash(passwordEncoder.encode(requirePassword(request.getPassword())));
 
         User saved = userRepository.save(entity);
+        if (mechanicRole) {
+            mechanicAccountAssociationService.associate(request.getMechanicId(), saved.getId());
+        }
         UserResponseDTO response = toResponse(saved);
 
         // Role and status only — no credential appears in this string.
@@ -169,6 +194,109 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Page<UserResponseDTO> listUsers(Pageable pageable) {
         return userRepository.findAll(pageable).map(this::toResponse);
+    }
+
+    // ── Update ────────────────────────────────────────────────────────────
+
+    /**
+     * Updates the profile fields, role and account status of one account.
+     *
+     * <p>The password hash is never touched: {@link UserResponseDTO} carries no
+     * credential field, so the edit form has nothing to pre-fill and a request
+     * that resets the password on every save would be a request that silently
+     * changes a credential the caller cannot see. Uniqueness of username and
+     * email is re-checked the same way it is checked on create, with one
+     * difference: the account being updated keeps its own username and email, so
+     * those two checks are skipped when the submitted value is already the
+     * account's own (case-insensitively) rather than being an offer of a
+     * duplicate.
+     */
+    @Override
+    public UserResponseDTO updateUser(Long id, UserUpdateDTO request) {
+        User current = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+        if (current.getRole() != null
+                && "ADMIN".equals(canonicalRoleName(current.getRole().getName()))) {
+            throw new BusinessRuleException(
+                    "Administrator accounts cannot be modified through user management.");
+        }
+
+        String username = requireText(request.getUsername(), "username");
+        String email    = requireText(request.getEmail(), "email");
+
+        if (!username.equalsIgnoreCase(current.getUsername())) {
+            assertUsernameAvailable(username);
+        }
+        if (!email.equalsIgnoreCase(current.getEmail())) {
+            assertEmailAvailable(email);
+        }
+
+        Role role = resolveRole(request.getRole());
+        boolean mechanicRole = "MECHANIC".equals(canonicalRoleName(role.getName()));
+        Optional<Mechanic> linkedMechanic =
+                mechanicAccountAssociationService.findProfileForUser(current.getId());
+        if (mechanicRole && linkedMechanic.isEmpty() && request.getMechanicId() == null) {
+            throw new BusinessRuleException("Select the mechanic profile to link to this account.");
+        }
+        if (mechanicRole && linkedMechanic.isPresent() && request.getMechanicId() != null
+                && !linkedMechanic.get().getId().equals(request.getMechanicId())) {
+            throw new BusinessRuleException("This account is already linked to a different mechanic profile.");
+        }
+        if (!mechanicRole && request.getMechanicId() != null) {
+            throw new BusinessRuleException("A mechanic profile can only be linked to a MECHANIC account.");
+        }
+
+        current.setUsername(username);
+        current.setEmail(email);
+        current.setFullName(requireText(request.getFullName(), "fullName"));
+        current.setPhone(requireText(request.getPhone(), "phone"));
+        current.setRole(role);
+        current.setActive(resolveActive(request.getStatus()));
+
+        User saved = userRepository.save(current);
+        if (mechanicRole && request.getMechanicId() != null) {
+            mechanicAccountAssociationService.associate(request.getMechanicId(), saved.getId());
+        } else if (!mechanicRole && linkedMechanic.isPresent()) {
+            mechanicAccountAssociationService.unlinkUser(current.getId());
+        }
+        UserResponseDTO response = toResponse(saved);
+
+        // Role and status only — no credential appears in this string.
+        // AuditService redacts credential-shaped text as a second defence.
+        auditService.recordSuccess(AUDIT_ENTITY, saved.getId(), AuditAction.USER_UPDATE,
+                "User updated: " + saved.getUsername()
+                        + " (role " + role.getName()
+                        + ", status " + statusLabel(saved.getActive()) + ")");
+        return response;
+    }
+
+    @Override
+    public void removeUser(Long id, String requestingUsername) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
+
+        if (requestingUsername == null || requestingUsername.isBlank()
+                || requestingUsername.equalsIgnoreCase(user.getUsername())) {
+            throw new BusinessRuleException("You cannot remove your own account.");
+        }
+
+        String roleName = user.getRole() == null
+                ? ""
+                : canonicalRoleName(user.getRole().getName());
+        if (!ASSIGNABLE_ROLES.contains(roleName)) {
+            throw new BusinessRuleException("Only workshop user accounts can be removed.");
+        }
+
+        mechanicAccountAssociationService.unlinkUser(id);
+        appointmentRepository.clearAdvisorReferences(id);
+        followupRepository.clearAssignedUserReferences(id);
+        accessRequestRepository.clearReviewerReferences(id);
+        notificationRepository.deleteByUser_Id(id);
+        passwordResetOtpRepository.deleteAllByUserId(id);
+
+        userRepository.delete(user);
+        auditService.recordSuccess(AUDIT_ENTITY, id, AuditAction.USER_DELETE,
+                "User removed: " + user.getUsername() + " (role " + roleName + ")");
     }
 
     // ── Private helpers ───────────────────────────────────────────────────

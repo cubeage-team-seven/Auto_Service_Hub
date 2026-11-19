@@ -31,7 +31,7 @@ public class FeedbackController {
      * POST /api/v1/feedback
      */
     @PostMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasAnyRole('OWNER', 'GARAGE_OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<FeedbackResponseDTO> create(
             @Valid @RequestBody FeedbackRequestDTO request) {
@@ -43,7 +43,7 @@ public class FeedbackController {
      * PUT /api/v1/feedback/{id}
      */
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasAnyRole('OWNER', 'GARAGE_OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     public ApiResponse<FeedbackResponseDTO> update(
             @PathVariable Long id,
             @Valid @RequestBody FeedbackRequestDTO request) {
@@ -55,22 +55,22 @@ public class FeedbackController {
      * GET /api/v1/feedback/{id}
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'GARAGE_OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'BILLING_USER')")
     public ApiResponse<FeedbackResponseDTO> getById(@PathVariable Long id) {
         return ApiResponse.ok(service.getById(id));
     }
 
     /**
-     * List feedback. Requires either customerId or jobCardId.
+     * List feedback with optional customer, job-card, or text filters.
      *
-     * GET /api/v1/feedback?customerId={id}   — all feedback for a customer
-     * GET /api/v1/feedback?jobCardId={id}    — feedback for a specific job card
+     * GET /api/v1/feedback?q=service&page=0&size=20
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'GARAGE_OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'BILLING_USER')")
     public ApiResponse<Page<FeedbackResponseDTO>> list(
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) Long jobCardId,
+            @RequestParam(required = false) String q,
             Pageable pageable) {
         if (customerId != null) {
             return ApiResponse.ok(service.listByCustomer(customerId, pageable));
@@ -78,9 +78,7 @@ public class FeedbackController {
         if (jobCardId != null) {
             return ApiResponse.ok(service.listByJobCard(jobCardId, pageable));
         }
-        // At least one filter is required — prevents full-table scans
-        throw new com.autoservicehub.exception.BusinessRuleException(
-                "Either customerId or jobCardId query parameter is required.");
+        return ApiResponse.ok(service.listAll(q, pageable));
     }
 
     /**
@@ -88,7 +86,7 @@ public class FeedbackController {
      * DELETE /api/v1/feedback/{id}
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
+    @PreAuthorize("hasAnyRole('OWNER', 'GARAGE_OWNER', 'MANAGER', 'SERVICE_ADVISOR')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         service.delete(id);

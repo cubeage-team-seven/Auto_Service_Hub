@@ -43,13 +43,13 @@ public class PaymentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<PaymentResponseDTO> getById(@PathVariable Long id) {
         return ApiResponse.ok(service.getById(id));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<Page<PaymentResponseDTO>> list(Pageable pageable) {
         return ApiResponse.ok(service.list(pageable));
     }
@@ -62,7 +62,7 @@ public class PaymentController {
      * Restricted to the same roles that may already read a payment by id.
      */
     @GetMapping("/invoice/{invoiceId}")
-    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'MECHANIC', 'INVENTORY_MANAGER', 'BILLING_USER')")
+    @PreAuthorize("hasAnyRole('OWNER', 'MANAGER', 'SERVICE_ADVISOR', 'INVENTORY_MANAGER', 'BILLING_USER')")
     public ApiResponse<Page<PaymentResponseDTO>> listByInvoice(
             @PathVariable Long invoiceId,
             Pageable pageable) {

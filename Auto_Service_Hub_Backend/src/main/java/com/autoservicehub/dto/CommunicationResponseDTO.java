@@ -27,6 +27,7 @@ public class CommunicationResponseDTO {
     private String subject;
     private String message;
     private LocalDateTime sentAt;
+    private String deliveryStatus;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

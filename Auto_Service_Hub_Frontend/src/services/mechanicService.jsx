@@ -27,17 +27,16 @@ async function getData(path, options = {}) {
   } catch {
     throw new Error(
       response.ok
-        ? `Mechanic API returned invalid JSON (${response.status}).`
-        : `Mechanic API request failed (${response.status}).`
+        ? `Mechanic API returned invalid JSON (${response.status}) for ${options.method || "GET"} ${url}.`
+        : `${options.method || "GET"} ${url} failed with HTTP ${response.status}.`
     );
   }
 
   if (!response.ok) {
-    const message = payload?.message || `Mechanic API request failed (${response.status}).`;
-    if (response.status === 401 || response.status === 403) {
-      throw new Error(`${message} Sign in with an authorized account and try again.`);
-    }
-    throw new Error(message);
+    const message = payload?.message || payload?.error || "No error message was returned.";
+    throw new Error(
+      `${options.method || "GET"} ${url} failed with HTTP ${response.status}: ${message}`
+    );
   }
 
   if (response.status === 204) return null;
@@ -65,6 +64,25 @@ async function getPages(path, sort) {
 }
 
 export const getMechanics = () => getPages("/mechanics", "name,asc");
+export const getUnlinkedMechanicProfiles = async () => {
+  const profiles = await getData("/mechanics/unlinked-profiles");
+  if (!Array.isArray(profiles)) {
+    throw new Error("Mechanic API returned an unexpected profile list.");
+  }
+  return profiles;
+};
+export const getUnlinkedMechanicAccounts = async () => {
+  const accounts = await getData("/mechanics/unlinked-accounts");
+  if (!Array.isArray(accounts)) {
+    throw new Error("Mechanic API returned an unexpected account list.");
+  }
+  return accounts;
+};
+export const associateMechanicUser = (mechanicId, userId) =>
+  getData(`/mechanics/${mechanicId}/user`, {
+    method: "PUT",
+    body: JSON.stringify({ userId: Number(userId) }),
+  });
 export const getMechanicAttendance = (date) =>
   getData(`/attendance?from=${encodeURIComponent(date)}&to=${encodeURIComponent(date)}`);
 export const getMechanicPerformance = (from, to) =>

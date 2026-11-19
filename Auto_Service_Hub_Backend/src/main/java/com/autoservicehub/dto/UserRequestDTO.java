@@ -62,4 +62,7 @@ public class UserRequestDTO {
             regexp = "(?i)^(Active|Inactive)$",
             message = "status must be Active or Inactive")
     private String status;
+
+    /** Required for a MECHANIC account; selected explicitly by an authorized owner or administrator. */
+    private Long mechanicId;
 }

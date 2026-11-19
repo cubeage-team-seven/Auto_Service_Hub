@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import ForgotPasswordLink from "../auth/ForgotPasswordLink";
 import "./CustomerLogin.css";
 
 function CustomerLogin() {
@@ -19,7 +20,8 @@ function CustomerLogin() {
       await login(
         formData.get("username"),
         formData.get("password"),
-        rememberMe
+        rememberMe,
+        "CUSTOMER"
       );
       navigate("/customer-dashboard");
     } catch (loginError) {
@@ -112,7 +114,7 @@ function CustomerLogin() {
                   />
                   <span>Remember me</span>
                 </label>
-                <a href="#forgot" className="forgot-pass">Forgot password?</a>
+                <ForgotPasswordLink loginPath="/customers" className="forgot-pass" />
               </div>
 
               <button type="submit" className="submit-btn" disabled={loading}>

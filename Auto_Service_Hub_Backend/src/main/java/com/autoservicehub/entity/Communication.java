@@ -30,6 +30,10 @@ public class Communication extends BaseEntity {
     @JoinColumn(name = "job_card_id")
     private JobCard jobCard;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "followup_id")
+    private Followup followup;
+
     /** CALL | WHATSAPP | EMAIL | REMINDER */
     @Column(name = "channel", nullable = false, length = 20)
     private String channel;
@@ -46,4 +50,8 @@ public class Communication extends BaseEntity {
 
     @Column(name = "sent_at")
     private LocalDateTime sentAt;
+
+    /** RECORDED until an external provider confirms delivery. */
+    @Column(name = "delivery_status", nullable = false, length = 20)
+    private String deliveryStatus = "RECORDED";
 }

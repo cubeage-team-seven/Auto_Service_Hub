@@ -11,7 +11,6 @@ import {
   createPayment,
   deleteEstimate,
   deleteInvoice,
-  deletePayment,
   downloadInvoiceExcel,
   downloadInvoicePdf,
   getEstimate,
@@ -1107,30 +1106,6 @@ function GarageOwnerBilling() {
       setFormError(error instanceof Error ? error.message : "Unable to record the payment.");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleDeletePayment = async (payment) => {
-    if (
-      !window.confirm(
-        `Delete this ${formatMoney(payment.amount)} payment? The invoice balance is recalculated.`
-      )
-    ) {
-      return;
-    }
-
-    const removed = await runAction(
-      `payment-${payment.id}-delete`,
-      async () => {
-        await deletePayment(payment.id);
-        return payment;
-      },
-      (entry) =>
-        `Payment of ${formatMoney(entry.amount)} deleted. The invoice balance was recalculated.`
-    );
-
-    if (removed !== null && detailDocument?.type === "Invoice") {
-      await openInvoiceDetail(detailDocument.data);
     }
   };
 
@@ -2610,17 +2585,6 @@ function GarageOwnerBilling() {
                             ? ` · ref ${payment.transactionRef}`
                             : ""}
                         </span>
-
-                        {canWrite && (
-                          <button
-                            type="button"
-                            className="billing-action billing-action-danger"
-                            disabled={isBusy(`payment-${payment.id}-delete`)}
-                            onClick={() => void handleDeletePayment(payment)}
-                          >
-                            Delete
-                          </button>
-                        )}
                       </div>
                     ))}
 

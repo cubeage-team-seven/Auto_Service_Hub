@@ -18,11 +18,15 @@ async function request(path, { method = "GET", body, params, headers = {} } = {}
     });
   }
 
-  const token =
-    sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
   const requestHeaders = new Headers(headers);
   requestHeaders.set("Accept", "application/json");
-  if (token) requestHeaders.set("Authorization", `Bearer ${token}`);
+  if (["/auth/login", "/auth/forgot-password", "/auth/verify-otp", "/auth/reset-password"].includes(path)) {
+    requestHeaders.delete("Authorization");
+  } else {
+    const token =
+      sessionStorage.getItem("accessToken") || localStorage.getItem("accessToken");
+    if (token) requestHeaders.set("Authorization", `Bearer ${token}`);
+  }
   if (body !== undefined && !(body instanceof FormData)) {
     requestHeaders.set("Content-Type", "application/json");
   }

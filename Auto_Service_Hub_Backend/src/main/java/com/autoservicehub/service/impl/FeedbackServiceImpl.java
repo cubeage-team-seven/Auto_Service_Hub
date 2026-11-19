@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +54,10 @@ public class FeedbackServiceImpl implements FeedbackService {
                 .orElseThrow(() -> new ResourceNotFoundException("Feedback not found: " + id));
         JobCard jobCard = jobCardRepository.findById(request.getJobCardId())
                 .orElseThrow(() -> new ResourceNotFoundException("JobCard not found: " + request.getJobCardId()));
+        if (!"DELIVERED".equalsIgnoreCase(jobCard.getStatus())) {
+            throw new BusinessRuleException(
+                    "Feedback can only be submitted for completed (DELIVERED) job cards.");
+        }
         mapToEntity(request, existing, jobCard);
         return toResponse(repository.save(existing));
     }
@@ -82,10 +87,32 @@ public class FeedbackServiceImpl implements FeedbackService {
         }
         return repository.findByJobCardId(jobCardId)
                 .map(f -> {
+                    if (pageable.isPaged() && pageable.getOffset() > 0) {
+                        return Page.<FeedbackResponseDTO>empty(pageable);
+                    }
                     List<FeedbackResponseDTO> list = List.of(toResponse(f));
-                    return (Page<FeedbackResponseDTO>) new PageImpl<>(list, pageable, 1L);
+                    return new PageImpl<>(list, pageable, 1L);
                 })
                 .orElseGet(() -> Page.empty(pageable));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<FeedbackResponseDTO> listAll(String query, Pageable pageable) {
+        Specification<Feedback> specification = (root, criteriaQuery, cb) -> {
+            if (query == null || query.isBlank()) {
+                return cb.conjunction();
+            }
+            String pattern = "%" + query.trim().toLowerCase(java.util.Locale.ROOT) + "%";
+            var customer = root.join("customer");
+            var jobCard = root.join("jobCard");
+            return cb.or(
+                    cb.like(cb.lower(customer.get("name")), pattern),
+                    cb.like(cb.lower(jobCard.get("jobCardNumber")), pattern),
+                    cb.like(cb.lower(jobCard.get("serviceType")), pattern),
+                    cb.like(cb.lower(root.get("comments")), pattern));
+        };
+        return repository.findAll(specification, pageable).map(this::toResponse);
     }
 
     @Override
@@ -101,6 +128,9 @@ public class FeedbackServiceImpl implements FeedbackService {
     private void mapToEntity(FeedbackRequestDTO r, Feedback e, JobCard jobCard) {
         Customer customer = customerRepository.findById(r.getCustomerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + r.getCustomerId()));
+        if (jobCard.getCustomer() == null || !jobCard.getCustomer().getId().equals(customer.getId())) {
+            throw new BusinessRuleException("The selected job card does not belong to this customer.");
+        }
         e.setCustomer(customer);
         e.setJobCard(jobCard);
         e.setRating(r.getRating());

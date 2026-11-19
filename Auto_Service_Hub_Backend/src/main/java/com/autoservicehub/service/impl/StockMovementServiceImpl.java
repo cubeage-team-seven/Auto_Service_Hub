@@ -13,7 +13,9 @@ import com.autoservicehub.repository.PartRepository;
 import com.autoservicehub.repository.StockMovementRepository;
 import com.autoservicehub.service.AuditService;
 import com.autoservicehub.service.StockMovementService;
+import com.autoservicehub.service.MechanicAuthorizationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -55,9 +57,13 @@ public class StockMovementServiceImpl implements StockMovementService {
     private final PartRepository           partRepository;
     private final JobCardRepository        jobCardRepository;
     private final AuditService             auditService;
+    @Autowired
+    private MechanicAuthorizationService mechanicAuthorization;
 
     @Override
     public StockMovementResponseDTO create(StockMovementRequestDTO request) {
+        MechanicAuthorizationService.assertNotMechanic(
+                "Mechanics may only record part consumption against their assigned job cards.");
         String type = resolveType(request.getMovementType());
         int quantity = resolveQuantity(request.getQuantity());
 
@@ -126,6 +132,7 @@ public class StockMovementServiceImpl implements StockMovementService {
                                                       Integer quantity, String reason) {
         JobCard jobCard = jobCardRepository.findById(jobCardId)
                 .orElseThrow(() -> new ResourceNotFoundException("JobCard not found: " + jobCardId));
+        assertMechanicAssignment(jobCard);
 
         Part part = partRepository.findById(partId)
                 .orElseThrow(() -> new ResourceNotFoundException("Part not found: " + partId));
@@ -176,14 +183,24 @@ public class StockMovementServiceImpl implements StockMovementService {
     @Override
     @Transactional(readOnly = true)
     public Page<StockMovementResponseDTO> listByJobCard(Long jobCardId, Pageable pageable) {
-        if (!jobCardRepository.existsById(jobCardId)) {
-            throw new ResourceNotFoundException("JobCard not found: " + jobCardId);
-        }
+        JobCard jobCard = jobCardRepository.findById(jobCardId)
+                .orElseThrow(() -> new ResourceNotFoundException("JobCard not found: " + jobCardId));
+        assertMechanicAssignment(jobCard);
         return repository.findByJobCardIdOrderByIdAsc(jobCardId, pageable)
                          .map(this::toResponse);
     }
 
     // ── Private helpers ───────────────────────────────────────────────────
+
+    private void assertMechanicAssignment(JobCard jobCard) {
+        if (MechanicAuthorizationService.isMechanicPrincipal()) {
+            if (mechanicAuthorization == null) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Mechanic assignment authorization is unavailable.");
+            }
+            mechanicAuthorization.assertJobCardAssigned(jobCard);
+        }
+    }
 
     private String resolveType(String requested) {
         if (requested == null || requested.isBlank()) {

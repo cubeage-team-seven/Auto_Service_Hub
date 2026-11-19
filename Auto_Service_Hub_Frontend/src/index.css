@@ -42,6 +42,17 @@ input::placeholder {
     line-height: 1.5;
 }
 
+.forgot-password-link {
+    color: #d8ff3d;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.forgot-password-link:hover {
+    opacity: 0.75;
+}
+
 button:disabled {
     cursor: not-allowed;
     opacity: 0.65;
